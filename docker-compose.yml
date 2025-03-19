@@ -1,0 +1,111 @@
+services:
+  airflow-container:
+    image: apache/airflow:slim-2.10.3rc2-python3.10
+    depends_on: 
+      - zookeeper
+      - kafka
+    volumes:
+      - ./backend/dags:/opt/airflow/dags
+      - ./.env:/opt/airflow/.env
+      - ./backend/requirements.txt:/opt/airflow/requirements.txt
+    ports:
+      - 9999:8080
+    networks:
+      - blocktrade-track
+    command: bash -c '(pip install -r /opt/airflow/requirements.txt && airflow db init && airflow users create --username ${AIRFLOW_USERNAME} --password ${AIRFLOW_PASSWORD} --firstname ${AIRFLOW_FIRSTNAME} --lastname ${AIRFLOW_LASTNAME} --role Admin --email ${AIRFLOW_EMAIL}); airflow webserver & airflow scheduler'
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    networks: 
+      - blocktrade-track
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeperData:/var/lib/zookeeper/data
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    networks: 
+      - blocktrade-track
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    volumes:
+      - kafkaData:/var/lib/kafka
+
+  control-center:
+    image: confluentinc/cp-enterprise-control-center:6.0.1
+    depends_on: 
+      - kafka
+    ports:
+      - "9021:9021"
+    networks: 
+      - blocktrade-track
+    environment:
+      CONTROL_CENTER_BOOTSTRAP_SERVERS: "kafka:29092"
+      CONFLUENT_METRICS_TOPIC_REPLICATION: 1
+      CONTROL_CENTER_REPLICATION_FACTOR: 1
+      CONTROL_CENTER_COMMAND_TOPIC_REPLICATION: 1
+      CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_REPLICATION: 1
+      CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS: 1
+      CONTROL_CENTER_INTERNAL_TOPICS_REPLICATION: 1
+      CONTROL_CENTER_STREAMS_NUM_STREAM_THREADS: 1
+      CONTROL_CENTER_STREAMS_CACHE_MAX_BYTES_BUFFERING: 104857600
+
+  spark-master:
+    image: bitnami/spark:3.5.0
+    environment:
+      - SPARK_MODE=master
+      - SPARK_UI_PORT=8080
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - USER=root
+    ports:
+      - "9090:8080"  # Spark Web UI
+      - "7077:7077"  # Spark Master Port
+    volumes:
+      - ./backend/checkpointLocation:/opt/bitnami/spark/checkpointLocation
+    networks: 
+      - blocktrade-track
+
+  spark-worker:
+    image: bitnami/spark:3.5.0
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER=spark://spark-master:7077
+      - SPARK_WORKER_CORES=2
+      - SPARK_WORKER_MEMORY=2g
+      - USER=root
+    depends_on:
+      spark-master:
+        condition: service_started
+    ports:
+      - "8081:8081"  # Spark Worker UI
+    volumes:
+      - ./backend/checkpointLocation:/opt/bitnami/spark/checkpointLocation
+    networks: 
+      - blocktrade-track
+
+  clickhouse:
+    image: clickhouse/clickhouse-server
+    ports:
+      - '8124:8123'
+    networks:
+      - blocktrade-track
+
+volumes:
+  dags:
+  kafkaData:
+  zookeeperData: 
+  checkpointLocation:
+networks:
+  blocktrade-track:
+    driver: bridge
