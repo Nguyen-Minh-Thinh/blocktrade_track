@@ -7,7 +7,14 @@ module.exports = {
     flowbite.content(),
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        default: "#FF0000",
+        second: "#00FF00",
+        third: "#0000FF", 
+        buttonColor: "#261FB3",
+      },
+    },
   },
   plugins: [
     flowbite.plugin(),
