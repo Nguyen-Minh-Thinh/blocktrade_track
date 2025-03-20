@@ -7,7 +7,7 @@ const FooterComponent = () => {
       <div className="w-full">
         <div className="grid w-full justify-between sm:flex sm:justify-between md:flex md:grid-cols-1">
           <div className='flex relative self-center whitespace-nowrap text-4xl font-semibold text-white'>
-              Block Trade
+              Blocktrade
                 <div className='flex items-center justify-center absolute -right-8 top-0 font-bold border-2 border-white rounded-full w-6 h-6 text-xs '>
                     T
                 </div>

@@ -10,7 +10,7 @@ const SignUp = ({openSU, setOpenSU, swapModels}) => {
              <h3 className="text-xl font-medium text-gray-900 dark:text-white">Sign up</h3>
              <div>
                <div className="mb-2 block">
-                 <Label htmlFor="user" value="Your UserName" />
+                 <Label htmlFor="user" value="Your username" />
                </div>
                <TextInput
                  id="UserName"
@@ -32,23 +32,23 @@ const SignUp = ({openSU, setOpenSU, swapModels}) => {
              </div>
              <div>
                <div className="mb-2 block">
-                 <Label htmlFor="password" value="Your password" />
+                 <Label htmlFor="password" value="Password" />
                </div>
-               <TextInput id="password" type="password" required />
+               <TextInput id="password" placeholder="Enter your password" type="password" required />
              </div>
-             <div className="flex justify-between">
-               <div className="flex items-center gap-2">
-                 <Checkbox id="remember" />
-                 <Label htmlFor="remember">Remember me</Label>
+             <div>
+               <div className="mb-2 block">
+                 <Label htmlFor="password_cf" value="Password confirmation" />
                </div>
+               <TextInput id="password_cf" placeholder="Confirm your password" type="password" required />
              </div>
              <div className="w-full">
-               <Button>Log in to your account</Button>
+               <Button>Sign up</Button>
              </div>
              <div className="flex justify-between text-sm font-medium text-gray-500 dark:text-gray-300">
-               Not registered?&nbsp;
+               Already have an account?&nbsp;
                <p onClick={swapModels} className="text-cyan-700 hover:underline dark:text-cyan-500 cursor-pointer">
-                 Create account
+                 Sign in
                </p>
              </div>
            </div>
