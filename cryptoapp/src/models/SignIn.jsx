@@ -1,10 +1,11 @@
 import React from 'react'
 
 import { Button, Checkbox, Label, Modal, TextInput } from "flowbite-react";
-const SignIn = () => {
+import { Link } from "react-router-dom";
+const SignIn = ({openSI,setOpenSI, swapModels }) => {
   return (
     <>
-    <Modal initialFocus  popup>
+    <Modal show={openSI} onClose={() => setOpenSI(false)} initialFocus  popup>
       <Modal.Header />
       <Modal.Body>
         <div className="space-y-6">
@@ -30,18 +31,18 @@ const SignIn = () => {
               <Checkbox id="remember" />
               <Label htmlFor="remember">Remember me</Label>
             </div>
-            <a href="#" className="text-sm text-cyan-700 hover:underline dark:text-cyan-500">
+            <Link to="/" className="text-sm text-cyan-700 hover:underline dark:text-cyan-500">
               Lost Password?
-            </a>
+            </Link>
           </div>
           <div className="w-full">
             <Button>Log in to your account</Button>
           </div>
           <div className="flex justify-between text-sm font-medium text-gray-500 dark:text-gray-300">
             Not registered?&nbsp;
-            <a href="#" className="text-cyan-700 hover:underline dark:text-cyan-500">
+            <p onClick={swapModels}  className="text-cyan-700 hover:underline dark:text-cyan-500 cursor-pointer" >
               Create account
-            </a>
+            </p>
           </div>
         </div>
       </Modal.Body>
