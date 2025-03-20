@@ -17,14 +17,14 @@ const HeaderComponent = () => {
             <Button>Đăng ký</Button>
             <Navbar.Toggle />
         </div>
-        <Navbar.Collapse className='text-white'>
-            <Navbar.Link href="#" active>
+        <Navbar.Collapse className=''>
+            <Navbar.Link className='text-white' href="#">
                 Home
             </Navbar.Link>
-            <Navbar.Link href="#">About</Navbar.Link>
-            <Navbar.Link href="#">Services</Navbar.Link>
-            <Navbar.Link href="#">Pricing</Navbar.Link>
-            <Navbar.Link href="#">Contact</Navbar.Link>
+            <Navbar.Link className='text-white' href="#">About</Navbar.Link>
+            <Navbar.Link className='text-white' href="#">Services</Navbar.Link>
+            <Navbar.Link className='text-white' href="#">Pricing</Navbar.Link>
+            <Navbar.Link className='text-white' href="#">Contact</Navbar.Link>
         </Navbar.Collapse>
     </Navbar>
   )
