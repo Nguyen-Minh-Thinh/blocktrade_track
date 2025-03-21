@@ -7,7 +7,9 @@ function App() {
     <div className="App">
       <Routes>
         <Route path="/" element={<DefaulPage />} >
-          <Route path="/homepage" element={<HomePage />} />
+          <Route path="" element={<HomePage />} />
+          
+
         </Route>
       </Routes>
     </div>

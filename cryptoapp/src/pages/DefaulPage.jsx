@@ -5,9 +5,11 @@ import { Outlet } from 'react-router-dom'
 
 const DefaulPage = () => {
   return (
-    <div>
+    <div >
         <HeaderComponent />
-        <Outlet />
+        <div className='min-h-[100vh]'>
+          <Outlet/>
+        </div>
         <FooterComponent />
     </div>
   )

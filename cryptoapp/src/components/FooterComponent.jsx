@@ -6,11 +6,8 @@ const FooterComponent = () => {
     <Footer  className='bg-transparent container m-auto'>
       <div className="w-full">
         <div className="grid w-full justify-between sm:flex sm:justify-between md:flex md:grid-cols-1">
-          <div className='flex relative self-center whitespace-nowrap text-4xl font-semibold text-white'>
-              Blocktrade
-                <div className='flex items-center justify-center absolute -right-8 top-0 font-bold border-2 border-white rounded-full w-6 h-6 text-xs '>
-                    T
-                </div>
+          <div>
+            <img src="/logo.png" alt="" className='w-32' />
           </div>
           <div className="grid grid-cols-2 gap-8 sm:mt-4 sm:grid-cols-3 sm:gap-6">
             <div>
