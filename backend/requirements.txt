@@ -1,3 +1,6 @@
 kafka-python==2.0.2
 python-dotenv==1.0.1
 clickhouse-connect==0.8.14
+websockets==15.0.1
+requests==2.32.3
+python-binance==1.0.28
