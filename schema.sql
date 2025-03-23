@@ -15,9 +15,7 @@ CREATE TABLE IF NOT EXISTS blocktrade_track.coins (
     coin_id UUID DEFAULT generateUUIDv4(),
     name String,
     symbol String,
-    image_url String,
-    total_supply Decimal128(10), 
-    circulating_supply Decimal128(10)
+    image_url String
 ) ENGINE = MergeTree()
 ORDER BY coin_id;
 
@@ -36,6 +34,7 @@ CREATE TABLE IF NOT EXISTS blocktrade_track.market_data (
     market_cap Decimal128(10),
     volume_24h Decimal128(10),
     price_change_24h Decimal32(3),
+    circulating_supply Decimal128(10),
     updated_date DateTime DEFAULT now()
 ) ENGINE = MergeTree()
 ORDER BY market_id;
