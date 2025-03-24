@@ -4,3 +4,7 @@ clickhouse-connect==0.8.14
 websockets==15.0.1
 requests==2.32.3
 python-binance==1.0.28
+Flask==3.1.0
+clickhouse-driver==0.2.9
+bcrypt==4.3.0
+flask-cors==5.0.1

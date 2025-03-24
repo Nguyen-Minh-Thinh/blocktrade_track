@@ -54,9 +54,9 @@ const HomePage = () => {
   return (
     <div className='mx-14 mb-36'>
       <SignUp openSU={started} setOpenSU={setStarted}></SignUp>
-      <div >
-        <div className='relative'>  
-          <div className='absolute w-full -z-10'>
+      <div className='flex flex-col items-center'>
+        <div className='relative max-w-[1700px]  w-full'>  
+          <div className='absolute w-full -z-10 left-'>
             <img src="/bg.webp" alt="logo" className='w-full opacity-15 ' />
           </div>
         </div>
