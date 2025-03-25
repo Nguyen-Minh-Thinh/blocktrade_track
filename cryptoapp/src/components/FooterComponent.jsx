@@ -3,7 +3,7 @@ import React from 'react'
 import { BsDribbble, BsFacebook, BsGithub, BsInstagram, BsTwitter } from "react-icons/bs";
 const FooterComponent = () => {
   return (
-    <Footer bgDark className='rounded-none bg-transparent'>
+    <Footer bgDark className='container mx-auto rounded-none bg-transparent'>
       <div className="w-full border border-gray-800">
         <div className="grid w-full items-center grid-cols-3 gap-8 px-6 py-8 md:grid-cols-5">
           <div className=' flex items-center'>

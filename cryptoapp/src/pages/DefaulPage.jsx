@@ -7,7 +7,7 @@ const DefaulPage = () => {
   return (
     <div >
         <HeaderComponent />
-        <div className='min-h-[100vh]'>
+        <div className='min-h-[100vh] mt-[68px]'>
           <Outlet/>
         </div>
         <FooterComponent />

@@ -1,10 +1,14 @@
 import { Navbar, Dropdown } from 'flowbite-react';
 import React, { useState, useEffect } from 'react';
+import { FaUserCircle, FaUser, FaChevronCircleDown } from "react-icons/fa";
+import { TbLogout } from "react-icons/tb";
+import { IoMdSettings } from "react-icons/io";
 import SignIn from '../models/SignIn';
 import SignUp from '../models/SignUp';
 import ButtonComponent from './ButtonComponent';
 import Search from '../models/Search';
 import { checkAuth } from '../api/auth';
+import { Link } from 'react-router-dom';
 
 const HeaderComponent = () => {
   const [openSignIn, setOpenSignIn] = useState(false);
@@ -15,24 +19,35 @@ const HeaderComponent = () => {
     setOpenSignIn(openSignUp);
     setOpenSignUp(openSignIn);
   };
-
-  useEffect(() => {
-    const verifyAuth = async () => {
-      const userData = await checkAuth();
+  const verifyAuth = async () => {
+    const userData = await checkAuth();
+    if(userData){
+      console.log('userData', userData)
       setUser(userData);
-    };
-    verifyAuth();
+      localStorage.setItem("userLogin",JSON.stringify(userData))
+    }
+  };
+  useEffect(() => {
+    const userLogin = localStorage.getItem("userLogin")
+    if(userLogin){
+      console.log('first')
+      setUser(JSON.parse(userLogin));
+    }else{
+      console.log('me')
+      verifyAuth();
+    }
   }, []);
 
   const handleLogout = () => {
     document.cookie = 'user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
     setUser(null);
+    localStorage.removeItem("userLogin")
   };
 
   return (
     <Navbar
       rounded
-      className="bg-gray-950  py-1 fixed top-0 left-0 w-full z-50 shadow-md"
+      className="bg-gray-950  py-1 fixed top-0 left-0 w-full z-50 shadow-md "
     >
       <SignIn
         openSI={openSignIn}
@@ -45,79 +60,73 @@ const HeaderComponent = () => {
         setOpenSU={setOpenSignUp}
         swapModels={swapModels}
       />
-      <Navbar.Brand href="/homepage">
+      <Navbar.Brand as={Link} to="/">
         <div>
           <img src="/logo.png" alt="" className="w-28" />
         </div>
       </Navbar.Brand>
-      <div className="flex md:order-2 items-center space-x-4">
+      <div className="flex md:order-2 items-center ">
         <Search />
         {user ? (
-          <Dropdown
+          <Dropdown 
+          theme={{
+            floating:{
+              item:{
+                base:"flex w-full cursor-pointer items-center justify-start px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 focus:bg-gray-800 focus:outline-none dark:text-gray-200 dark:hover:bg-gray-600 dark:hover:text-white dark:focus:bg-gray-600 dark:focus:text-white"
+              }
+            },
+            content:" focus:outline-none"
+          }}
             label={
-              <div className="group flex items-center space-x-2 bg-gray-800 rounded-full p-1 hover:bg-gray-700 transition duration-300 cursor-pointer">
-                <img
-                  src={user.image_url || 'https://cdn.kona-blue.com/upload/kona-blue_com/post/images/2024/09/19/465/avatar-trang-1.jpg'}
+              <div className=" relative space-x-2 bg-transparent rounded-full p-1 hover:opacity-90 transition cursor-pointer">
+                {user.image_url ? 
+                (<img
+                  src={user.image_url}
                   alt="User Avatar"
-                  className="w-10 h-10 rounded-full border-2 border-gray-600 object-cover transition duration-200 group-hover:border-gray-400"
-                />
-                <span className="text-white font-medium text-sm pr-2 transition duration-200 group-hover:text-gray-200">
-                  {user.username}
-                </span>
+                  className="w-9 h-9  rounded-full object-cover transition duration-200 group-hover:border-gray-400"
+                />)
+                :(
+                  <FaUserCircle className="w-9 h-9  text-gray-300 rounded-full bg-transparent object-cover transition duration-200 group-hover:border-gray-400"/>
+                )}
+                <FaChevronCircleDown className='absolute bottom-1 text-gray-700 p-0 m-0 border-[3px] border-gray-950 rounded-full bg-gray-300 right-0 text-[16px]'/>
+                
               </div>
             }
+            
             inline
             arrowIcon={false}
-            placement="bottom-end"
-            className="bg-gray-800 border-gray-700 rounded-lg shadow-lg p-0 mt-2 animate-fadeIn"
+            className="bg-gray-900 z-50 min-w-[132px] border border-gray-800 rounded shadow-lg animate-fadeIn"
+
           >
-            <Dropdown.Item
+            <Dropdown.Item 
               href="/user-info"
-              className="text-white hover:bg-gray-700 px-4 py-2 rounded-t-lg transition duration-200 flex items-center"
+              className="  hover:text-gray-400  transition flex text-start items-center gap-x-3 py-[6px] px-3 "
             >
-              <svg
-                className="w-5 h-5 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                />
-              </svg>
-              User Info
+              <FaUser className='text-base w-4 p-0 m-0'/>
+              <p className="w-[80px] truncate">
+                {user.username}
+              </p>
             </Dropdown.Item>
-            <Dropdown.Item
-              onClick={handleLogout}
-              className="text-white hover:bg-gray-700 px-4 py-2 rounded-b-lg transition duration-200 flex items-center"
+            <Dropdown.Item 
+              className="  hover:text-gray-400  transition flex text-start items-center gap-x-3 py-[6px] px-3"
             >
-              <svg
-                className="w-5 h-5 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                />
-              </svg>
-              Logout
+              <IoMdSettings className='text-base w-4 p-0 m-0'/>
+              <p>Settings</p>
+            </Dropdown.Item>
+            <Dropdown.Item 
+              onClick={handleLogout}
+              className="  hover:text-gray-400  transition flex text-start items-center gap-x-3 py-[6px] px-3"
+            >
+              <TbLogout className='text-[18px] w-4 p-0 m-0'/>
+              <p>Logout</p>
             </Dropdown.Item>
           </Dropdown>
         ) : (
           <>
-            <div onClick={() => setOpenSignIn(true)} className="w-[92px]">
+            <div onClick={() => setOpenSignIn(true)} className="w-[92px] mx-1">
               <ButtonComponent contentButton="Sign in" />
             </div>
-            <div onClick={() => setOpenSignUp(true)} className="w-[92px]">
+            <div onClick={() => setOpenSignUp(true)} className="w-[92px] mx-1">
               <ButtonComponent contentButton="Sign up" />
             </div>
           </>

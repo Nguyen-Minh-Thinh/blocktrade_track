@@ -53,6 +53,7 @@ const HomePage = () => {
   }, []);
   return (
     <div className='mx-14 mb-36'>
+      
       <SignUp openSU={started} setOpenSU={setStarted}></SignUp>
       <div className='flex flex-col items-center'>
         <div className='relative max-w-[1700px]  w-full'>  
@@ -146,8 +147,8 @@ const HomePage = () => {
                       <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={data}>
                           
-                          <XAxis hide dataKey="date" />
-                          <YAxis hide/>
+                          <XAxis hide  dataKey="date" />
+                          <YAxis hide dataKey="uv"/>
                           <Tooltip />
                           <Area
                             type="monotone"
@@ -202,35 +203,27 @@ const HomePage = () => {
             <div className='font-medium'>
               <div className='p-5 my-3 bg-gray-900 rounded-xl cursor-pointer'>
                 <p className=''>Liquidity in Crypto Markets: What It Is and Why It Matters</p>
-                <p >
-                  <List className='text-blue-600 font-medium'>
-                      <List.Item>Beginner</List.Item>
-                  </List>
-                </p>
+                <List className='text-blue-600 font-medium'>
+                    <List.Item>Beginner</List.Item>
+                </List>
               </div>
               <div className='p-5 my-3 bg-gray-900 rounded-xl cursor-pointer'>
                 <p className=''>What Is Render Network and How to Buy the RNDR Crypto Token</p>
-                <p>
-                  <List className='text-blue-600 font-medium'>
-                      <List.Item>Beginner</List.Item>
-                  </List>
-                </p>
+                <List className='text-blue-600 font-medium'>
+                    <List.Item>Beginner</List.Item>
+                </List>
               </div>
               <div className='p-5 my-3 bg-gray-900 rounded-xl cursor-pointer'>
                 <p className=''>What Is Render Network and How to Buy the RNDR Crypto Token</p>
-                <p>
-                  <List className='text-blue-600 font-medium'>
-                      <List.Item>Beginner</List.Item>
-                  </List>
-                </p>
+                <List className='text-blue-600 font-medium'>
+                    <List.Item>Beginner</List.Item>
+                </List>
               </div>
               <div className='p-5 my-3 bg-gray-900 rounded-xl cursor-pointer'>
                 <p className=''>What Is Render Network and How to Buy the RNDR Crypto Token</p>
-                <p>
-                  <List className='text-blue-600 font-medium'>
-                      <List.Item>Beginner</List.Item>
-                  </List>
-                </p>
+                <List className='text-blue-600 font-medium'>
+                    <List.Item>Beginner</List.Item>
+                </List>
               </div>
             </div>
           </div>
