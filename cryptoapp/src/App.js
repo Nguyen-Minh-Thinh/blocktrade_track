@@ -17,9 +17,9 @@ function App() {
           <Route path="newdetail" element={<NewDetailPage />} />
           <Route path="coindetal" element={<CoinDetailPage/>} />
           <Route path="newpage" element={<NewPage />} />
-          <Route path="market" element={<MarketPagea />} />
+          <Route path="market" element={<MarketPage />} />
           <Route path="user-info" element={<UserInfoPage />} />
-          <Route path="vitualexchange" element={<VitualexchangePageP />} />
+          <Route path="vitualexchange" element={<VitualexchangePage />} />
 
         </Route>
       </Routes>
