@@ -54,27 +54,8 @@ const HomePage = () => {
   return (
     <div className='mx-14 mb-36'>
       
-      <SignUp openSU={started} setOpenSU={setStarted}></SignUp>
-      <div className='flex flex-col items-center'>
-        <div className='relative max-w-[1700px]  w-full'>  
-          <div className='absolute w-full -z-10 left-'>
-            <img src="/bg.webp" alt="logo" className='w-full opacity-15 ' />
-          </div>
-        </div>
-        <div className='text-7xl text-white font-bold text-center pt-40 '>
-          <h1>Secure & Intuitive</h1>
-          <h1>Crypto Trading</h1>
-        </div>
-        <div className='text-slate-500 font-medium text-center text-base pt-6'>
-          <p>Empower your future with cutting-edge crypto smart contracts.</p>
-          <p>Start developing your smart contract today with Blocktrade Track.</p>
-        </div>
-        <div className='flex justify-center my-6'>
-          <div onClick={()=>{setStarted(true)}} className='w-32 '>
-            <ButtonComponent contentButton={"Get Started →"}></ButtonComponent>
-          </div>
-        </div>
-      </div>
+      
+      
       <div className=' mt-[250px]'>
         <h1 className='text-white text-4xl text-center font-medium my-6'>Crypto Market Trade And Metrics</h1>
         <div className='flex justify-center gap-3 '>
@@ -168,67 +149,7 @@ const HomePage = () => {
           </table>
         </div>
       </div>
-      <div >
-        <h1 className='text-4xl text-white font-medium text-center mt-40 mb-6'>News And Learn</h1>
-        <div className='flex justify-center text-white gap-x-16'>
-          <div className='w-[500px]'>
-            <div className='flex justify-between my-6 font-medium '>
-              <h1 className='text-3xl'>News</h1>
-              <p className='text-blue-600 cursor-pointer'>View All</p>
-            </div>
-            <div className='font-medium'>
-              <div className='p-5 my-3 bg-gray-900 rounded-xl cursor-pointer'>
-                <p className=' truncate '>Crypto.com Surpasses 100 Million Global Users</p>
-                <p className=' truncate text-gray-500'>New Major Milestone Reached Following Latest Marketing Campaign</p>
-              </div>
-              <div className='p-5 my-3 bg-gray-900 rounded-xl cursor-pointer'>
-                <p className=' truncate '>Crypto.com’s Dubai Entity Receives Full Operational Approval</p>
-                <p className=' truncate text-gray-500'>Crypto.com Exchange for Institutional Investors Launches as First Operational Milestone</p>
-              </div>
-              <div className='p-5 my-3 bg-gray-900 rounded-xl cursor-pointer'>
-                <p className=' truncate '>Crypto.com’s Dubai Entity Receives Full Operational Approval</p>
-                <p className=' truncate text-gray-500'>Crypto.com Exchange for Institutional Investors Launches as First Operational Milestone</p>
-              </div>
-              <div className='p-5 my-3 bg-gray-900 rounded-xl cursor-pointer'>
-                <p className=' truncate '>Crypto.com’s Dubai Entity Receives Full Operational Approval</p>
-                <p className=' truncate text-gray-500'>Crypto.com Exchange for Institutional Investors Launches as First Operational Milestone</p>
-              </div>
-            </div>
-          </div>
-          <div className='w-[500px]'>
-            <div className='flex justify-between my-6 font-medium'>
-              <h1 className='text-3xl '>Learn</h1>
-              <p className='text-blue-600 cursor-pointer'>View All</p>
-            </div>
-            <div className='font-medium'>
-              <div className='p-5 my-3 bg-gray-900 rounded-xl cursor-pointer'>
-                <p className=''>Liquidity in Crypto Markets: What It Is and Why It Matters</p>
-                <List className='text-blue-600 font-medium'>
-                    <List.Item>Beginner</List.Item>
-                </List>
-              </div>
-              <div className='p-5 my-3 bg-gray-900 rounded-xl cursor-pointer'>
-                <p className=''>What Is Render Network and How to Buy the RNDR Crypto Token</p>
-                <List className='text-blue-600 font-medium'>
-                    <List.Item>Beginner</List.Item>
-                </List>
-              </div>
-              <div className='p-5 my-3 bg-gray-900 rounded-xl cursor-pointer'>
-                <p className=''>What Is Render Network and How to Buy the RNDR Crypto Token</p>
-                <List className='text-blue-600 font-medium'>
-                    <List.Item>Beginner</List.Item>
-                </List>
-              </div>
-              <div className='p-5 my-3 bg-gray-900 rounded-xl cursor-pointer'>
-                <p className=''>What Is Render Network and How to Buy the RNDR Crypto Token</p>
-                <List className='text-blue-600 font-medium'>
-                    <List.Item>Beginner</List.Item>
-                </List>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      
     </div>
   )
 }
