@@ -1,0 +1,267 @@
+[
+    {
+        "id": "sonic-3",
+        "symbol": "s",
+        "name": "Sonic (prev. FTM)"
+    },
+    {
+        "id": "polkadot",
+        "symbol": "dot",
+        "name": "Polkadot"
+    },
+    {
+        "id": "aptos",
+        "symbol": "apt",
+        "name": "Aptos"
+    },
+    {
+        "id": "usd-coin",
+        "symbol": "usdc",
+        "name": "USDC"
+    },
+    {
+        "id": "ripple",
+        "symbol": "xrp",
+        "name": "XRP"
+    },
+    {
+        "id": "bitcoin-cash",
+        "symbol": "bch",
+        "name": "Bitcoin Cash"
+    },
+    {
+        "id": "hedera-hashgraph",
+        "symbol": "hbar",
+        "name": "Hedera"
+    },
+    {
+        "id": "vechain",
+        "symbol": "vet",
+        "name": "VeChain"
+    },
+    {
+        "id": "bittensor",
+        "symbol": "tao",
+        "name": "Bittensor"
+    },
+    {
+        "id": "jupiter-exchange-solana",
+        "symbol": "jup",
+        "name": "Jupiter"
+    },
+    {
+        "id": "the-graph",
+        "symbol": "grt",
+        "name": "The Graph"
+    },
+    {
+        "id": "ethereum",
+        "symbol": "eth",
+        "name": "Ethereum"
+    },
+    {
+        "id": "internet-computer",
+        "symbol": "icp",
+        "name": "Internet Computer"
+    },
+    {
+        "id": "movement",
+        "symbol": "move",
+        "name": "Movement"
+    },
+    {
+        "id": "the-open-network",
+        "symbol": "ton",
+        "name": "Toncoin"
+    },
+    {
+        "id": "near",
+        "symbol": "near",
+        "name": "NEAR Protocol"
+    },
+    {
+        "id": "official-trump",
+        "symbol": "trump",
+        "name": "Official Trump"
+    },
+    {
+        "id": "dogecoin",
+        "symbol": "doge",
+        "name": "Dogecoin"
+    },
+    {
+        "id": "shiba-inu",
+        "symbol": "shib",
+        "name": "Shiba Inu"
+    },
+    {
+        "id": "maker",
+        "symbol": "mkr",
+        "name": "Maker"
+    },
+    {
+        "id": "worldcoin-wld",
+        "symbol": "wld",
+        "name": "Worldcoin"
+    },
+    {
+        "id": "avalanche-2",
+        "symbol": "avax",
+        "name": "Avalanche"
+    },
+    {
+        "id": "dai",
+        "symbol": "dai",
+        "name": "Dai"
+    },
+    {
+        "id": "uniswap",
+        "symbol": "uni",
+        "name": "Uniswap"
+    },
+    {
+        "id": "algorand",
+        "symbol": "algo",
+        "name": "Algorand"
+    },
+    {
+        "id": "stellar",
+        "symbol": "xlm",
+        "name": "Stellar"
+    },
+    {
+        "id": "sui",
+        "symbol": "sui",
+        "name": "Sui"
+    },
+    {
+        "id": "injective-protocol",
+        "symbol": "inj",
+        "name": "Injective"
+    },
+    {
+        "id": "sei-network",
+        "symbol": "sei",
+        "name": "Sei"
+    },
+    {
+        "id": "celestia",
+        "symbol": "tia",
+        "name": "Celestia"
+    },
+    {
+        "id": "cardano",
+        "symbol": "ada",
+        "name": "Cardano"
+    },
+    {
+        "id": "solana",
+        "symbol": "sol",
+        "name": "Solana"
+    },
+    {
+        "id": "tron",
+        "symbol": "trx",
+        "name": "TRON"
+    },
+    {
+        "id": "chainlink",
+        "symbol": "link",
+        "name": "Chainlink"
+    },
+    {
+        "id": "binancecoin",
+        "symbol": "bnb",
+        "name": "BNB"
+    },
+    {
+        "id": "blockstack",
+        "symbol": "stx",
+        "name": "Stacks"
+    },
+    {
+        "id": "bonk",
+        "symbol": "bonk",
+        "name": "Bonk"
+    },
+    {
+        "id": "dexe",
+        "symbol": "dexe",
+        "name": "DeXe"
+    },
+    {
+        "id": "aave",
+        "symbol": "aave",
+        "name": "Aave"
+    },
+    {
+        "id": "ethereum-classic",
+        "symbol": "etc",
+        "name": "Ethereum Classic"
+    },
+    {
+        "id": "bitcoin",
+        "symbol": "btc",
+        "name": "Bitcoin"
+    },
+    {
+        "id": "fetch-ai",
+        "symbol": "fet",
+        "name": "Artificial Superintelligence Alliance"
+    },
+    {
+        "id": "pepe",
+        "symbol": "pepe",
+        "name": "Pepe"
+    },
+    {
+        "id": "optimism",
+        "symbol": "op",
+        "name": "Optimism"
+    },
+    {
+        "id": "immutable-x",
+        "symbol": "imx",
+        "name": "Immutable"
+    },
+    {
+        "id": "arbitrum",
+        "symbol": "arb",
+        "name": "Arbitrum"
+    },
+    {
+        "id": "filecoin",
+        "symbol": "fil",
+        "name": "Filecoin"
+    },
+    {
+        "id": "litecoin",
+        "symbol": "ltc",
+        "name": "Litecoin"
+    },
+    {
+        "id": "render-token",
+        "symbol": "render",
+        "name": "Render"
+    },
+    {
+        "id": "monero",
+        "symbol": "xmr",
+        "name": "Monero"
+    },
+    {
+        "id": "mantra-dao",
+        "symbol": "om",
+        "name": "MANTRA"
+    },
+    {
+        "id": "ethena",
+        "symbol": "ena",
+        "name": "Ethena"
+    },
+    {
+        "id": "first-digital-usd",
+        "symbol": "fdusd",
+        "name": "First Digital USD"
+    }
+]
