@@ -13,6 +13,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
+import { Link } from 'react-router-dom';
 const HomePage = () => {
   const [started,setStarted] = useState(false)
   const [listTabs2, setListTabs2] = useState("popular")
@@ -53,7 +54,7 @@ const HomePage = () => {
   }, []);
   return (
     <div className='mx-14 mb-36'>
-      
+
       <SignUp openSU={started} setOpenSU={setStarted}></SignUp>
       <div className='flex flex-col items-center'>
         <div className='relative max-w-[1700px]  w-full'>  
@@ -167,6 +168,9 @@ const HomePage = () => {
             </tbody>
           </table>
         </div>
+        <div  className=' flex justify-end my-2 py-1 text-blue-900 font-medium'>
+          <p className='w-fit hover:text-blue-500 cursor-pointer'>View other Crypto</p>
+        </div>
       </div>
       <div >
         <h1 className='text-4xl text-white font-medium text-center mt-40 mb-6'>News And Learn</h1>
@@ -174,7 +178,7 @@ const HomePage = () => {
           <div className='w-[500px]'>
             <div className='flex justify-between my-6 font-medium '>
               <h1 className='text-3xl'>News</h1>
-              <p className='text-blue-600 cursor-pointer'>View All</p>
+              <Link to={"newpage"} className='text-blue-600 cursor-pointer'>View All</Link>
             </div>
             <div className='font-medium'>
               <div className='p-5 my-3 bg-gray-900 rounded-xl cursor-pointer'>

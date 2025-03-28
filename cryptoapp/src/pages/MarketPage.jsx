@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { TiStarOutline } from "react-icons/ti";
 import { FaStar } from "react-icons/fa";
-import ButtonComponent from '../components/ButtonComponent'
-import SignUp from '../models/SignUp'
-import { List } from 'flowbite-react';
 import axios from 'axios';
 import {
   AreaChart,
@@ -14,7 +11,6 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 const HomePage = () => {
-  const [started,setStarted] = useState(false)
   const [listTabs2, setListTabs2] = useState("popular")
   const [data, setData] = useState([]);
   const [favorites, setFavorites] = useState(false)

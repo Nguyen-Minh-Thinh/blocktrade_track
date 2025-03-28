@@ -1,20 +1,20 @@
 import { Navbar, Dropdown } from 'flowbite-react';
 import React, { useState, useEffect } from 'react';
 import { FaUserCircle, FaUser, FaChevronCircleDown } from "react-icons/fa";
-import { TbLogout } from "react-icons/tb";
-import { IoMdSettings } from "react-icons/io";
+import { TbLogout} from "react-icons/tb";
+import { MdWbSunny } from "react-icons/md";
+import { IoMoon } from "react-icons/io5";
 import SignIn from '../models/SignIn';
 import SignUp from '../models/SignUp';
 import ButtonComponent from './ButtonComponent';
 import Search from '../models/Search';
 import { checkAuth } from '../api/auth';
 import { Link } from 'react-router-dom';
-
+import Spot from '../models/Spot';
 const HeaderComponent = () => {
   const [openSignIn, setOpenSignIn] = useState(false);
   const [openSignUp, setOpenSignUp] = useState(false);
   const [user, setUser] = useState(null);
-
   const swapModels = () => {
     setOpenSignIn(openSignUp);
     setOpenSignUp(openSignIn);
@@ -59,6 +59,7 @@ const HeaderComponent = () => {
         openSU={openSignUp}
         setOpenSU={setOpenSignUp}
         swapModels={swapModels}
+
       />
       <Navbar.Brand as={Link} to="/">
         <div>
@@ -67,6 +68,7 @@ const HeaderComponent = () => {
       </Navbar.Brand>
       <div className="flex md:order-2 items-center ">
         <Search />
+        <Spot/>
         {user ? (
           <Dropdown 
           theme={{
@@ -88,7 +90,7 @@ const HeaderComponent = () => {
                 :(
                   <FaUserCircle className="w-9 h-9  text-gray-300 rounded-full bg-transparent object-cover transition duration-200 group-hover:border-gray-400"/>
                 )}
-                <FaChevronCircleDown className='absolute bottom-1 text-gray-700 p-0 m-0 border-[3px] border-gray-950 rounded-full bg-gray-300 right-0 text-[16px]'/>
+                <FaChevronCircleDown className='absolute bottom-1 text-gray-900 p-0 m-0 border-[3px] border-gray-950 rounded-full bg-gray-300 right-0 text-[16px]'/>
                 
               </div>
             }
@@ -110,8 +112,9 @@ const HeaderComponent = () => {
             <Dropdown.Item 
               className="  hover:text-gray-400  transition flex text-start items-center gap-x-3 py-[6px] px-3"
             >
-              <IoMdSettings className='text-base w-4 p-0 m-0'/>
-              <p>Settings</p>
+              <MdWbSunny className='text-base w-4 p-0 m-0 hidden'/>
+              <IoMoon className='text-base w-4 p-0 m-0'/>
+              <p>Dark</p>
             </Dropdown.Item>
             <Dropdown.Item 
               onClick={handleLogout}

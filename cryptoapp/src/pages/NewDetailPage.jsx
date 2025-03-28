@@ -14,7 +14,7 @@ const NewDetailPage = () => {
                     <Link to="">COMPANY NEWS</Link>
                 </div>
                 <section>
-                    <h1 className='my-6 text-[56px] font-bold'>Crypto.com Receives an Authorization as a Crypto-Asset Service Provider Under the EU Markets in Crypto Assets Regulation (MiCA)</h1>
+                    <h1 className='my-6 text-6xl font-bold'>Crypto.com Receives an Authorization as a Crypto-Asset Service Provider Under the EU Markets in Crypto Assets Regulation (MiCA)</h1>
                     <p className='py-3'>What does this mean for Crypto.com users?</p>
                     <img src="https://contenthub-static.crypto.com/wp_media/2025/03/2400x1456-1.png" className='w-full object-fill py-12' alt="z" />
                     <div >
