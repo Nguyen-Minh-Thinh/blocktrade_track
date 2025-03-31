@@ -60,3 +60,11 @@ CREATE TABLE IF NOT EXISTS blocktrade_track.transactions (
     trans_date DateTime DEFAULT now()
 ) ENGINE = MergeTree()
 ORDER BY transaction_id;
+
+CREATE TABLE IF NOT EXISTS blocktrade_track.password_reset_tokens (
+    user_id UUID,
+    token String,           -- Mã xác nhận 6 chữ số
+    expires_at DateTime,    -- Thời gian hết hạn (3 phút sau khi tạo)
+    created_at DateTime DEFAULT now()
+) ENGINE = MergeTree()
+ORDER BY (user_id, created_at);
