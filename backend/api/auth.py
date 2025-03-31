@@ -21,6 +21,32 @@ def hash_password(password):
 def verify_password(password, hashed_password):
     return bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8'))
 
+# Helper function to check if email or username already exists (excluding the current user)
+def check_user_exists(username, exclude_user_id=None):
+    query = f"""
+    SELECT user_id FROM {DATABASE}.users 
+    WHERE (email = '{username}' OR username = '{username}')
+    """
+    if exclude_user_id:
+        query += f" AND user_id != '{exclude_user_id}'"
+    query += " FORMAT JSON"
+    url = f"{CLICKHOUSE_HOST}/?query={query}"
+    response = requests.get(url)
+    result = response.json()
+    return 'data' in result and result['data']
+
+# Helper function to validate user_id
+def validate_user(user_id):
+    query = f"""
+    SELECT * FROM {DATABASE}.users 
+    WHERE user_id = '{user_id}' 
+    FORMAT JSON
+    """
+    url = f"{CLICKHOUSE_HOST}/?query={query}"
+    response = requests.get(url)
+    result = response.json()
+    return result.get('data', [])
+
 # Register endpoint
 @auth_bp.route('/register', methods=['POST'])
 def register():
@@ -42,12 +68,7 @@ def register():
             return jsonify({'error': 'Passwords do not match'}), 400
 
         # Check if username or email already exists
-        query = f"SELECT user_id FROM {DATABASE}.users WHERE username = '{username}' OR email = '{email}' FORMAT JSON"
-        url = f"{CLICKHOUSE_HOST}/?query={query}"
-        response = requests.get(url)
-        result = response.json()
-
-        if 'data' in result and result['data']:
+        if check_user_exists(username):
             return jsonify({'error': 'Username or email already exists'}), 409
 
         # Hash the password
@@ -110,7 +131,6 @@ def login():
             response = requests.get(url)
             result = response.json()
 
-
         if 'data' not in result or not result['data']:
             return jsonify({'error': 'Invalid username or password'}), 401
 
@@ -128,7 +148,7 @@ def login():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# Check authentication endpoint (kiểm tra cookie thay vì session)
+# Check authentication endpoint
 @auth_bp.route('/me', methods=['GET'])
 def check_auth():
     try:
@@ -153,6 +173,68 @@ def check_auth():
             return jsonify(user_data), 200
         else:
             return jsonify(None), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Update user profile endpoint
+@auth_bp.route('/update', methods=['PUT'])
+def update_user():
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        name = data.get('name')
+        email = data.get('email')
+        image_url = data.get('image_url')
+        username = data.get('username')
+        password = data.get('password')
+
+        # Validate required fields
+        if not user_id:
+            return jsonify({'error': 'Missing user_id'}), 400
+
+        # Validate user_id
+        user_data = validate_user(user_id)
+        if not user_data:
+            return jsonify({'error': 'Invalid user_id'}), 404
+        user = user_data[0]
+
+        # Prepare fields to update
+        updates = []
+        if name:
+            updates.append(f"name = '{name}'")
+        if email:
+            updates.append(f"email = '{email}'")
+        if image_url is not None:  # Allow empty string for image_url
+            updates.append(f"image_url = '{image_url}'")
+        if username:
+            updates.append(f"username = '{username}'")
+        if password:
+            password_hash = hash_password(password)
+            updates.append(f"password_hash = '{password_hash}'")
+
+        # If no fields to update, return error
+        if not updates:
+            return jsonify({'error': 'No fields to update'}), 400
+
+        # Check for email or username conflicts
+        check_username = username if username else user['username']
+        if check_user_exists(check_username, exclude_user_id=user_id):
+            return jsonify({'error': 'Email or username already exists'}), 409
+
+        # Build and execute the UPDATE query
+        update_query = f"""
+        ALTER TABLE {DATABASE}.users 
+        UPDATE {', '.join(updates)}
+        WHERE user_id = '{user_id}'
+        """
+        update_url = f"{CLICKHOUSE_HOST}/?query={update_query}"
+        update_response = requests.post(update_url)
+
+        if update_response.status_code == 200:
+            return jsonify({'message': 'User profile updated successfully'}), 200
+        else:
+            return jsonify({'error': update_response.text}), 500
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
