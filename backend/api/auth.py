@@ -4,6 +4,10 @@ import bcrypt
 from flask_cors import CORS
 import uuid
 from datetime import datetime, timezone, timedelta
+import random
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 # Initialize the Blueprint for auth routes
 auth_bp = Blueprint('auth', __name__)
@@ -12,6 +16,10 @@ CORS(auth_bp, supports_credentials=True, origins="*")  # Enable CORS for the aut
 # ClickHouse Configuration
 CLICKHOUSE_HOST = "http://localhost:8124"
 DATABASE = "blocktrade_track"
+
+# Email Configuration (Gmail SMTP)
+EMAIL_ADDRESS = "dnthien29@gmail.com"  # Thay bằng email của bạn
+EMAIL_PASSWORD = "cjgh ldei fozg itie"    # Thay bằng App Password của Gmail (không phải mật khẩu thông thường)
 
 # Helper function to hash passwords
 def hash_password(password):
@@ -46,6 +54,102 @@ def validate_user(user_id):
     response = requests.get(url)
     result = response.json()
     return result.get('data', [])
+
+# Helper function to validate email
+def validate_user_by_email(email):
+    query = f"""
+    SELECT * FROM {DATABASE}.users 
+    WHERE email = '{email}' 
+    FORMAT JSON
+    """
+    url = f"{CLICKHOUSE_HOST}/?query={query}"
+    response = requests.get(url)
+    result = response.json()
+    return result.get('data', [])
+
+# Helper function to generate a 6-digit code
+def generate_reset_code():
+    return str(random.randint(100000, 999999))
+
+# Helper function to send email with reset code
+def send_reset_code_email(email, code):
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = EMAIL_ADDRESS
+        msg['To'] = email
+        msg['Subject'] = "🔐 Blocktrade - Reset Your Password"
+
+        # Email body in HTML format (Dark Mode, Styled like Blocktrade)
+        body = f"""
+        <html>
+        <head>
+            <style>
+                body {{
+                    font-family: Arial, sans-serif;
+                    background-color: #0d1117;
+                    color: #ffffff;
+                    padding: 20px;
+                    text-align: center;
+                }}
+                .container {{
+                    background-color: #161b22;
+                    padding: 30px;
+                    border-radius: 10px;
+                    box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.1);
+                    width: 80%;
+                    margin: auto;
+                }}
+                h2 {{
+                    color: #f97316;
+                }}
+                p {{
+                    font-size: 16px;
+                    color: #c9d1d9;
+                }}
+                .code {{
+                    font-size: 24px;
+                    font-weight: bold;
+                    color: #58a6ff;
+                    background: #21262d;
+                    padding: 10px;
+                    border-radius: 5px;
+                    display: inline-block;
+                    margin: 10px 0;
+                }}
+                .footer {{
+                    margin-top: 20px;
+                    font-size: 14px;
+                    color: #8b949e;
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h2>🔐 Reset Your Password</h2>
+                <p>Hello,</p>
+                <p>You requested to reset your password on <strong>Blocktrade</strong>. Use the code below to proceed:</p>
+                <div class="code">{code}</div>
+                <p>This code is valid for <strong>3 minutes</strong>.</p>
+                <p>If you did not request this, please ignore this email.</p>
+                <hr>
+                <p class="footer">© 2025 Blocktrade. All rights reserved.</p>
+            </div>
+        </body>
+        </html>
+        """
+
+        msg.attach(MIMEText(body, 'html'))
+
+        # Send email
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            server.starttls()
+            server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
+            server.sendmail(EMAIL_ADDRESS, email, msg.as_string())
+
+        return True
+    except Exception as e:
+        print(f"Failed to send email: {str(e)}")
+        return False
 
 # Register endpoint
 @auth_bp.route('/register', methods=['POST'])
@@ -153,7 +257,9 @@ def login():
 def check_auth():
     try:
         user_id = request.cookies.get('user')
-        # Không kiểm tra if not user_id, giả sử luôn có cookie từ frontend
+        
+        if not user_id:
+            return jsonify({'error': 'Unauthorized'}), 401
 
         query = f"""
         SELECT user_id, name, email, image_url, username, created_at, points
@@ -235,6 +341,155 @@ def update_user():
             return jsonify({'message': 'User profile updated successfully'}), 200
         else:
             return jsonify({'error': update_response.text}), 500
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Forgot Password endpoint
+@auth_bp.route('/forgot-password', methods=['POST'])
+def forgot_password():
+    try:
+        data = request.get_json()
+        email = data.get('email')
+
+        # Validate required fields
+        if not email:
+            return jsonify({'error': 'Missing email'}), 400
+
+        # Check if email exists
+        user_data = validate_user_by_email(email)
+        if not user_data:
+            return jsonify({'error': 'Email not found'}), 404
+        user = user_data[0]
+        user_id = user['user_id']
+
+        # Generate a 6-digit code
+        reset_code = generate_reset_code()
+
+        # Calculate expiration time (3 minutes from now)
+        expires_at = (datetime.now(timezone.utc) + timedelta(minutes=3)).strftime('%Y-%m-%d %H:%M:%S')
+
+        # Store the reset code in the database
+        insert_query = f"""
+        INSERT INTO {DATABASE}.password_reset_tokens (user_id, token, expires_at)
+        VALUES ('{user_id}', '{reset_code}', '{expires_at}')
+        """
+        insert_url = f"{CLICKHOUSE_HOST}/?query={insert_query}"
+        insert_response = requests.post(insert_url)
+
+        if insert_response.status_code != 200:
+            return jsonify({'error': 'Failed to store reset code'}), 500
+
+        # Send the reset code via email
+        if not send_reset_code_email(email, reset_code):
+            return jsonify({'error': 'Failed to send reset code email'}), 500
+
+        return jsonify({'message': 'Reset code sent to your email'}), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Verify Reset Code endpoint
+@auth_bp.route('/verify-reset-code', methods=['POST'])
+def verify_reset_code():
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        code = data.get('code')
+
+        # Validate required fields
+        if not all([email, code]):
+            return jsonify({'error': 'Missing email or code'}), 400
+
+        # Check if email exists
+        user_data = validate_user_by_email(email)
+        if not user_data:
+            return jsonify({'error': 'Email not found'}), 404
+        user = user_data[0]
+        user_id = user['user_id']
+
+        # Check if the code exists and is valid
+        current_time = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+        query = f"""
+        SELECT * FROM {DATABASE}.password_reset_tokens 
+        WHERE user_id = '{user_id}' 
+        AND token = '{code}' 
+        AND expires_at > '{current_time}'
+        FORMAT JSON
+        """
+        url = f"{CLICKHOUSE_HOST}/?query={query}"
+        response = requests.get(url)
+        result = response.json()
+
+        if 'data' not in result or not result['data']:
+            return jsonify({'error': 'Invalid or expired code'}), 400
+
+        return jsonify({'message': 'Code verified successfully', 'user_id': user_id}), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Reset Password endpoint
+@auth_bp.route('/reset-password', methods=['POST'])
+def reset_password():
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        code = data.get('code')
+        new_password = data.get('new_password')
+        confirm_password = data.get('confirm_password')
+
+        # Validate required fields
+        if not all([user_id, code, new_password, confirm_password]):
+            return jsonify({'error': 'Missing required fields'}), 400
+
+        # Check if passwords match
+        if new_password != confirm_password:
+            return jsonify({'error': 'Passwords do not match'}), 400
+
+        # Validate user_id
+        user_data = validate_user(user_id)
+        if not user_data:
+            return jsonify({'error': 'Invalid user_id'}), 404
+
+        # Check if the code exists and is valid
+        current_time = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+        query = f"""
+        SELECT * FROM {DATABASE}.password_reset_tokens 
+        WHERE user_id = '{user_id}' 
+        AND token = '{code}' 
+        AND expires_at > '{current_time}'
+        FORMAT JSON
+        """
+        url = f"{CLICKHOUSE_HOST}/?query={query}"
+        response = requests.get(url)
+        result = response.json()
+
+        if 'data' not in result or not result['data']:
+            return jsonify({'error': 'Invalid or expired code'}), 400
+
+        # Update the user's password
+        password_hash = hash_password(new_password)
+        update_query = f"""
+        ALTER TABLE {DATABASE}.users 
+        UPDATE password_hash = '{password_hash}'
+        WHERE user_id = '{user_id}'
+        """
+        update_url = f"{CLICKHOUSE_HOST}/?query={update_query}"
+        update_response = requests.post(update_url)
+
+        if update_response.status_code != 200:
+            return jsonify({'error': 'Failed to update password'}), 500
+
+        # Delete the used reset code
+        delete_query = f"""
+        ALTER TABLE {DATABASE}.password_reset_tokens 
+        DELETE WHERE user_id = '{user_id}' AND token = '{code}'
+        """
+        delete_url = f"{CLICKHOUSE_HOST}/?query={delete_query}"
+        requests.post(delete_url)
+
+        return jsonify({'message': 'Password reset successfully'}), 200
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
