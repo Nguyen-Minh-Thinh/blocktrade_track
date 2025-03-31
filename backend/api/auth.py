@@ -3,7 +3,7 @@ import requests
 import bcrypt
 from flask_cors import CORS
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 
 # Initialize the Blueprint for auth routes
 auth_bp = Blueprint('auth', __name__)
@@ -55,8 +55,8 @@ def register():
 
         # Insert the new user into the users table
         user_id = str(uuid.uuid4())
-        created_at = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
-        points = 0.0  # Default points
+        created_at = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+        points = 1000.0  # Default points
 
         insert_query = f"""
         INSERT INTO {DATABASE}.users (user_id, name, email, image_url, username, password_hash, created_at, points)
@@ -86,7 +86,7 @@ def login():
             return jsonify({'error': 'Missing username or password'}), 400
 
         # Query recent users (last 1 year)
-        one_year_ago = (datetime.utcnow() - timedelta(days=365)).strftime('%Y-%m-%d')
+        one_year_ago = (datetime.now(timezone.utc) - timedelta(days=365)).strftime('%Y-%m-%d')
         query_recent = f"""
         SELECT user_id, password_hash 
         FROM {DATABASE}.users 
