@@ -100,6 +100,9 @@ services:
       - '8124:8123'
     networks:
       - blocktrade-track
+    environment:
+      - CLICKHOUSE_USER=default
+      - CLICKHOUSE_PASSWORD=123456
 
 volumes:
   dags:
