@@ -1,13 +1,10 @@
 from flask import Blueprint, request, jsonify
 import pytz
 from datetime import datetime
-from .portfolio import execute_clickhouse_query  # Nhập hàm từ portfolio.py
+from .clickhouse_config import execute_clickhouse_query, DATABASE  # Nhập từ file mới
 
 # Initialize the Blueprint for favorites routes
 favorites_bp = Blueprint('favorites', __name__)
-
-# ClickHouse Configuration
-DATABASE = "blocktrade_track"
 
 # Helper function to validate user_id
 def validate_user(user_id):

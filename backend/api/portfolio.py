@@ -1,62 +1,15 @@
-import requests
 from flask import Blueprint, request, jsonify
 import uuid
 from datetime import datetime, timezone
 from flask_cors import CORS
+from .clickhouse_config import execute_clickhouse_query, DATABASE  # Nhập từ file mới
 
 # Initialize the Blueprint for portfolio routes
 portfolio_bp = Blueprint('portfolio', __name__)
 CORS(portfolio_bp, supports_credentials=True, origins="*")
 
-# ClickHouse Configuration
-CLICKHOUSE_HOST = "http://localhost:8124"
-DATABASE = "blocktrade_track"
-
 # Conversion rate: 1 point = $1 (adjust as needed)
 POINTS_PER_DOLLAR = 1
-
-# Helper function to send a query to ClickHouse via HTTP API
-def execute_clickhouse_query(query, params=None):
-    # Add FORMAT JSON to get structured JSON responses (for SELECT queries)
-    is_select_query = query.strip().upper().startswith("SELECT")
-    if is_select_query:
-        query = f"{query} FORMAT JSON"
-
-    # Manually substitute parameters into the query string
-    if params:
-        for key, value in params.items():
-            # Sanitize the value to prevent SQL injection
-            if isinstance(value, str):
-                # Escape single quotes by doubling them (ClickHouse uses '' for escaping)
-                escaped_value = value.replace("'", "''")
-                sanitized_value = f"'{escaped_value}'"
-            else:
-                sanitized_value = str(value)
-            query = query.replace(f"%({key})s", sanitized_value)
-
-    # Construct the URL with the database parameter
-    url = f"{CLICKHOUSE_HOST}/?database={DATABASE}"
-
-    try:
-        # Use GET for SELECT queries (read-only), POST for modifying queries (INSERT, UPDATE, DELETE)
-        if is_select_query:
-            url = f"{url}&query={query}"
-            response = requests.get(url)
-        else:
-            response = requests.post(url, data=query, headers={'Content-Type': 'text/plain'})
-
-        if response.status_code != 200:
-            raise Exception(f"ClickHouse query failed: {response.text}")
-
-        # For SELECT queries, parse the JSON response
-        if is_select_query:
-            return response.json()
-        # For modifying queries, return an empty dict (ClickHouse doesn't return data for these)
-        return {"data": []}
-    except requests.exceptions.RequestException as e:
-        raise Exception(f"ClickHouse query failed: {str(e)}")
-    except ValueError as e:
-        raise Exception(f"Failed to parse ClickHouse response as JSON: {str(e)}")
 
 # Helper function to validate user_id and get user points
 def get_user_points(user_id):

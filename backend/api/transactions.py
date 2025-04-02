@@ -1,13 +1,10 @@
 from flask import Blueprint, request, jsonify
 import pytz
 from datetime import datetime, timedelta
-from .portfolio import execute_clickhouse_query  # Nhập hàm từ portfolio.py
+from .clickhouse_config import execute_clickhouse_query, DATABASE  # Nhập từ file mới
 
 # Initialize the Blueprint for transaction routes
 transactions_bp = Blueprint('transactions', __name__)
-
-# ClickHouse Configuration
-DATABASE = "blocktrade_track"
 
 # Helper function to validate user_id
 def validate_user(user_id):

@@ -1,5 +1,4 @@
 from flask import Blueprint, request, jsonify, make_response
-import requests
 import bcrypt
 from flask_cors import CORS
 import uuid
@@ -8,18 +7,15 @@ import random
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from .clickhouse_config import execute_clickhouse_query, DATABASE  # Nhập từ clickhouse_config.py
 
 # Initialize the Blueprint for auth routes
 auth_bp = Blueprint('auth', __name__)
-CORS(auth_bp, supports_credentials=True, origins="*")  # Enable CORS for the auth blueprint
-
-# ClickHouse Configuration
-CLICKHOUSE_HOST = "http://localhost:8124"
-DATABASE = "blocktrade_track"
+CORS(auth_bp, supports_credentials=True, origins="*")
 
 # Email Configuration (Gmail SMTP)
-EMAIL_ADDRESS = "dnthien29@gmail.com"  # Thay bằng email của bạn
-EMAIL_PASSWORD = "cjgh ldei fozg itie"    # Thay bằng App Password của Gmail (không phải mật khẩu thông thường)
+EMAIL_ADDRESS = "dnthien29@gmail.com"
+EMAIL_PASSWORD = "cjgh ldei fozg itie"
 
 # Helper function to hash passwords
 def hash_password(password):
@@ -33,38 +29,32 @@ def verify_password(password, hashed_password):
 def check_user_exists(username, exclude_user_id=None):
     query = f"""
     SELECT user_id FROM {DATABASE}.users 
-    WHERE (email = '{username}' OR username = '{username}')
+    WHERE (email = %(username)s OR username = %(username)s)
     """
     if exclude_user_id:
-        query += f" AND user_id != '{exclude_user_id}'"
-    query += " FORMAT JSON"
-    url = f"{CLICKHOUSE_HOST}/?query={query}"
-    response = requests.get(url)
-    result = response.json()
-    return 'data' in result and result['data']
+        query += f" AND user_id != %(exclude_user_id)s"
+    result = execute_clickhouse_query(query, params={
+        "username": username,
+        "exclude_user_id": exclude_user_id
+    })
+    return bool(result.get('data', []))
 
 # Helper function to validate user_id
 def validate_user(user_id):
     query = f"""
     SELECT * FROM {DATABASE}.users 
-    WHERE user_id = '{user_id}' 
-    FORMAT JSON
+    WHERE user_id = %(user_id)s 
     """
-    url = f"{CLICKHOUSE_HOST}/?query={query}"
-    response = requests.get(url)
-    result = response.json()
+    result = execute_clickhouse_query(query, params={"user_id": user_id})
     return result.get('data', [])
 
 # Helper function to validate email
 def validate_user_by_email(email):
     query = f"""
     SELECT * FROM {DATABASE}.users 
-    WHERE email = '{email}' 
-    FORMAT JSON
+    WHERE email = %(email)s 
     """
-    url = f"{CLICKHOUSE_HOST}/?query={query}"
-    response = requests.get(url)
-    result = response.json()
+    result = execute_clickhouse_query(query, params={"email": email})
     return result.get('data', [])
 
 # Helper function to generate a 6-digit code
@@ -99,6 +89,9 @@ def send_reset_code_email(email, code):
                     width: 80%;
                     margin: auto;
                 }}
+                .logo {{
+                    margin-bottom: 20px;
+                }}
                 h2 {{
                     color: #f97316;
                 }}
@@ -125,6 +118,7 @@ def send_reset_code_email(email, code):
         </head>
         <body>
             <div class="container">
+                <img src="https://i.ibb.co/7JSn7CXV/logo.png" alt="Blocktrade Logo" class="logo" width="150">
                 <h2>🔐 Reset Your Password</h2>
                 <p>Hello,</p>
                 <p>You requested to reset your password on <strong>Blocktrade</strong>. Use the code below to proceed:</p>
@@ -185,15 +179,20 @@ def register():
 
         insert_query = f"""
         INSERT INTO {DATABASE}.users (user_id, name, email, image_url, username, password_hash, created_at, points)
-        VALUES ('{user_id}', '{name}', '{email}', '{image_url}', '{username}', '{password_hash}', '{created_at}', {points})
+        VALUES (%(user_id)s, %(name)s, %(email)s, %(image_url)s, %(username)s, %(password_hash)s, %(created_at)s, %(points)s)
         """
-        insert_url = f"{CLICKHOUSE_HOST}/?query={insert_query}"
-        insert_response = requests.post(insert_url)
+        execute_clickhouse_query(insert_query, params={
+            "user_id": user_id,
+            "name": name,
+            "email": email,
+            "image_url": image_url,
+            "username": username,
+            "password_hash": password_hash,
+            "created_at": created_at,
+            "points": points
+        })
 
-        if insert_response.status_code == 200:
-            return jsonify({'message': 'User registered successfully', 'user_id': user_id}), 201
-        else:
-            return jsonify({'error': insert_response.text}), 500
+        return jsonify({'message': 'User registered successfully', 'user_id': user_id}), 201
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -215,27 +214,24 @@ def login():
         query_recent = f"""
         SELECT user_id, password_hash 
         FROM {DATABASE}.users 
-        WHERE (username = '{username}' OR email = '{username}')
-        AND created_at >= '{one_year_ago}' 
-        FORMAT JSON
+        WHERE (username = %(username)s OR email = %(username)s)
+        AND created_at >= %(one_year_ago)s 
         """
-        url = f"{CLICKHOUSE_HOST}/?query={query_recent}"
-        response = requests.get(url)
-        result = response.json()
+        result = execute_clickhouse_query(query_recent, params={
+            "username": username,
+            "one_year_ago": one_year_ago
+        })
 
         # If not found, search full table
-        if 'data' not in result or not result['data']:
+        if not result.get('data', []):
             query_full = f"""
             SELECT user_id, password_hash 
             FROM {DATABASE}.users 
-            WHERE username = '{username}' OR email = '{username}'
-            FORMAT JSON
+            WHERE username = %(username)s OR email = %(username)s
             """
-            url = f"{CLICKHOUSE_HOST}/?query={query_full}"
-            response = requests.get(url)
-            result = response.json()
+            result = execute_clickhouse_query(query_full, params={"username": username})
 
-        if 'data' not in result or not result['data']:
+        if not result.get('data', []):
             return jsonify({'error': 'Invalid username or password'}), 401
 
         user_id, password_hash = result['data'][0]['user_id'], result['data'][0]['password_hash']
@@ -264,21 +260,15 @@ def check_auth():
         query = f"""
         SELECT user_id, name, email, image_url, username, created_at, points
         FROM {DATABASE}.users
-        WHERE user_id = '{user_id}'
-        FORMAT JSON
+        WHERE user_id = %(user_id)s
         """
-        url = f"{CLICKHOUSE_HOST}/?query={query}"
-        response = requests.get(url)
+        result = execute_clickhouse_query(query, params={"user_id": user_id})
 
-        if response.status_code != 200:
-            return jsonify({'error': 'Failed to fetch user data'}), 500
-
-        result = response.json()
-        if 'data' in result and result['data']:
-            user_data = result['data'][0]
-            return jsonify(user_data), 200
-        else:
+        if not result.get('data', []):
             return jsonify(None), 200
+
+        user_data = result['data'][0]
+        return jsonify(user_data), 200
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -308,16 +298,16 @@ def update_user():
         # Prepare fields to update
         updates = []
         if name:
-            updates.append(f"name = '{name}'")
+            updates.append(f"name = %(name)s")
         if email:
-            updates.append(f"email = '{email}'")
+            updates.append(f"email = %(email)s")
         if image_url is not None:  # Allow empty string for image_url
-            updates.append(f"image_url = '{image_url}'")
+            updates.append(f"image_url = %(image_url)s")
         if username:
-            updates.append(f"username = '{username}'")
+            updates.append(f"username = %(username)s")
         if password:
             password_hash = hash_password(password)
-            updates.append(f"password_hash = '{password_hash}'")
+            updates.append(f"password_hash = %(password_hash)s")
 
         # If no fields to update, return error
         if not updates:
@@ -332,15 +322,23 @@ def update_user():
         update_query = f"""
         ALTER TABLE {DATABASE}.users 
         UPDATE {', '.join(updates)}
-        WHERE user_id = '{user_id}'
+        WHERE user_id = %(user_id)s
         """
-        update_url = f"{CLICKHOUSE_HOST}/?query={update_query}"
-        update_response = requests.post(update_url)
+        params = {"user_id": user_id}
+        if name:
+            params["name"] = name
+        if email:
+            params["email"] = email
+        if image_url is not None:
+            params["image_url"] = image_url
+        if username:
+            params["username"] = username
+        if password:
+            params["password_hash"] = password_hash
 
-        if update_response.status_code == 200:
-            return jsonify({'message': 'User profile updated successfully'}), 200
-        else:
-            return jsonify({'error': update_response.text}), 500
+        execute_clickhouse_query(update_query, params=params)
+
+        return jsonify({'message': 'User profile updated successfully'}), 200
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -372,13 +370,13 @@ def forgot_password():
         # Store the reset code in the database
         insert_query = f"""
         INSERT INTO {DATABASE}.password_reset_tokens (user_id, token, expires_at)
-        VALUES ('{user_id}', '{reset_code}', '{expires_at}')
+        VALUES (%(user_id)s, %(token)s, %(expires_at)s)
         """
-        insert_url = f"{CLICKHOUSE_HOST}/?query={insert_query}"
-        insert_response = requests.post(insert_url)
-
-        if insert_response.status_code != 200:
-            return jsonify({'error': 'Failed to store reset code'}), 500
+        execute_clickhouse_query(insert_query, params={
+            "user_id": user_id,
+            "token": reset_code,
+            "expires_at": expires_at
+        })
 
         # Send the reset code via email
         if not send_reset_code_email(email, reset_code):
@@ -412,16 +410,17 @@ def verify_reset_code():
         current_time = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
         query = f"""
         SELECT * FROM {DATABASE}.password_reset_tokens 
-        WHERE user_id = '{user_id}' 
-        AND token = '{code}' 
-        AND expires_at > '{current_time}'
-        FORMAT JSON
+        WHERE user_id = %(user_id)s 
+        AND token = %(code)s 
+        AND expires_at > %(current_time)s
         """
-        url = f"{CLICKHOUSE_HOST}/?query={query}"
-        response = requests.get(url)
-        result = response.json()
+        result = execute_clickhouse_query(query, params={
+            "user_id": user_id,
+            "code": code,
+            "current_time": current_time
+        })
 
-        if 'data' not in result or not result['data']:
+        if not result.get('data', []):
             return jsonify({'error': 'Invalid or expired code'}), 400
 
         return jsonify({'message': 'Code verified successfully', 'user_id': user_id}), 200
@@ -456,38 +455,40 @@ def reset_password():
         current_time = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
         query = f"""
         SELECT * FROM {DATABASE}.password_reset_tokens 
-        WHERE user_id = '{user_id}' 
-        AND token = '{code}' 
-        AND expires_at > '{current_time}'
-        FORMAT JSON
+        WHERE user_id = %(user_id)s 
+        AND token = %(code)s 
+        AND expires_at > %(current_time)s
         """
-        url = f"{CLICKHOUSE_HOST}/?query={query}"
-        response = requests.get(url)
-        result = response.json()
+        result = execute_clickhouse_query(query, params={
+            "user_id": user_id,
+            "code": code,
+            "current_time": current_time
+        })
 
-        if 'data' not in result or not result['data']:
+        if not result.get('data', []):
             return jsonify({'error': 'Invalid or expired code'}), 400
 
         # Update the user's password
         password_hash = hash_password(new_password)
         update_query = f"""
         ALTER TABLE {DATABASE}.users 
-        UPDATE password_hash = '{password_hash}'
-        WHERE user_id = '{user_id}'
+        UPDATE password_hash = %(password_hash)s
+        WHERE user_id = %(user_id)s
         """
-        update_url = f"{CLICKHOUSE_HOST}/?query={update_query}"
-        update_response = requests.post(update_url)
-
-        if update_response.status_code != 200:
-            return jsonify({'error': 'Failed to update password'}), 500
+        execute_clickhouse_query(update_query, params={
+            "password_hash": password_hash,
+            "user_id": user_id
+        })
 
         # Delete the used reset code
         delete_query = f"""
         ALTER TABLE {DATABASE}.password_reset_tokens 
-        DELETE WHERE user_id = '{user_id}' AND token = '{code}'
+        DELETE WHERE user_id = %(user_id)s AND token = %(code)s
         """
-        delete_url = f"{CLICKHOUSE_HOST}/?query={delete_query}"
-        requests.post(delete_url)
+        execute_clickhouse_query(delete_query, params={
+            "user_id": user_id,
+            "code": code
+        })
 
         return jsonify({'message': 'Password reset successfully'}), 200
 
