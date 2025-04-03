@@ -1,0 +1,8 @@
+FROM bitnami/spark:3.5.0
+
+USER root
+
+
+# Copy and install requirements
+COPY ./requirements_spark.txt /
+RUN pip install -r /requirements_spark.txt
