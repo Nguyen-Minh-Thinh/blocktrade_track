@@ -6,13 +6,11 @@ services:
       - kafka
     volumes:
       - ./backend/dags:/opt/airflow/dags
-      - ./.env:/opt/airflow/.env
-      - ./backend/requirements.txt:/opt/airflow/requirements.txt
     ports:
       - 9999:8080
     networks:
       - blocktrade-track
-    command: bash -c '(pip install -r /opt/airflow/requirements.txt && airflow db init && airflow users create --username ${AIRFLOW_USERNAME} --password ${AIRFLOW_PASSWORD} --firstname ${AIRFLOW_FIRSTNAME} --lastname ${AIRFLOW_LASTNAME} --role Admin --email ${AIRFLOW_EMAIL}); airflow webserver & airflow scheduler'
+    command: bash -c '(pip install -r /opt/airflow/dags/requirements.txt && airflow db init && airflow users create --username ${AIRFLOW_USERNAME} --password ${AIRFLOW_PASSWORD} --firstname ${AIRFLOW_FIRSTNAME} --lastname ${AIRFLOW_LASTNAME} --role Admin --email ${AIRFLOW_EMAIL}); airflow webserver & airflow scheduler'
 
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
@@ -67,13 +65,10 @@ services:
       - SPARK_MODE=master
       - SPARK_UI_PORT=8080
       - SPARK_RPC_AUTHENTICATION_ENABLED=no
-      - USER=root
     ports:
       - "9090:8080"  # Spark Web UI
       - "7077:7077"  # Spark Master Port
-    volumes:
-      - ./backend/checkpointLocation:/opt/bitnami/spark/checkpointLocation
-    networks: 
+    networks:
       - blocktrade-track
 
   spark-worker:
@@ -83,16 +78,26 @@ services:
       - SPARK_MASTER=spark://spark-master:7077
       - SPARK_WORKER_CORES=2
       - SPARK_WORKER_MEMORY=2g
-      - USER=root
     depends_on:
-      spark-master:
-        condition: service_started
+      - spark-master
     ports:
       - "8081:8081"  # Spark Worker UI
-    volumes:
-      - ./backend/checkpointLocation:/opt/bitnami/spark/checkpointLocation
-    networks: 
+    networks:
       - blocktrade-track
+
+  # spark-client:
+  #   image: bitnami/spark:3.5.0
+  #   environment:
+  #     - SPARK_MODE=client
+  #   volumes:
+  #     - ./backend/checkpointLocation:/opt/bitnami/spark/checkpointLocation
+  #     - ./backend/spark_app.py:/opt/bitnami/spark/spark_app.py
+  #   networks:
+  #     - blocktrade-track
+  #   depends_on:
+  #     - spark-master
+  #     - spark-worker
+    # command: bash -c "pip install kafka-python==2.0.2 && spark-submit --master local[*] --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0,ru.yandex.clickhouse:clickhouse-jdbc:0.3.2 /opt/bitnami/spark/spark_app.py"
 
   clickhouse:
     image: clickhouse/clickhouse-server

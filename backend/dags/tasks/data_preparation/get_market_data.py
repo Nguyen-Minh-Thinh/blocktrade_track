@@ -9,7 +9,6 @@ import numpy as np
 
 
 
-
 def create_df_from_bi_api(start_date, end_date, clickhouse_client, client):
     coin_data = clickhouse_client.query("SELECT coin_id, name, symbol FROM blocktrade_track.coins")
     coin_data = [(str(x[0]), x[1], x[2]) for x in coin_data.result_rows]
@@ -67,13 +66,13 @@ def create_df_from_onl_api(start_date, end_date):
     return df
 
 
-def full_load(clickhouse_client, client):
+def full_load(clickhouse_client, client, kafka_producer):
     df1_start_date = (datetime.now() - timedelta(days=364)).strftime("%Y-%m-%d")
-    df1_end_date = (datetime.now() - timedelta(days=5)).strftime("%Y-%m-%d")
+    df1_end_date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
     df1 = create_df_from_bi_api(df1_start_date, df1_end_date, clickhouse_client, client)
 
     df2_start_date = datetime.timestamp(datetime.strptime((datetime.now().date() - timedelta(days=364)).strftime('%Y-%m-%d'), '%Y-%m-%d'))
-    df2_end_date = datetime.timestamp(datetime.strptime((datetime.now().date() - timedelta(days=5)).strftime('%Y-%m-%d'), '%Y-%m-%d'))
+    df2_end_date = datetime.timestamp(datetime.strptime((datetime.now().date() - timedelta(days=1)).strftime('%Y-%m-%d'), '%Y-%m-%d'))
     df2 = create_df_from_onl_api(df2_start_date, df2_end_date)
 
     df = pd.merge(df1, df2, on=['Symbol', 'Timestamp'], how='inner')
@@ -88,10 +87,16 @@ def full_load(clickhouse_client, client):
     df['circulating_supply'] = df['circulating_supply'].fillna(0)
 
     df = df[['Coin ID', 'Close', 'Market_cap', 'Volume', 'price_change_24h', 'circulating_supply', 'Timestamp']]
-    data = list(df.itertuples(index=False, name=None))
-    clickhouse_client.insert(table='blocktrade_track.market_data', data=data, column_names=['coin_id', 'price', 'market_cap', 'volume_24h', 'price_change_24h', 'circulating_supply','updated_date']) 
+    for _, row in df.iterrows():
+        dict_data = row.to_dict()  # Chuyển từng hàng thành JSON
+        dict_data['Timestamp'] = dict_data['Timestamp'].strftime("%Y-%m-%d")
+        print(dict_data)
+        kafka_producer.produce('coin_history_data', value=json.dumps(dict_data).encode('utf-8'))
+    kafka_producer.flush()
+    # data = list(df.itertuples(index=False, name=None))
+    # clickhouse_client.insert(table='blocktrade_track.market_data', data=data, column_names=['coin_id', 'price', 'market_cap', 'volume_24h', 'price_change_24h', 'circulating_supply','updated_date']) 
 
-def incremental_load(clickhouse_client, client):
+def incremental_load(clickhouse_client, client, kafka_producer):
     coin_data = clickhouse_client.query("SELECT coin_id, symbol, name FROM blocktrade_track.coins").result_rows
     for coin in coin_data:
         max_time = clickhouse_client.query(f"SELECT max(updated_date) FROM blocktrade_track.market_data WHERE coin_id = '{coin[0]}'").result_rows[0][0]
@@ -121,6 +126,7 @@ def incremental_load(clickhouse_client, client):
         df2_start_date = int(datetime.timestamp(datetime.strptime((max_time.date() + timedelta(days=1)).strftime('%Y-%m-%d'), '%Y-%m-%d')))
         df2_end_date = int(datetime.timestamp(datetime.strptime((datetime.now()).strftime('%Y-%m-%d'), '%Y-%m-%d')))
         print('df2 start date:', datetime.fromtimestamp(df2_start_date), 'df2 end date:', datetime.fromtimestamp(df2_end_date))
+        # with open(r'./data_preparation/coin_id.json', 'r') as f:
         with open(r'/opt/airflow/dags/tasks/data_preparation/coin_id.json', 'r') as f:
             data = json.load(f) 
         df2_columns = ['Timestamp', 'Market_cap', 'Symbol']
@@ -155,11 +161,20 @@ def incremental_load(clickhouse_client, client):
         df['circulating_supply'] = df['circulating_supply'].fillna(0)
 
         df = df[['Coin ID', 'Close', 'Market_cap', 'Volume', 'price_change_24h', 'circulating_supply', 'Timestamp']]
-        data = list(df.itertuples(index=False, name=None))
+        # data = list(df.itertuples(index=False, name=None))
         # print(data)
-        clickhouse_client.insert(table='blocktrade_track.market_data', data=data, column_names=['coin_id', 'price', 'market_cap', 'volume_24h', 'price_change_24h', 'circulating_supply','updated_date']) 
-        print(data)
+        # clickhouse_client.insert(table='blocktrade_track.market_data', data=data, column_names=['coin_id', 'price', 'market_cap', 'volume_24h', 'price_change_24h', 'circulating_supply','updated_date']) 
+        
+        # Chuyển từng dòng thành chuỗi JSON riêng lẻ
+        for _, row in df.iterrows():
+            dict_data = row.to_dict()  # Chuyển từng hàng thành JSON
+            dict_data['Timestamp'] = dict_data['Timestamp'].strftime("%Y-%m-%d")
+            print(dict_data)
+            kafka_producer.produce('coin_history_data', value=json.dumps(dict_data).encode('utf-8'))
+            
+        # print(data)
         time.sleep(15)
+    kafka_producer.flush()
 
 
 
@@ -172,7 +187,6 @@ if __name__ == "__main__":
     )
     client = Client()
     # full_load()
-    incremental_load(clickhouse_client, client)
     # Sắp xếp dữ liệu theo 'Coin ID' và 'Timestamp' để đảm bảo tính toán chính xác
     
 # print(df.head())
