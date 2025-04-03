@@ -43,8 +43,7 @@ def data_output(df, batch_id):
     password = ''
     host = 'localhost'
     port = '8124'
-    database = 'blocktrade_track'
-    url = f'jdbc:clickhouse://{host}:{port}/{database}'
+    url = f'jdbc:clickhouse://{host}:{port}'
 
     df = df.withColumnRenamed('Coin ID', 'coin_id')
     df = df.withColumnRenamed('Close', 'price')
