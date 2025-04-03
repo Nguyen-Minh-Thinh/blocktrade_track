@@ -5,13 +5,17 @@ import ButtonComponent from '../components/ButtonComponent';
 import { login } from '../api/auth';
 import { HiEye, HiEyeOff } from 'react-icons/hi'; // Add icons from react-icons
 import { checkAuth } from '../api/auth'
+import { toast } from 'react-toastify';
 
 const SignIn = ({ openSI, setOpenSI, swapModels, setUser }) => {
   const [formData, setFormData] = useState({
     username: '',
     password: ''
   });
-  const [error, setError] = useState(null);
+  const [error, setError] = useState({
+    username: '',
+    password: ''
+  });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false); // Password hide/show status
 
@@ -32,6 +36,10 @@ const SignIn = ({ openSI, setOpenSI, swapModels, setUser }) => {
   };
 
   const handleChange = (e) => {
+    setError({
+      ...error,
+      [e.target.id]: e.target.value.length <= 0 ? "This value cannot be empty" : ""
+    });
     setFormData({
       ...formData,
       [e.target.id]: e.target.value
@@ -44,35 +52,47 @@ const SignIn = ({ openSI, setOpenSI, swapModels, setUser }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    try {
-      await login(
-        formData.username,
-        formData.password
-      );
-      setOpenSI(false);
-      const userData = await checkAuth(); // Lấy thông tin người dùng sau khi đăng nhập
-      setUser(userData); // Cập nhật state user trong HeaderComponent
-      setOpenSI(false)
-    } catch (err) {
-      setError(err.error || 'Login failed');
-    } finally {
-      setLoading(false);
+    
+    // setError(null);
+    let newErrors = { ...error };
+    if (!formData.username.trim()) {
+      newErrors.username = "This value cannot be empty";
+    }
+    if (!formData.password.trim()) {
+      newErrors.password = "This value cannot be empty";
+    }
+    setError(newErrors);
+    if(newErrors.username ==="" && newErrors.password===""){
+      setLoading(true);
+      try {
+        await login(
+          formData.username,
+          formData.password
+        );
+        setOpenSI(false);
+        toast.success("Login success");
+        setFormData({username: '',password: ''});
+        const userData = await checkAuth(); // Lấy thông tin người dùng sau khi đăng nhập
+        setUser(userData); // Cập nhật state user trong HeaderComponent
+      } catch (err) {
+        // setError(err.error || 'Login failed');
+        toast.error(err.error);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
   return (
     <>
-      <Modal show={openSI} onClose={() => setOpenSI(false)} initialFocus size='md' popup theme={customStyles}>
+      <Modal show={openSI} onClose={() => {setOpenSI(false) ;setError({username: '',password: ''}); setFormData({username: '',password: ''})} } initialFocus size='md' popup theme={customStyles}>
         <Modal.Header />
         <Modal.Body>
-          <div className="my-6 px-4 text-white">
+          <div className="my-2 px-4 text-white">
             <h3 className="text-xl font-medium dark:text-white text-center">Sign in</h3>
             <form onSubmit={handleSubmit}>
               <div>
-                <div className="mb-2 mt-3 block">
+                <div className="mb-2 mt-2 block">
                   <Label className='text-white' htmlFor="username" value="Your Username/Email" />
                 </div>
                 <TextInput
@@ -82,11 +102,14 @@ const SignIn = ({ openSI, setOpenSI, swapModels, setUser }) => {
                   placeholder="Enter your Username/Email"
                   value={formData.username}
                   onChange={handleChange}
-                  required
+                  
                 />
+                {error.username !== ""&&
+                  <span className="text-red-500 text-xs text-center mt-2">{error.username}</span>
+                }
               </div>
               <div className="relative">
-                <div className="mb-2 mt-3 block">
+                <div className="mb-2 mt-2 block">
                   <Label className='text-white' htmlFor="password" value="Your password" />
                 </div>
                 <TextInput
@@ -97,7 +120,7 @@ const SignIn = ({ openSI, setOpenSI, swapModels, setUser }) => {
                   placeholder='Enter your password'
                   value={formData.password}
                   onChange={handleChange}
-                  required
+                  
                 />
                 <button
                   type="button"
@@ -106,12 +129,10 @@ const SignIn = ({ openSI, setOpenSI, swapModels, setUser }) => {
                 >
                   {showPassword ? <HiEyeOff size={20} /> : <HiEye size={20} />}
                 </button>
+                {error.password !== ""&&
+                  <span className="text-red-500 text-xs text-center mt-2">{error.password}</span>
+                }
               </div>
-              {error && (
-                <div className="text-red-500 text-center mt-2">
-                  {error}
-                </div>
-              )}
               <div className="flex justify-between my-2">
                 <div className="flex items-center gap-2">
                   <Checkbox id="remember" />

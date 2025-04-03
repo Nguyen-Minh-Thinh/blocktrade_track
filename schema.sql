@@ -68,7 +68,6 @@ CREATE TABLE IF NOT EXISTS blocktrade_track.password_reset_tokens (
     created_at DateTime DEFAULT now()
 ) ENGINE = MergeTree()
 ORDER BY (user_id, created_at);
-truncate table coins;
 
 CREATE TABLE IF NOT EXISTS blocktrade_track.news(
 	news_id String DEFAULT generateUUIDv4(),

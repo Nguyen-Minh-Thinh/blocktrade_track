@@ -7,10 +7,12 @@ import CoinDetailPage from "./pages/CoinDetailPage";
 import MarketPage from "./pages/MarketPage";
 import UserInfoPage from "./pages/UserInfoPage";
 import VitualexchangePage from "./pages/VitualexchangePage";
+import { ToastContainer } from "react-toastify";
 
 function App() {
   return (
     <div className="App">
+      <ToastContainer/>
       <Routes>
         <Route path="/" element={<DefaulPage />} >
           <Route path="" element={<HomePage />} />
