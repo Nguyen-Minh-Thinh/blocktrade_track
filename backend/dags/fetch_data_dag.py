@@ -1,6 +1,7 @@
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.bash_operator import BashOperator
+# from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator 
 from datetime import datetime, timedelta
 
 default_args={
@@ -33,9 +34,9 @@ with DAG(
         bash_command='python /opt/airflow/dags/tasks/data_preparation/filter_coins.py'
     )
 
-    load_market_data = BashOperator(
-        task_id='load_market_data_to_clickhouse',
-        bash_command='python /opt/airflow/dags/tasks/load_market_data_to_clickhouse.py'
+    load_market_data_to_kafka = BashOperator(
+        task_id='load_market_data_to_kafka',
+        bash_command='python /opt/airflow/dags/tasks/load_market_data_to_kafka.py'
     )
 
-    create_table >> load_coins >> filter_coins >> load_market_data
+    create_table >> load_coins >> filter_coins >> load_market_data_to_kafka
