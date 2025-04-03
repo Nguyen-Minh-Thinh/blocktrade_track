@@ -8,14 +8,26 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from .clickhouse_config import execute_clickhouse_query, DATABASE  # Nhập từ clickhouse_config.py
+import requests
+from werkzeug.utils import secure_filename
 
 # Initialize the Blueprint for auth routes
 auth_bp = Blueprint('auth', __name__)
 CORS(auth_bp, supports_credentials=True, origins="*")
 
+
+# Imgur Client ID (https://api.imgur.com/)
+IMGUR_CLIENT_ID = "7a5dd71412cf78d"
+
+# Allowed image extensions
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
 # Email Configuration (Gmail SMTP)
 EMAIL_ADDRESS = "dnthien29@gmail.com"
 EMAIL_PASSWORD = "cjgh ldei fozg itie"
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # Helper function to hash passwords
 def hash_password(password):
@@ -277,13 +289,30 @@ def check_auth():
 @auth_bp.route('/update', methods=['PUT'])
 def update_user():
     try:
-        data = request.get_json()
-        user_id = data.get('user_id')
-        name = data.get('name')
-        email = data.get('email')
-        image_url = data.get('image_url')
-        username = data.get('username')
-        password = data.get('password')
+        # Handle form data (multipart/form-data)
+        user_id = request.form.get('user_id')
+        name = request.form.get('name')
+        email = request.form.get('email')
+        username = request.form.get('username')
+        password = request.form.get('password')
+        image_url = request.form.get('image_url')  # URL từ frontend nếu không gửi file
+
+        # Handle image file upload to Imgur if file is provided
+        if 'image' in request.files:
+            file = request.files['image']
+            if file and allowed_file(file.filename):
+                headers = {'Authorization': f'Client-ID {IMGUR_CLIENT_ID}'}
+                response = requests.post(
+                    'https://api.imgur.com/3/image',
+                    headers=headers,
+                    files={'image': file}
+                )
+                if response.status_code == 200:
+                    image_url = response.json()['data']['link']
+                else:
+                    return jsonify({'error': 'Failed to upload image to Imgur'}), 500
+            else:
+                return jsonify({'error': 'Invalid file type. Only PNG, JPG, JPEG, GIF allowed'}), 400
 
         # Validate required fields
         if not user_id:
@@ -301,7 +330,7 @@ def update_user():
             updates.append(f"name = %(name)s")
         if email:
             updates.append(f"email = %(email)s")
-        if image_url is not None:  # Allow empty string for image_url
+        if image_url is not None:  # Chỉ cập nhật image_url nếu có file hoặc URL mới
             updates.append(f"image_url = %(image_url)s")
         if username:
             updates.append(f"username = %(username)s")
@@ -338,7 +367,7 @@ def update_user():
 
         execute_clickhouse_query(update_query, params=params)
 
-        return jsonify({'message': 'User profile updated successfully'}), 200
+        return jsonify({'message': 'User profile updated successfully', 'image_url': image_url}), 200
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500

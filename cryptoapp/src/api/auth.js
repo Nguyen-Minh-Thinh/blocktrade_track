@@ -73,3 +73,25 @@ export const checkAuth = async () => {
         return null;
     }
 };
+
+// Function to update user profile
+export const updateUser = async (userData, imageFile) => {
+    try {
+        const data = new FormData();
+        data.append('user_id', userData.user_id);
+        if (userData.name) data.append('name', userData.name);
+        if (userData.email) data.append('email', userData.email);
+        if (userData.username) data.append('username', userData.username);
+        if (userData.password) data.append('password', userData.password);
+        if (imageFile) data.append('image', imageFile);
+
+        const response = await axios.put(`${API_URL}/update`, data, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+            withCredentials: true,
+        });
+
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || { error: 'Update failed' };
+    }
+};
