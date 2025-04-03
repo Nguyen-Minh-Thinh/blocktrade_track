@@ -5,7 +5,7 @@ client = clickhouse_connect.get_client(
     host='host.docker.internal',
     port='8124',
     username='default',
-    password=''
+    password='123456'
 )
 
 # Create database blocktrade_track
