@@ -8,7 +8,7 @@ const Search = () => {
         <FaSearch className='text-white text-lg cursor-pointer' onClick={()=>{setShowSearch(!showSearch)}} />
             {showSearch &&
                 <div>
-                    <div className='absolute top-10 right-0 bg-gray-900  rounded-lg shadow-lg w-[400px] z-50'>
+                    <div className='absolute top-10 right-0 bg-gray-900  rounded-lg shadow-lg min-w-[400px] z-30'>
                         <h1 className='text-white text-2xl font-medium pt-4 pl-4'>Search</h1>
                         <div className='border-b border-gray-600'>
                             <div className='px-4 pt-4 '>
@@ -121,7 +121,6 @@ const Search = () => {
                             </div>
                         </div>
                     </div>
-
                 </div>
             }
     

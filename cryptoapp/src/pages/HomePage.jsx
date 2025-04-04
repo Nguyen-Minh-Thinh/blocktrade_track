@@ -79,10 +79,10 @@ const HomePage = () => {
       <div className=' mt-[250px]'>
         <h1 className='text-white text-4xl text-center font-medium my-6'>Crypto Market Trade And Metrics</h1>
         <div className='flex justify-center gap-3 '>
-          <p onClick={() => {setListTabs2("popular")}} className={`${listTabs2 === "popular" && "border-b-2 border-blue-700 text-white"} text-[18px] text-gray-500 font-medium pb-1 px-1 cursor-pointer`}>Popular</p>
-          <p onClick={() => {setListTabs2("topGainers")}} className={`${listTabs2 === "topGainers" && "border-b-2 border-blue-700 text-white"} text-[18px] text-gray-500 font-medium pb-1 px-1 cursor-pointer`}>Top Gainers</p>
-          <p onClick={() => {setListTabs2("topVolume")}} className={`${listTabs2 === "topVolume" && "border-b-2 border-blue-700 text-white"} text-[18px] text-gray-500 font-medium pb-1 px-1 cursor-pointer`}>Top Volume</p>
-          <p onClick={() => {setListTabs2("newListings")}} className={`${listTabs2 === "newListings" && "border-b-2 border-blue-700 text-white"} text-[18px] text-gray-500 font-medium pb-1 px-1 cursor-pointer`}>New Listings</p>
+          <p onClick={() => {setListTabs2("popular")}} className={`${listTabs2 === "popular" && "border-b-2 border-blue-700 text-white"} text-base text-gray-500 font-medium pb-1 px-1 cursor-pointer`}>Popular</p>
+          <p onClick={() => {setListTabs2("topGainers")}} className={`${listTabs2 === "topGainers" && "border-b-2 border-blue-700 text-white"} text-base text-gray-500 font-medium pb-1 px-1 cursor-pointer`}>Top Gainers</p>
+          <p onClick={() => {setListTabs2("topVolume")}} className={`${listTabs2 === "topVolume" && "border-b-2 border-blue-700 text-white"} text-base text-gray-500 font-medium pb-1 px-1 cursor-pointer`}>Top Volume</p>
+          <p onClick={() => {setListTabs2("newListings")}} className={`${listTabs2 === "newListings" && "border-b-2 border-blue-700 text-white"} text-base text-gray-500 font-medium pb-1 px-1 cursor-pointer`}>New Listings</p>
         </div>
         <div className='my-3 flex items-center justify-center'>
           <table className='text-white font-medium ' >
@@ -100,7 +100,7 @@ const HomePage = () => {
               <col className='w-52'/>
             </colgroup>
             <thead>
-              <tr className='border-b border-gray-700'>
+              <tr className='border-b text-sm border-gray-700'>
                 <th></th>
                 <th className='text-start p-2'>#</th>
                 <th className='text-start p-2'>Name</th>
@@ -109,13 +109,13 @@ const HomePage = () => {
                 <th className='text-end p-2'>24h%</th>
                 <th className='text-end p-2'>7d%</th>
                 <th className='text-end p-2'>Market Cap</th>
-                <th className='text-end p-2'>Volume(24h)</th>
+                <th className='text-end p-2'>Volume (<span className='text-[10px]'>24h</span>)</th>
                 <th className='text-end p-2'>Circulating Supply</th>
                 <th className='text-end p-2'>Last 7 Days</th>
               </tr>
             </thead>
             <tbody>
-              <tr className='border-y border-gray-700 hover:bg-slate-900 cursor-pointer'>
+              <tr className='text-sm border-y border-gray-700 hover:bg-slate-900 cursor-pointer'>
                 <td >
                   <div onClick={()=>{setFavorites(!favorites)}} className='text-start p-2'>
                     {favorites ? <FaStar className='text-[18px] text-yellow-300'/>
@@ -125,8 +125,11 @@ const HomePage = () => {
                 <td className='text-start p-2'>1</td>
                 <td>
                   <div className='flex justify-between p-2'>
-                    <p>BitCoin BTC</p>
-                    <p className='px-2 text-xs border-2 border-blue-500 rounded-full'>Buy</p>
+                    <div className='flex gap-2 items-center'>
+                      <img src='https://cryptologos.cc/logos/bitcoin-btc-logo.png' alt="logo" className='w-5 h-5' />
+                      <p>BitCoin BTC</p>
+                    </div>
+                    <p className='px-2 text-[10px] border-2 border-blue-500 rounded-full'>Buy</p>
                   </div>
                 </td>
                 <td className='text-end p-2'>$84,198.38</td>
@@ -137,7 +140,7 @@ const HomePage = () => {
                 <td className='text-end p-2'>
                   <div>
                     <p>$9,431,294,831</p>
-                    <p className='text-xs'>112.12K BTC</p>
+                    <p className='text-[10px]'>112.12K BTC</p>
                   </div>
                 </td>
                 <td className='text-end p-2'>19.84M BTC</td>
@@ -182,8 +185,10 @@ const HomePage = () => {
             </div>
             <div className='font-medium'>
               <div className='p-5 my-3 bg-gray-900 rounded-xl cursor-pointer'>
-                <p className=' truncate '>Crypto.com Surpasses 100 Million Global Users</p>
-                <p className=' truncate text-gray-500'>New Major Milestone Reached Following Latest Marketing Campaign</p>
+                <Link to={"newdetail"}>
+                  <p className=' truncate '>Crypto.com Surpasses 100 Million Global Users</p>
+                  <p className=' truncate text-gray-500'>New Major Milestone Reached Following Latest Marketing Campaign</p>
+                </Link>
               </div>
               <div className='p-5 my-3 bg-gray-900 rounded-xl cursor-pointer'>
                 <p className=' truncate '>Crypto.com’s Dubai Entity Receives Full Operational Approval</p>

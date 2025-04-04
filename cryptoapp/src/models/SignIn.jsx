@@ -138,7 +138,7 @@ const SignIn = ({ openSI, setOpenSI, swapModels, setUser }) => {
                   <Checkbox id="remember" />
                   <Label className='text-white' htmlFor="remember">Remember me</Label>
                 </div>
-                <Link to="/" className="text-sm text-gray-500 hover:text-white hover:underline">
+                <Link to="/forgot" onClick={() => {setOpenSI(false) ;setError({username: '',password: ''}); setFormData({username: '',password: ''})}} className="text-sm text-gray-500 hover:text-white hover:underline">
                   Lost Password?
                 </Link>
               </div>
