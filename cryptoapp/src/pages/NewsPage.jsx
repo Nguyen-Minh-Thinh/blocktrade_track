@@ -33,7 +33,7 @@ const NewsCard = ({ title, date, category, image }) => (
   </div>
 );
 
-const NewPage = () => {
+const NewsPage = () => {
   const [selectedCategory, setSelectedCategory] = useState("ALL");
   const [showFilter, setShowFilter] = useState(false);
   const [visibleCount, setVisibleCount] = useState(8); // Ban đầu hiển thị 8 bài
@@ -119,4 +119,4 @@ const NewPage = () => {
   );
 };
 
-export default NewPage;
+export default NewsPage;
