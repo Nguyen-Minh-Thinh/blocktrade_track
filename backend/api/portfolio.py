@@ -4,6 +4,10 @@ from datetime import datetime, timezone
 from flask_cors import CORS
 from .clickhouse_config import execute_clickhouse_query, DATABASE  # Nhập từ file mới
 
+from flask_jwt_extended import create_access_token, create_refresh_token, set_access_cookies, set_refresh_cookies
+from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import jwt_required
+
 # Initialize the Blueprint for portfolio routes
 portfolio_bp = Blueprint('portfolio', __name__)
 CORS(portfolio_bp, supports_credentials=True, origins="*")
@@ -28,6 +32,12 @@ def update_user_points(user_id, new_points):
     WHERE user_id = %(user_id)s
     """
     execute_clickhouse_query(query, params={"new_points": new_points, "user_id": user_id})
+
+# Helper function to validate user_id
+def validate_user(user_id):
+    query = f"SELECT * FROM {DATABASE}.users WHERE user_id = %(user_id)s"
+    result = execute_clickhouse_query(query, params={"user_id": user_id})
+    return bool(result.get('data', []))
 
 # Helper function to validate coin_id
 def validate_coin(coin_id):
@@ -68,10 +78,14 @@ def log_transaction(user_id, coin_id, transaction_type, amount, price):
 
 # Add or update a coin in the user's portfolio
 @portfolio_bp.route('/add', methods=['POST'])
+@jwt_required()
 def add_to_portfolio():
     try:
+        user_id = get_jwt_identity()
+        # Validate user_id
+        if not validate_user(user_id):
+            return jsonify({'error': 'Invalid user_id'}), 404
         data = request.get_json()
-        user_id = data.get('user_id')
         coin_id = data.get('coin_id')
         amount = data.get('amount')
         purchase_price = data.get('purchase_price')
@@ -162,17 +176,17 @@ def add_to_portfolio():
 
 # Get the user's portfolio
 @portfolio_bp.route('/', methods=['GET'])
+@jwt_required()
 def get_portfolio():
     try:
-        user_id = request.args.get('user_id')
-
-        # Validate required field
-        if not user_id:
-            return jsonify({'error': 'Missing user_id parameter'}), 400
-
+        user_id = get_jwt_identity()
         # Validate user_id
-        if get_user_points(user_id) is None:
+        if not validate_user(user_id):
             return jsonify({'error': 'Invalid user_id'}), 404
+
+        # # Validate user_id
+        # if get_user_points(user_id) is None:
+        #     return jsonify({'error': 'Invalid user_id'}), 404
 
         # Fetch portfolio entries with coin details
         query = f"""
@@ -207,10 +221,14 @@ def get_portfolio():
 
 # Sell a specified amount of coins from the user's portfolio
 @portfolio_bp.route('/sell/<portfolio_id>', methods=['POST'])
+@jwt_required()
 def sell_from_portfolio(portfolio_id):
     try:
+        user_id = get_jwt_identity()
+        # Validate user_id
+        if not validate_user(user_id):
+            return jsonify({'error': 'Invalid user_id'}), 404
         data = request.get_json()
-        user_id = data.get('user_id')
         sell_amount = data.get('sell_amount')
         sell_price = data.get('sell_price')
 

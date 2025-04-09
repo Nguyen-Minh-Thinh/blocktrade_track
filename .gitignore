@@ -4,4 +4,4 @@ backend/image/.$architecture.drawio.bkp
 backend/.$workflow.drawio.bkp
 backend/workflow.drawio
 backend/checkpointLocation
-backend/dags/__pycache__
+**/__pycache__/

@@ -9,7 +9,7 @@ historical_data_bp = Blueprint('historical_data', __name__)
 
 @historical_data_bp.route('/all', methods=['GET'])
 def get_all_data():
-    # Get coin_symbol from query params (Example: /quarter?coin_symbol=BTCUSDT)
+    # Get coin_symbol from query params (Example: /quarter?coin_symbol=btcusdt)
     coin_symbol = request.args.get('coin_symbol').upper()
     if not coin_symbol:
         return jsonify({'error': 'Missing required field: coin_symbol'}), 400
@@ -21,12 +21,15 @@ def get_all_data():
         password='',
         database='blocktrade_track'
     )
-    coin_id_query = f"""
-        SELECT coin_id
-        FROM coins
-        WHERE symbol=%(coin_symbol)s
-    """
-    coin_id = clickhouse_client.query(coin_id_query, parameters={'coin_symbol': coin_symbol}).result_rows[0][0]
+    try:
+        coin_id_query = f"""
+            SELECT coin_id
+            FROM coins
+            WHERE symbol=%(coin_symbol)s
+        """
+        coin_id = clickhouse_client.query(coin_id_query, parameters={'coin_symbol': coin_symbol}).result_rows[0][0]
+    except Exception as e:
+        return jsonify({'error': 'This coin does not exist!'}), 404
     # print(coin_id)
     query = f"""
         SELECT *
@@ -70,12 +73,15 @@ def get_one_month_data():
         password='',
         database='blocktrade_track'
     )
-    coin_id_query = f"""
-        SELECT coin_id
-        FROM coins
-        WHERE symbol=%(coin_symbol)s
-    """
-    coin_id = clickhouse_client.query(coin_id_query, parameters={'coin_symbol': coin_symbol}).result_rows[0][0]
+    try:
+        coin_id_query = f"""
+            SELECT coin_id
+            FROM coins
+            WHERE symbol=%(coin_symbol)s
+        """
+        coin_id = clickhouse_client.query(coin_id_query, parameters={'coin_symbol': coin_symbol}).result_rows[0][0]
+    except Exception as e:
+        return jsonify({'error': 'This coin does not exist!'}), 404
     # print(coin_id)
     query = f"""
         SELECT *
@@ -98,7 +104,7 @@ def get_one_month_data():
                 else:
                     temp[columns[i]] = row[i]
             records[coin_symbol].append(temp)
-        print(records)
+        # print(records)
         return Response(
             json.dumps(records, use_decimal=True),  # dùng simplejson ở đây
             content_type='application/json'
@@ -120,12 +126,15 @@ def get_seven_day_data():
         password='',
         database='blocktrade_track'
     )
-    coin_id_query = f"""
-        SELECT coin_id
-        FROM coins
-        WHERE symbol=%(coin_symbol)s
-    """
-    coin_id = clickhouse_client.query(coin_id_query, parameters={'coin_symbol': coin_symbol}).result_rows[0][0]
+    try:
+        coin_id_query = f"""
+            SELECT coin_id
+            FROM coins
+            WHERE symbol=%(coin_symbol)s
+        """
+        coin_id = clickhouse_client.query(coin_id_query, parameters={'coin_symbol': coin_symbol}).result_rows[0][0]
+    except Exception as e:
+        return jsonify({'error': 'This coin does not exist!'}), 404
     # print(coin_id)
     query = f"""
         SELECT *
