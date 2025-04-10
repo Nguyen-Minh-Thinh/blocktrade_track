@@ -146,20 +146,28 @@ def get_favorites():
         # Fetch favorite coins with coin details and market data
         query = f"""
         SELECT 
-            f.favorite_id,
-            f.user_id, 
-            f.coin_id AS coin_id,  -- Alias to fix field name
-            c.name, 
-            c.symbol, 
-            c.image_url, 
-            f.added_at,
-            toString(m.price) AS price,  -- Cast to string
-            toString(m.price_change_24h) AS price_change_24h  -- Cast to string
-        FROM {DATABASE}.favorites f
-        LEFT JOIN {DATABASE}.coins c ON f.coin_id = c.coin_id
-        LEFT JOIN {DATABASE}.market_data m ON f.coin_id = m.coin_id
-        WHERE f.user_id = %(user_id)s
-        ORDER BY f.added_at DESC
+    f.favorite_id,
+    f.user_id, 
+    f.coin_id AS coin_id,
+    c.name, 
+    c.symbol, 
+    c.image_url, 
+    f.added_at,
+    toString(m.price) AS price,
+    toString(m.price_change_24h) AS price_change_24h
+FROM {DATABASE}.favorites f
+JOIN {DATABASE}.coins c 
+    ON f.coin_id = c.coin_id
+JOIN {DATABASE}.market_data m 
+    ON f.coin_id = m.coin_id
+JOIN (
+    SELECT 
+        coin_id, 
+        max(updated_date) AS max_updated
+    FROM {DATABASE}.market_data
+    GROUP BY coin_id
+) latest
+    ON m.coin_id = latest.coin_id AND m.updated_date = latest.max_updated
         """
         logger.info(f"Executing query: {query}")
         result = execute_clickhouse_query(query, params={"user_id": user_id})
