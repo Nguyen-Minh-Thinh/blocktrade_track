@@ -8,7 +8,7 @@ data = response.json()
 client = clickhouse_connect.get_client(
     host='host.docker.internal',
     username='default',
-    password='',
+    password='123456',
     port='8124'
 )
 
