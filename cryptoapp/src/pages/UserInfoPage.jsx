@@ -249,7 +249,7 @@ const UserInfo = () => {
               />
               <input
                 type="text"
-                placeholder="Nhập symbol"
+                placeholder="Enter symbol"
                 value={selectedSymbol}
                 onChange={(e) => setSelectedSymbol(e.target.value)}
                 className="bg-gray-700 text-white placeholder-gray-400 p-1 rounded w-15"

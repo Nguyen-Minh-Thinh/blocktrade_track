@@ -11,9 +11,26 @@ from collections import defaultdict
 from threading import Thread
 from flask_socketio import SocketIO
 
+from flask_jwt_extended import create_access_token
+from flask_jwt_extended import get_jwt
+from flask_jwt_extended import jwt_required
+from flask_jwt_extended import JWTManager
+from datetime import timedelta
+
 # Initialize the Flask app
 app = Flask(__name__)
 CORS(app, supports_credentials=True, origins="*")
+app.config["JWT_SECRET_KEY"] = "abcdefghklmnopq123456"  # Change this!
+app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
+app.config["JWT_ACCESS_COOKIE_NAME"] = "access_token"
+app.config["JWT_REFRESH_COOKIE_NAME"] = "refresh_token"
+app.config["JWT_COOKIE_CSRF_PROTECT"] = False  # Bật True khi production
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(seconds=30)
+app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=7)
+
+jwt = JWTManager(app)
+
+
 
 # Register blueprints (API modules)
 app.register_blueprint(auth_bp, url_prefix='/auth')  # Routes for authentication (e.g., /auth/register)

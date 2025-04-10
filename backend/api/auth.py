@@ -11,6 +11,12 @@ from .clickhouse_config import execute_clickhouse_query, DATABASE  # Nhập từ
 import requests
 from werkzeug.utils import secure_filename
 
+from flask_jwt_extended import create_access_token, create_refresh_token, set_access_cookies, set_refresh_cookies
+from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import jwt_required
+
+from datetime import timedelta
+
 # Initialize the Blueprint for auth routes
 auth_bp = Blueprint('auth', __name__)
 CORS(auth_bp, supports_credentials=True, origins="*")
@@ -253,22 +259,48 @@ def login():
             return jsonify({'error': 'Invalid username or password'}), 401
 
         # Create response and set cookie
-        response = make_response(jsonify({'message': 'Login successful', 'user_id': user_id}), 200)
-
-        return response
+        # response = make_response(jsonify({'message': 'Login successful', 'user_id': user_id}), 200)
+        # access_token = create_access_token(identity=user_id, expires_delta=timedelta(seconds=30))
+        access_token = create_access_token(identity=user_id)
+        refresh_token = create_refresh_token(identity=user_id)
+        resp = jsonify({"msg": "Login successful"})
+        set_access_cookies(resp, access_token)
+        set_refresh_cookies(resp, refresh_token)
+        # return jsonify(access_token=access_token)
+        return resp, 200
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@auth_bp.route("/refresh", methods=["POST"])
+@jwt_required(refresh=True) # Default: Automatically read refresh token
+def refresh():
+    current_user = get_jwt_identity()
+    new_access_token = create_access_token(identity=current_user)
+
+    resp = jsonify({"msg": "Token refreshed"})
+    set_access_cookies(resp, new_access_token)
+    return resp, 200
+
+# Test
+@auth_bp.route("/protected", methods=["GET"])
+@jwt_required()
+def protected():
+    # Access the identity of the current user with get_jwt_identity
+    current_user = get_jwt_identity()
+    return jsonify(logged_in_as=current_user), 200
+
+
 # Check authentication endpoint
 @auth_bp.route('/me', methods=['GET'])
+@jwt_required() # Default: Automatically read access token
 def check_auth():
     try:
-        user_id = request.cookies.get('user')
-        
+        # user_id = request.cookies.get('user')
+        user_id = get_jwt_identity()
         if not user_id:
             return jsonify({'error': 'Unauthorized'}), 401
-
+        print(f"[DEBUG] user_id from token: {user_id}")
         query = f"""
         SELECT user_id, name, email, image_url, username, created_at, points
         FROM {DATABASE}.users
