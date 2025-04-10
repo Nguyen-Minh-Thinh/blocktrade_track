@@ -3,6 +3,11 @@ import pytz
 from datetime import datetime
 from .clickhouse_config import execute_clickhouse_query, DATABASE  # Nhập từ file mới
 
+from flask_jwt_extended import create_access_token, create_refresh_token, set_access_cookies, set_refresh_cookies
+from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import jwt_required
+
+
 # Initialize the Blueprint for favorites routes
 favorites_bp = Blueprint('favorites', __name__)
 
@@ -29,19 +34,19 @@ def is_favorite(user_id, coin_id):
 
 # Add a coin to the user's favorites
 @favorites_bp.route('/add', methods=['POST'])
+@jwt_required()
 def add_to_favorites():
     try:
+        user_id = get_jwt_identity()
+        # Validate user_id
+        if not validate_user(user_id):
+            return jsonify({'error': 'Invalid user_id'}), 404
         data = request.get_json()
-        user_id = data.get('user_id')
         coin_id = data.get('coin_id')
 
         # Validate required fields
         if not all([user_id, coin_id]):
             return jsonify({'error': 'Missing required fields (user_id, coin_id)'}), 400
-
-        # Validate user_id
-        if not validate_user(user_id):
-            return jsonify({'error': 'Invalid user_id'}), 404
 
         # Validate coin_id
         if not validate_coin(coin_id):
@@ -72,19 +77,19 @@ def add_to_favorites():
 
 # Remove a coin from the user's favorites
 @favorites_bp.route('/remove', methods=['POST'])
+@jwt_required()
 def remove_from_favorites():
     try:
+        user_id = get_jwt_identity()
+        # Validate user_id
+        if not validate_user(user_id):
+            return jsonify({'error': 'Invalid user_id'}), 404
         data = request.get_json()
-        user_id = data.get('user_id')
         coin_id = data.get('coin_id')
 
         # Validate required fields
         if not all([user_id, coin_id]):
             return jsonify({'error': 'Missing required fields (user_id, coin_id)'}), 400
-
-        # Validate user_id
-        if not validate_user(user_id):
-            return jsonify({'error': 'Invalid user_id'}), 404
 
         # Validate coin_id
         if not validate_coin(coin_id):
@@ -108,15 +113,18 @@ def remove_from_favorites():
 
 # Get the user's favorite coins
 @favorites_bp.route('/', methods=['GET'])
+@jwt_required()
 def get_favorites():
     try:
-        user_id = request.args.get('user_id')
-
-        if not user_id:
-            return jsonify({'error': 'Missing user_id parameter'}), 400
-
+        user_id = get_jwt_identity()
+        # Validate user_id
         if not validate_user(user_id):
             return jsonify({'error': 'Invalid user_id'}), 404
+
+        # if not user_id:
+        #     return jsonify({'error': 'Missing user_id parameter'}), 400
+        # if not validate_user(user_id):
+        #     return jsonify({'error': 'Invalid user_id'}), 404
 
         # Fetch favorite coins with coin details
         query = f"""

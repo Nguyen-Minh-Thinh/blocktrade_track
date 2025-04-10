@@ -9,3 +9,4 @@ Flask==3.1.0
 clickhouse-driver==0.2.9
 bcrypt==4.3.0
 flask-cors==5.0.1
+simplejson==3.20.1

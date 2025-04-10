@@ -39,7 +39,7 @@ def handle_message(msg):
         }
     }
 
-    producer.send('realtime_coin', str(temp_dict))  # Convert dict type to string
+    producer.send('realtime_coin', temp_dict)  # Convert dict type to string
 
 # Initialize WebSocket Binance
 twm = ThreadedWebsocketManager()

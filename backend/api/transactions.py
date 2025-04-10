@@ -3,6 +3,10 @@ import pytz
 from datetime import datetime, timedelta
 from .clickhouse_config import execute_clickhouse_query, DATABASE  # Nhập từ file mới
 
+from flask_jwt_extended import create_access_token, create_refresh_token, set_access_cookies, set_refresh_cookies
+from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import jwt_required
+
 # Initialize the Blueprint for transaction routes
 transactions_bp = Blueprint('transactions', __name__)
 
@@ -14,9 +18,13 @@ def validate_user(user_id):
 
 # Get the user's transaction history
 @transactions_bp.route('/', methods=['GET'])
+@jwt_required()
 def get_transactions():
     try:
-        user_id = request.args.get('user_id')
+        user_id = get_jwt_identity()
+        # Validate user_id
+        if not validate_user(user_id):
+            return jsonify({'error': 'Invalid user_id'}), 404
         start_date = request.args.get('start_date')  # Format: YYYY-MM-DD
         end_date = request.args.get('end_date')      # Format: YYYY-MM-DD
 
