@@ -171,7 +171,7 @@ const UserInfo = () => {
               />
               <input
                 type="text"
-                placeholder="Nhập symbol"
+                placeholder="Enter symbol"
                 value={selectedSymbol}
                 onChange={(e) => setSelectedSymbol(e.target.value)}
                 className="bg-gray-700 text-white placeholder-gray-400  p-1 rounded w-15"
@@ -237,7 +237,7 @@ const UserInfo = () => {
                         name="name"
                         value={userInfo.name}
                         onChange={(e) => setUserInfo({ ...userInfo, name: e.target.value })}
-                        placeholder="Nhập tên của bạn"
+                        placeholder="Enter your name"
                         className="bg-gray-700 text-white placeholder-gray-500 w-full p-2 mt-2"
                       />
                     </div>
@@ -249,7 +249,7 @@ const UserInfo = () => {
                         type="email"
                         value={userInfo.email}
                         onChange={(e) => setUserInfo({ ...userInfo, email: e.target.value })}
-                        placeholder="Nhập email của bạn"
+                        placeholder="Enter your email"
                         className="bg-gray-700 text-white border-none placeholder-gray-500 w-full p-2 mt-2"
                       />
                     </div>
@@ -261,7 +261,7 @@ const UserInfo = () => {
                         type="text"
                         value={userInfo.username}
                         onChange={(e) => setUserInfo({ ...userInfo, username: e.target.value })}
-                        placeholder="Nhập username của bạn"
+                        placeholder="Enter your username"
                         className="bg-gray-700 text-white border-none placeholder-gray-500 w-full p-2 mt-2"
                       />
                     </div>
@@ -284,7 +284,7 @@ const UserInfo = () => {
                         id="oldPassword"
                         name="oldPassword"
                         type="password"
-                        placeholder="Nhập mật khẩu cũ"
+                        placeholder="Enter your old password"
                         required
                         className="bg-gray-700 text-white border-none placeholder-gray-500 w-full p-2 mt-2"
                       />
@@ -295,7 +295,7 @@ const UserInfo = () => {
                         id="newPassword"
                         name="newPassword"
                         type="password"
-                        placeholder="Nhập mật khẩu mới"
+                        placeholder="Enter your new password"
                         required
                         className="bg-gray-700 text-white border-none placeholder-gray-500 w-full p-2 mt-2"
                       />
@@ -306,7 +306,7 @@ const UserInfo = () => {
                         id="confirmPassword"
                         name="confirmPassword"
                         type="password"
-                        placeholder="Xác nhận mật khẩu mới"
+                        placeholder="Confirm your new password"
                         required
                         className="bg-gray-700 text-white border-none placeholder-gray-500 w-full p-2 mt-2"
                       />
