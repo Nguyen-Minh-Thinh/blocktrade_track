@@ -95,3 +95,65 @@ export const updateUser = async (userData, imageFile) => {
         throw error.response?.data || { error: 'Update failed' };
     }
 };
+
+// Function to request password reset
+export const forgotPassword = async (email) => {
+    try {
+        const response = await axios.post(
+            `${API_URL}/forgot-password`,
+            { email },
+            { withCredentials: true }
+        );
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || { error: 'Forgot password request failed' };
+    }
+};
+
+// Function to verify reset code
+export const verifyResetCode = async (email, code) => {
+    try {
+        const response = await axios.post(
+            `${API_URL}/verify-reset-code`,
+            { email, code },
+            { withCredentials: true }
+        );
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || { error: 'Code verification failed' };
+    }
+};
+
+// Function to reset password
+export const resetPassword = async (user_id, code, newPassword, confirmPassword) => {
+    try {
+        const response = await axios.post(
+            `${API_URL}/reset-password`,
+            { 
+                user_id, 
+                code, 
+                new_password: newPassword, 
+                confirm_password: confirmPassword 
+            },
+            { withCredentials: true }
+        );
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || { error: 'Password reset failed' };
+    }
+};
+
+// Function to verify old password
+export const verifyOldPassword = async (username, oldPassword) => {
+    try {
+        const response = await axios.post(
+            `${API_URL}/login`,
+            { username, password: oldPassword },
+            { withCredentials: true }
+        );
+        return response.data; // Nếu thành công, trả về dữ liệu (bao gồm user_id)
+    } catch (error) {
+        // eslint-disable-next-line no-throw-literal
+        throw { error: 'Old password is incorrect' };
+    }
+};

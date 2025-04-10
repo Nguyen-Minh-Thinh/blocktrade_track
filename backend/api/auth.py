@@ -130,7 +130,7 @@ def send_reset_code_email(email, code):
         </head>
         <body>
             <div class="container">
-                <img src="https://i.ibb.co/7JSn7CXV/logo.png" alt="Blocktrade Logo" class="logo" width="150">
+                <img src="https://i.imgur.com/AnYXkxG.png" alt="Blocktrade Logo" class="logo" width="150">
                 <h2>🔐 Reset Your Password</h2>
                 <p>Hello,</p>
                 <p>You requested to reset your password on <strong>Blocktrade</strong>. Use the code below to proceed:</p>

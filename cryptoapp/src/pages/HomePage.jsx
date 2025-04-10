@@ -126,7 +126,7 @@ const HomePage = () => {
                 <td>
                   <div className='flex justify-between p-2'>
                     <div className='flex gap-2 items-center'>
-                      <img src='https://cryptologos.cc/logos/bitcoin-btc-logo.png' alt="logo" className='w-5 h-5' />
+                      <img src='https://s2.coinmarketcap.com/static/img/coins/32x32/1.png' alt="logo" className='w-5 h-5' />
                       <p>BitCoin BTC</p>
                     </div>
                     <p className='px-2 text-[10px] border-2 border-blue-500 rounded-full'>Buy</p>

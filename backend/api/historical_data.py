@@ -18,7 +18,7 @@ def get_all_data():
         host='localhost',
         port='8124',
         user='default',
-        password='',
+        password='123456',
         database='blocktrade_track'
     )
     coin_id_query = f"""
@@ -67,7 +67,7 @@ def get_one_month_data():
         host='localhost',
         port='8124',
         user='default',
-        password='',
+        password='123456',
         database='blocktrade_track'
     )
     coin_id_query = f"""
@@ -117,7 +117,7 @@ def get_seven_day_data():
         host='localhost',
         port='8124',
         user='default',
-        password='',
+        password='123456',
         database='blocktrade_track'
     )
     coin_id_query = f"""
