@@ -6,7 +6,7 @@ import json
 clickhouse_client = clickhouse_connect.get_client(
     host='host.docker.internal',
     username='default',
-    password='',
+    password='123456',
     port='8124'
 )
 check = clickhouse_client.query('SELECT * FROM blocktrade_track.coins').result_rows
