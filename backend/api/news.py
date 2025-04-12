@@ -23,14 +23,8 @@ def validate_coin(coin_id):
     return bool(result.get('data', []))
 
 @news_bp.route('/all', methods=['GET'])
-@jwt_required()
 def get_all():
     try:
-        user_id = get_jwt_identity()
-        # Validate user_id
-        if not validate_user(user_id):
-            return jsonify({'error': 'Invalid user_id'}), 404
-        
         # Fetch news with coin details
         query = f"""
         SELECT n.news_id, n.title, n.news_link, n.source_name, n.updated_at, c.coin_id, c.name, c.symbol, c.image_url
@@ -58,14 +52,8 @@ def get_all():
         return jsonify({'error': str(e)}), 500
 
 @news_bp.route('/coin', methods=['GET'])
-@jwt_required()
 def get_by_coin_id():
-    try:
-        user_id = get_jwt_identity()
-        # Validate user_id
-        if not validate_user(user_id):
-            return jsonify({'error': 'Invalid user_id'}), 404
-        
+    try: 
         coin_id = request.args.get('coin_id')
         # Validate coin_id
         if not validate_coin(coin_id):
