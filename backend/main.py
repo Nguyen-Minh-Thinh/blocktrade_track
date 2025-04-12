@@ -5,15 +5,14 @@ from api.portfolio import portfolio_bp
 from api.transactions import transactions_bp
 from api.favorites import favorites_bp
 from api.historical_data import historical_data_bp
+from api.news import news_bp
+
 from kafka import KafkaConsumer
 import json
 from collections import defaultdict
 from threading import Thread
 from flask_socketio import SocketIO
 
-from flask_jwt_extended import create_access_token
-from flask_jwt_extended import get_jwt
-from flask_jwt_extended import jwt_required
 from flask_jwt_extended import JWTManager
 from datetime import timedelta
 
@@ -38,7 +37,7 @@ app.register_blueprint(portfolio_bp, url_prefix='/portfolio')  # Routes for port
 app.register_blueprint(transactions_bp, url_prefix='/transactions')
 app.register_blueprint(favorites_bp, url_prefix='/favorites')
 app.register_blueprint(historical_data_bp, url_prefix='/historical_data')
-
+app.register_blueprint(news_bp, url_prefix='/news')
 # Optional: Add a root route to verify the server is running
 @app.route('/')
 def home():

@@ -8,7 +8,7 @@ clickhouse_config_bp = Blueprint('clickhouse_config', __name__)
 CLICKHOUSE_HOST = "http://localhost:8124"
 DATABASE = "blocktrade_track"
 CLICKHOUSE_USER = "default"
-CLICKHOUSE_PASSWORD = ""  
+CLICKHOUSE_PASSWORD = "123456"  
 
 # Helper function to send a query to ClickHouse via HTTP API
 def execute_clickhouse_query(query, params=None):

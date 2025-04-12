@@ -40,7 +40,7 @@ def data_output(df, batch_id):
     # driver = 'com.clickhouse.jdbc.ClickHouseDriver'
     driver = 'ru.yandex.clickhouse.ClickHouseDriver'
     username = 'default'
-    password = ''
+    password = '123456'
     host = 'localhost'
     port = '8124'
     url = f'jdbc:clickhouse://{host}:{port}'

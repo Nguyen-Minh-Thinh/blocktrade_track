@@ -5,13 +5,25 @@ from threading import Event
 from kafka import KafkaProducer
 import json
 
+import clickhouse_connect
+
+clickhouse_client = clickhouse_connect.get_client(
+    host='localhost',
+    port='8124',
+    username='default',
+    password='123456',
+    database='blocktrade_track'
+)
+
 # List of coin id
-SYMBOLS = [
-    "btcusdt", "ethusdt", "bnbusdt", "xrpusdt", "adausdt",
-    "dogeusdt", "solusdt", "dotusdt", "maticusdt", "ltcusdt",
-    "shibusdt", "avaxusdt", "trxusdt", "linkusdt", "xlmusdt",
-    "uniusdt", "atomusdt", "vetusdt", "nearusdt", "filusdt"
-]
+# SYMBOLS = [
+#     "btcusdt", "ethusdt", "bnbusdt", "xrpusdt", "adausdt",
+#     "dogeusdt", "solusdt", "dotusdt", "maticusdt", "ltcusdt",
+#     "shibusdt", "avaxusdt", "trxusdt", "linkusdt", "xlmusdt",
+#     "uniusdt", "atomusdt", "vetusdt", "nearusdt", "filusdt"
+# ]
+SYMBOLS = [val[0].lower() for val in clickhouse_client.query('SELECT symbol FROM coins').result_rows]
+
 
 producer = KafkaProducer(
     bootstrap_servers = 'localhost:9092',
