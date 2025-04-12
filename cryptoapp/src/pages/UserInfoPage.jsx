@@ -1,33 +1,15 @@
-import React, { useState } from "react";
-import { Menu, Table, Button, Space, DatePicker, Avatar, Upload } from "antd";
-import { AppstoreOutlined, EditOutlined, HistoryOutlined, UploadOutlined } from "@ant-design/icons";
-import moment from "moment";
+import React, { useState, useEffect } from "react";
+import { Menu, Table, Button, Space, DatePicker } from "antd";
+import { AppstoreOutlined, EditOutlined, HistoryOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom"; 
+import { checkAuth, updateUser, verifyOldPassword } from '../api/auth';
 
 const DarkHeaderCell = (props) => (
-  <th
-    {...props}
-    style={{
-      backgroundColor: "#1f2b3a",
-      color: "#fff",
-      padding: "8px",
-      border: "1px solid #2d3748",
-      fontWeight: 500,
-      ...props.style,
-    }}
-  />
+  <th {...props} style={{ backgroundColor: "#1f2b3a", color: "#fff", padding: "8px", border: "1px solid #2d3748", fontWeight: 500, ...props.style }} />
 );
 
 const DarkBodyCell = (props) => (
-  <td
-    {...props}
-    style={{
-      backgroundColor: "transparent",
-      color: "#000000",
-      padding: "8px",
-      border: "1px solid #2d3748",
-      ...props.style,
-    }}
-  />
+  <td {...props} style={{ backgroundColor: "transparent", color: "#000000", padding: "8px", border: "1px solid #2d3748", ...props.style }} />
 );
 
 const UserInfo = () => {
@@ -35,15 +17,30 @@ const UserInfo = () => {
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
   const [selectedSymbol, setSelectedSymbol] = useState("");
+  const [formData, setFormData] = useState({
+    user_id: "",
+    name: "",
+    email: "",
+    username: "",
+    password: "",
+    points: 0,
+  });
+  const [image, setImage] = useState(null);
+  const [imageUrl, setImageUrl] = useState("");
+  const [previewImage, setPreviewImage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [profileErrorMessage, setProfileErrorMessage] = useState(""); // Lỗi cho phần thông tin
+  const [passwordErrorMessage, setPasswordErrorMessage] = useState(""); // Lỗi cho phần đổi mật khẩu
+  const [profileSuccessMessage, setProfileSuccessMessage] = useState(""); // Thành công cho phần thông tin
+  const [passwordSuccessMessage, setPasswordSuccessMessage] = useState(""); // Thành công cho phần đổi mật khẩu
+  const navigate = useNavigate(); // Hook để điều hướng
 
-  // Dữ liệu ví dụ cho Portfolio
   const portfolioData = [
     { key: 1, coin: "Bitcoin", symbol: "btc", amount: 2, price: 50000, totalValue: 100000 },
     { key: 2, coin: "Ethereum", symbol: "eth", amount: 5, price: 2000, totalValue: 10000 },
     { key: 3, coin: "Litecoin", symbol: "ltc", amount: 10, price: 150, totalValue: 1500 },
   ];
 
-  // Icon cho từng loại coin
   const coinIcons = {
     btc: "https://cryptologos.cc/logos/bitcoin-btc-logo.png",
     eth: "https://cryptologos.cc/logos/ethereum-eth-logo.png",
@@ -61,29 +58,135 @@ const UserInfo = () => {
 
   const [filteredTradeHistoryData, setFilteredTradeHistoryData] = useState(tradeHistoryData);
 
-  const [userInfo, setUserInfo] = useState({
-    name: "Nguyễn Văn A",
-    email: "nguyen@gmail.com",
-    username: "AA",
-    avatar: "https://joeschmoe.io/api/v1/random",
-  });
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      setLoading(true);
+      try {
+        const userData = await checkAuth();
+        if (userData) {
+          setFormData({
+            user_id: userData.user_id || "",
+            name: userData.name || "",
+            email: userData.email || "",
+            username: userData.username || "",
+            password: "",
+            points: userData.points || 0,
+          });
+          setImageUrl(userData.image_url || "");
+        } else {
+          navigate("/"); // Điều hướng về trang chủ nếu không đăng nhập
+        }
+      } catch (error) {
+        setProfileErrorMessage("Failed to load user info");
+        setTimeout(() => setProfileErrorMessage(""), 2000);
+        navigate("/"); // Điều hướng về trang chủ nếu có lỗi
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUserInfo();
+  }, [navigate]);
 
-  const handleAvatarChange = (info) => {
-    if (info.file.status === "done") {
-      setUserInfo({ ...userInfo, avatar: info.file.response.url });
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewImage(reader.result);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  // Hàm tìm kiếm chỉ lọc theo symbol (không sử dụng fromDate, toDate)
+  const handleProfileSubmit = async (e) => {
+    e.preventDefault();
+    setProfileErrorMessage("");
+    setProfileSuccessMessage("");
+    if (!formData.user_id) {
+      setProfileErrorMessage("User ID is missing. Please log in.");
+      navigate("/"); // Điều hướng nếu không có user_id
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await updateUser(formData, image);
+      const updatedUser = {
+        ...formData,
+        image_url: response.image_url || imageUrl,
+        points: response.points || formData.points || 0,
+      };
+      localStorage.setItem("userLogin", JSON.stringify(updatedUser));
+      window.dispatchEvent(new Event("userUpdated"));
+      setProfileSuccessMessage("Updated successfully");
+      setTimeout(() => setProfileSuccessMessage(""), 2000);
+
+      if (response.image_url) {
+        setImageUrl(response.image_url);
+        setPreviewImage("");
+        setImage(null);
+      }
+    } catch (error) {
+      setProfileErrorMessage(error.error || "Failed to update profile");
+      setTimeout(() => setProfileErrorMessage(""), 2000);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePasswordSubmit = async (e) => {
+    e.preventDefault();
+    setPasswordErrorMessage("");
+    setPasswordSuccessMessage("");
+    const oldPassword = e.target.oldPassword.value;
+    const newPassword = e.target.newPassword.value;
+    const confirmPassword = e.target.confirmPassword.value;
+
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      setPasswordErrorMessage("Vui lòng điền đầy đủ tất cả các trường");
+      setTimeout(() => setPasswordErrorMessage(""), 2000);
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordErrorMessage("Mật khẩu mới và xác nhận mật khẩu không khớp");
+      setTimeout(() => setPasswordErrorMessage(""), 2000);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await verifyOldPassword(formData.username, oldPassword);
+      const userData = { user_id: formData.user_id, password: newPassword };
+      await updateUser(userData, null);
+      setPasswordSuccessMessage("Updated successfully");
+      setTimeout(() => setPasswordSuccessMessage(""), 2000);
+      e.target.reset();
+    } catch (error) {
+      if (error.error === "Old password is incorrect") {
+        setPasswordErrorMessage("Old password is incorrect");
+        setTimeout(() => setPasswordErrorMessage(""), 2000);
+      } else {
+        setPasswordErrorMessage(error.error || "Cập nhật mật khẩu thất bại");
+        setTimeout(() => setPasswordErrorMessage(""), 2000);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSearch = () => {
     let filteredData = tradeHistoryData;
-
     if (selectedSymbol.trim() !== "") {
       filteredData = filteredData.filter((trade) =>
         trade.symbol.toLowerCase().includes(selectedSymbol.toLowerCase())
       );
     }
-
     setFilteredTradeHistoryData(filteredData);
   };
 
@@ -106,27 +209,13 @@ const UserInfo = () => {
                     </Space>
                   ),
                 },
-                {
-                  title: "Quantity",
-                  dataIndex: "amount",
-                },
-                {
-                  title: "Price",
-                  dataIndex: "price",
-                  render: (price) => `$${price.toFixed(2)}`,
-                },
-                {
-                  title: "Total Value",
-                  dataIndex: "totalValue",
-                  render: (totalValue) => `$${totalValue.toFixed(2)}`,
-                },
+                { title: "Quantity", dataIndex: "amount" },
+                { title: "Price", dataIndex: "price", render: (price) => `$${price.toFixed(2)}` },
+                { title: "Total Value", dataIndex: "totalValue", render: (totalValue) => `$${totalValue.toFixed(2)}` },
               ]}
               pagination={false}
               bordered
-              components={{
-                header: { cell: DarkHeaderCell },
-                body: { cell: DarkBodyCell },
-              }}
+              components={{ header: { cell: DarkHeaderCell }, body: { cell: DarkBodyCell } }}
             />
           </div>
         );
@@ -136,18 +225,8 @@ const UserInfo = () => {
           { title: "Time", dataIndex: "time", key: "time" },
           { title: "Symbol", dataIndex: "symbol", key: "symbol" },
           { title: "Side", dataIndex: "side", key: "side" },
-          {
-            title: "Price",
-            dataIndex: "price",
-            key: "price",
-            render: (price) => price.toFixed(2),
-          },
-          {
-            title: "Quantity",
-            dataIndex: "quantity",
-            key: "quantity",
-            render: (qty) => qty.toFixed(4),
-          },
+          { title: "Price", dataIndex: "price", key: "price", render: (price) => price.toFixed(2) },
+          { title: "Quantity", dataIndex: "quantity", key: "quantity", render: (qty) => qty.toFixed(4) },
           { title: "Fee", dataIndex: "fee", key: "fee" },
           { title: "Realized Profit", dataIndex: "realizedProfit", key: "realizedProfit" },
         ];
@@ -156,7 +235,6 @@ const UserInfo = () => {
           <div className="p-6">
             <h2 className="text-2xl font-semibold text-white mb-4">Trade History</h2>
             <div className="flex flex-wrap items-center gap-2 mb-4">
-              {/* DatePicker vẫn được giữ hiển thị */}
               <DatePicker
                 placeholder="From YYYY-MM-DD"
                 className="bg-gray-700 text-white"
@@ -174,7 +252,7 @@ const UserInfo = () => {
                 placeholder="Enter symbol"
                 value={selectedSymbol}
                 onChange={(e) => setSelectedSymbol(e.target.value)}
-                className="bg-gray-700 text-white placeholder-gray-400  p-1 rounded w-15"
+                className="bg-gray-700 text-white placeholder-gray-400 p-1 rounded w-15"
               />
               <Button onClick={handleSearch} className="bg-blue-600 text-white hover:bg-blue-500">
                 Search
@@ -190,136 +268,156 @@ const UserInfo = () => {
           </div>
         );
 
-        case "editProfile":
-          return (
-            <div className="p-6 flex flex-col">
-              <div className="flex mb-6">
-                <div className="w-1/2 p-4">
-                  <h2 className="text-2xl font-semibold text-white mb-4">My Profile</h2>
-                  <div className="flex center mb-6">
-                    <Upload
-                      action="/upload"
-                      listType="picture-card"
-                      showUploadList={false}
-                      onChange={handleAvatarChange}
-                      className="avatar-upload z-50"
-                    >
-                      {userInfo.avatar ? (
-                        <Avatar size={64} src={userInfo.avatar} className="border-2 border-gray-800" />
-                      ) : (
-                        <div
-                          className="flex text-white"
-                          style={{
-                            width: "64px",
-                            height: "64px",
-                            borderRadius: "50%",
-                            backgroundColor: "#333",
-                          }}
-                        ></div>
-                      )}
-                    </Upload>
+      case "editProfile":
+        return (
+          <div className="p-6">
+            <h2 className="text-2xl font-semibold text-white mb-6 text-center">Edit Profile</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Profile Info */}
+              <div className="bg-gray-900/80 border border-gray-800 rounded-xl p-6 shadow-lg">
+                <div className="flex justify-center mb-6">
+                  <label
+                    htmlFor="imageInput"
+                    className="cursor-pointer w-20 h-20 rounded-full overflow-hidden border-2 border-gray-700 flex items-center justify-center bg-gray-800"
+                  >
+                    <img
+                      src={previewImage || imageUrl || "https://via.placeholder.com/80"}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
+                  </label>
+                  <input
+                    type="file"
+                    id="imageInput"
+                    name="image"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                </div>
+                <form onSubmit={handleProfileSubmit} className="space-y-4">
+                  <div>
+                    <label htmlFor="name" className="text-white text-sm font-medium mb-1 block">
+                      Your Name
+                    </label>
+                    <input
+                      id="name"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      placeholder="Nhập tên của bạn"
+                      className="w-full bg-gray-800 text-white placeholder-gray-500 border border-gray-700 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                    />
                   </div>
-                </div>
+                  <div>
+                    <label htmlFor="email" className="text-white text-sm font-medium mb-1 block">
+                      Your Email
+                    </label>
+                    <input
+                      id="email"
+                      name="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="Nhập email của bạn"
+                      className="w-full bg-gray-800 text-white placeholder-gray-500 border border-gray-700 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="username" className="text-white text-sm font-medium mb-1 block">
+                      Your Username
+                    </label>
+                    <input
+                      id="username"
+                      name="username"
+                      type="text"
+                      value={formData.username}
+                      onChange={handleChange}
+                      placeholder="Nhập username của bạn"
+                      className="w-full bg-gray-800 text-white placeholder-gray-500 border border-gray-700 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <input
+                      id="points"
+                      name="points"
+                      type="number"
+                      value={formData.points}
+                      onChange={handleChange}
+                      placeholder="Points"
+                      className="w-full bg-gray-800 text-white placeholder-gray-500 border border-gray-700 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                      disabled
+                      hidden
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className={`w-full py-2 px-4 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-700 transition-all ${
+                      loading ? "bg-gray-500" : profileErrorMessage ? "bg-red-500" : profileSuccessMessage ? "bg-green-500" : "bg-blue-500 hover:bg-blue-600"
+                    } disabled:opacity-50`}
+                  >
+                    {loading ? "Saving..." : profileErrorMessage || profileSuccessMessage || "Save Profile"}
+                  </button>
+                </form>
               </div>
-        
-              <div className="flex">
-                <div className="w-1/2 p-4">
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      alert("Thông tin đã được cập nhật!");
-                    }}
+
+              {/* Change Password */}
+              <div className="bg-gray-900/80 border border-gray-800 rounded-xl p-6 shadow-lg">
+                <h3 className="text-lg font-semibold text-white mb-4">Change Password</h3>
+                <form onSubmit={handlePasswordSubmit} className="space-y-4">
+                  <div>
+                    <label htmlFor="oldPassword" className="text-white text-sm font-medium mb-1 block">
+                      Old Password
+                    </label>
+                    <input
+                      id="oldPassword"
+                      name="oldPassword"
+                      type="password"
+                      placeholder="Nhập mật khẩu cũ"
+                      required
+                      className="w-full bg-gray-800 text-white placeholder-gray-500 border border-gray-700 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="newPassword" className="text-white text-sm font-medium mb-1 block">
+                      New Password
+                    </label>
+                    <input
+                      id="newPassword"
+                      name="newPassword"
+                      type="password"
+                      placeholder="Nhập mật khẩu mới"
+                      required
+                      className="w-full bg-gray-800 text-white placeholder-gray-500 border border-gray-700 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="confirmPassword" className="text-white text-sm font-medium mb-1 block">
+                      Confirm New Password
+                    </label>
+                    <input
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      type="password"
+                      placeholder="Xác nhận mật khẩu mới"
+                      required
+                      className="w-full bg-gray-800 text-white placeholder-gray-500 border border-gray-700 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className={`w-full py-2 px-4 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-700 transition-all ${
+                      loading ? "bg-gray-500" : passwordErrorMessage ? "bg-red-500" : passwordSuccessMessage ? "bg-green-500" : "bg-blue-500 hover:bg-blue-600"
+                    } disabled:opacity-50`}
                   >
-                    <div className="mb-4">
-                      <label htmlFor="name" className="text-white">Your Name</label>
-                      <input
-                        id="name"
-                        name="name"
-                        value={userInfo.name}
-                        onChange={(e) => setUserInfo({ ...userInfo, name: e.target.value })}
-                        placeholder="Enter your name"
-                        className="bg-gray-700 text-white placeholder-gray-500 w-full p-2 mt-2"
-                      />
-                    </div>
-                    <div className="mb-4">
-                      <label htmlFor="email" className="text-white">Your Email</label>
-                      <input
-                        id="email"
-                        name="email"
-                        type="email"
-                        value={userInfo.email}
-                        onChange={(e) => setUserInfo({ ...userInfo, email: e.target.value })}
-                        placeholder="Enter your email"
-                        className="bg-gray-700 text-white border-none placeholder-gray-500 w-full p-2 mt-2"
-                      />
-                    </div>
-                    <div className="mb-4">
-                      <label htmlFor="username" className="text-white">Your username</label>
-                      <input
-                        id="username"
-                        name="username"
-                        type="text"
-                        value={userInfo.username}
-                        onChange={(e) => setUserInfo({ ...userInfo, username: e.target.value })}
-                        placeholder="Enter your username"
-                        className="bg-gray-700 text-white border-none placeholder-gray-500 w-full p-2 mt-2"
-                      />
-                    </div>
-                    <button type="submit" className="bg-blue-500 text-white py-2 px-4 rounded-lg">
-                      Save
-                    </button>
-                  </form>
-                </div>
-        
-                <div className="w-1/2 p-4 ml-6">
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      alert("Mật khẩu đã được thay đổi!");
-                    }}
-                  >
-                    <div className="mb-4">
-                      <label htmlFor="oldPassword" className="text-white">Old Password</label>
-                      <input
-                        id="oldPassword"
-                        name="oldPassword"
-                        type="password"
-                        placeholder="Enter your old password"
-                        required
-                        className="bg-gray-700 text-white border-none placeholder-gray-500 w-full p-2 mt-2"
-                      />
-                    </div>
-                    <div className="mb-4">
-                      <label htmlFor="newPassword" className="text-white">New Password</label>
-                      <input
-                        id="newPassword"
-                        name="newPassword"
-                        type="password"
-                        placeholder="Enter your new password"
-                        required
-                        className="bg-gray-700 text-white border-none placeholder-gray-500 w-full p-2 mt-2"
-                      />
-                    </div>
-                    <div className="mb-4">
-                      <label htmlFor="confirmPassword" className="text-white">Confirm New Password</label>
-                      <input
-                        id="confirmPassword"
-                        name="confirmPassword"
-                        type="password"
-                        placeholder="Confirm your new password"
-                        required
-                        className="bg-gray-700 text-white border-none placeholder-gray-500 w-full p-2 mt-2"
-                      />
-                    </div>
-                    <button type="submit" className="bg-blue-500 text-white py-2 px-4 rounded-lg">
-                      Change Password
-                    </button>
-                  </form>
-                </div>
+                    {loading ? "Changing..." : passwordErrorMessage || passwordSuccessMessage || "Change Password"}
+                  </button>
+                </form>
               </div>
             </div>
-          );
-        
+          </div>
+        );
 
       default:
         return <div className="p-6 text-white">Chọn một mục từ menu</div>;

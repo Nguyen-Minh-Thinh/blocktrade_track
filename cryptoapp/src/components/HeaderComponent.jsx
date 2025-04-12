@@ -1,7 +1,7 @@
 import { Navbar, Dropdown } from 'flowbite-react';
 import React, { useState, useEffect } from 'react';
 import { FaUserCircle, FaUser, FaChevronCircleDown } from "react-icons/fa";
-import { TbLogout} from "react-icons/tb";
+import { TbLogout } from "react-icons/tb";
 import { MdWbSunny } from "react-icons/md";
 import { IoMoon } from "react-icons/io5";
 import SignIn from '../models/SignIn';
@@ -12,43 +12,71 @@ import { checkAuth } from '../api/auth';
 import { Link } from 'react-router-dom';
 import Spot from '../models/Spot';
 import FavoritesList from '../models/FavoritesList';
+
 const HeaderComponent = () => {
   const [openSignIn, setOpenSignIn] = useState(false);
   const [openSignUp, setOpenSignUp] = useState(false);
   const [user, setUser] = useState(null);
+
   const swapModels = () => {
     setOpenSignIn(openSignUp);
     setOpenSignUp(openSignIn);
   };
-  const verifyAuth = async () => {
-    const userData = await checkAuth();
-    if(userData){
-      console.log('userData', userData)
-      setUser(userData);
-      localStorage.setItem("userLogin",JSON.stringify(userData))
+
+  // Hàm lấy thông tin người dùng từ localStorage
+  const loadUserFromStorage = () => {
+    const userData = localStorage.getItem("userLogin");
+    if (userData) {
+      setUser(JSON.parse(userData));
+    } else {
+      setUser(null); // Nếu không có dữ liệu, đặt user về null
     }
   };
+
+  // Xác minh auth khi không có dữ liệu trong localStorage
+  const verifyAuth = async () => {
+    const userData = await checkAuth();
+    if (userData) {
+      console.log('userData', userData);
+      setUser(userData);
+      localStorage.setItem("userLogin", JSON.stringify(userData));
+    }
+  };
+
   useEffect(() => {
-    const userLogin = localStorage.getItem("userLogin")
-    if(userLogin){
-      console.log('first')
-      setUser(JSON.parse(userLogin));
-    }else{
-      console.log('me')
+    // Load thông tin từ localStorage khi mount
+    loadUserFromStorage();
+
+    if (!localStorage.getItem("userLogin")) {
+      console.log('me');
       verifyAuth();
     }
+
+    // Lắng nghe sự kiện userUpdated từ UserInfo
+    const handleUserUpdated = () => {
+      console.log('User updated event received');
+      loadUserFromStorage(); // Cập nhật lại user từ localStorage
+    };
+
+    window.addEventListener("userUpdated", handleUserUpdated);
+
+    // Cleanup listener khi component unmount
+    return () => {
+      window.removeEventListener("userUpdated", handleUserUpdated);
+    };
   }, []);
 
   const handleLogout = () => {
     document.cookie = 'user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
     setUser(null);
-    localStorage.removeItem("userLogin")
+    localStorage.removeItem("userLogin");
+    window.location.reload();
   };
 
   return (
     <Navbar
       rounded
-      className="bg-gray-950  py-1 fixed top-0 left-0 w-full z-50 shadow-md "
+      className="bg-gray-950 py-1 fixed top-0 left-0 w-full z-50 shadow-md"
     >
       <SignIn
         openSI={openSignIn}
@@ -60,70 +88,66 @@ const HeaderComponent = () => {
         openSU={openSignUp}
         setOpenSU={setOpenSignUp}
         swapModels={swapModels}
-
       />
       <Navbar.Brand as={Link} to="/">
         <div>
           <img src="/logo.png" alt="" className="w-28" />
         </div>
       </Navbar.Brand>
-      <div className="flex md:order-2 items-center ">
+      <div className="flex md:order-2 items-center">
         <Search />
         {user ? (
           <>
-            <FavoritesList/>
-            <Spot/>
-            <Dropdown 
-            theme={{
-              floating:{
-                item:{
-                  base:"flex w-full cursor-pointer items-center justify-start px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 focus:bg-gray-800 focus:outline-none dark:text-gray-200 dark:hover:bg-gray-600 dark:hover:text-white dark:focus:bg-gray-600 dark:focus:text-white"
-                }
-              },
-              content:" focus:outline-none"
-            }}
+            <FavoritesList userId={user.user_id} />
+            <Spot value={user.points} />
+            <Dropdown
+              theme={{
+                floating: {
+                  item: {
+                    base: "flex w-full cursor-pointer items-center justify-start px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 focus:bg-gray-800 focus:outline-none dark:text-gray-200 dark:hover:bg-gray-600 dark:hover:text-white dark:focus:bg-gray-600 dark:focus:text-white"
+                  }
+                },
+                content: "focus:outline-none"
+              }}
               label={
-                <div className=" relative space-x-2 bg-transparent rounded-full p-1 hover:opacity-90 transition cursor-pointer">
-                  {user.image_url ? 
-                  (<img
-                    src={user.image_url}
-                    alt="User Avatar"
-                    className="w-9 h-9  rounded-full object-cover transition duration-200 group-hover:border-gray-400"
-                  />)
-                  :(
-                    <FaUserCircle className="w-9 h-9  text-gray-300 rounded-full bg-transparent object-cover transition duration-200 group-hover:border-gray-400"/>
+                <div className="relative space-x-2 bg-transparent rounded-full p-1 hover:opacity-90 transition cursor-pointer">
+                  {user.image_url ? (
+                    <img
+                      src={user.image_url}
+                      alt="User Avatar"
+                      className="w-9 h-9 rounded-full object-cover transition duration-200 group-hover:border-gray-400"
+                    />
+                  ) : (
+                    <FaUserCircle className="w-9 h-9 text-gray-300 rounded-full bg-transparent object-cover transition duration-200 group-hover:border-gray-400" />
                   )}
-                  <FaChevronCircleDown className='absolute bottom-1 text-gray-900 p-0 m-0 border-[3px] border-gray-950 rounded-full bg-gray-300 right-0 text-[16px]'/>
-                  
+                  <FaChevronCircleDown className="absolute bottom-1 text-gray-900 p-0 m-0 border-[3px] border-gray-950 rounded-full bg-gray-300 right-0 text-[16px]" />
                 </div>
               }
-              
               inline
               arrowIcon={false}
               className="bg-gray-900 z-50 min-w-[132px] border border-gray-800 rounded shadow-lg animate-fadeIn"
-
             >
-              <Dropdown.Item 
+              <Dropdown.Item
                 href="/user-info"
-                className="  hover:text-gray-400  transition flex text-start items-center gap-x-3 py-[6px] px-3 "
+                className="hover:text-gray-400 transition flex text-start items-center gap-x-3 py-[6px] px-3"
               >
-                <FaUser className='text-base w-4 p-0 m-0'/>
+                <FaUser className="text-base w-4 p-0 m-0" />
                 <p className="w-[80px] truncate">
-                  {user.username}
+                  {user.name}
                 </p>
               </Dropdown.Item>
-              <Dropdown.Item 
-                className="  hover:text-gray-400  transition flex text-start items-center gap-x-3 py-[6px] px-3"
+              <Dropdown.Item
+                className="hover:text-gray-400 transition flex text-start items-center gap-x-3 py-[6px] px-3"
               >
-                <MdWbSunny className='text-base w-4 p-0 m-0 hidden'/>
-                <IoMoon className='text-base w-4 p-0 m-0'/>
+                <MdWbSunny className="text-base w-4 p-0 m-0 hidden" />
+                <IoMoon className="text-base w-4 p-0 m-0" />
                 <p>Dark</p>
               </Dropdown.Item>
-              <Dropdown.Item 
+              <Dropdown.Item
                 onClick={handleLogout}
-                className="  hover:text-gray-400  transition flex text-start items-center gap-x-3 py-[6px] px-3"
+                className="hover:text-gray-400 transition flex text-start items-center gap-x-3 py-[6px] px-3"
               >
-                <TbLogout className='text-[18px] w-4 p-0 m-0'/>
+                <TbLogout className="text-[18px] w-4 p-0 m-0" />
                 <p>Logout</p>
               </Dropdown.Item>
             </Dropdown>
@@ -141,9 +165,7 @@ const HeaderComponent = () => {
         <Navbar.Toggle />
       </div>
       <Navbar.Collapse className="">
-        <Navbar.Link className="text-white" href="#">
-          Home
-        </Navbar.Link>
+        <Navbar.Link className="text-white" href="#">Home</Navbar.Link>
         <Navbar.Link className="text-white" href="#">About</Navbar.Link>
         <Navbar.Link className="text-white" href="#">Services</Navbar.Link>
         <Navbar.Link className="text-white" href="#">Pricing</Navbar.Link>

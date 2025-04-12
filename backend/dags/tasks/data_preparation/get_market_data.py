@@ -186,7 +186,7 @@ if __name__ == "__main__":
         port='8124'
     )
     client = Client()
-    # full_load()
+    full_load()
     # Sắp xếp dữ liệu theo 'Coin ID' và 'Timestamp' để đảm bảo tính toán chính xác
     
 # print(df.head())
