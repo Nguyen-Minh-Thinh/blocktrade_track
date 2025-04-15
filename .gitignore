@@ -5,3 +5,5 @@ backend/.$workflow.drawio.bkp
 backend/workflow.drawio
 backend/checkpointLocation
 **/__pycache__/
+backend/test_chatbot.py
+backend/.env
