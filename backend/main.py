@@ -6,6 +6,7 @@ from api.transactions import transactions_bp
 from api.favorites import favorites_bp
 from api.historical_data import historical_data_bp
 from api.news import news_bp
+from api.coins import coins_bp
 
 from kafka import KafkaConsumer
 import json
@@ -38,6 +39,7 @@ app.register_blueprint(transactions_bp, url_prefix='/transactions')
 app.register_blueprint(favorites_bp, url_prefix='/favorites')
 app.register_blueprint(historical_data_bp, url_prefix='/historical_data')
 app.register_blueprint(news_bp, url_prefix='/news')
+app.register_blueprint(coins_bp, url_prefix='/coins')
 # Optional: Add a root route to verify the server is running
 @app.route('/')
 def home():

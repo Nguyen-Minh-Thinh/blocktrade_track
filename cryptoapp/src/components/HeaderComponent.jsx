@@ -8,69 +8,111 @@ import SignIn from '../models/SignIn';
 import SignUp from '../models/SignUp';
 import ButtonComponent from './ButtonComponent';
 import Search from '../models/Search';
-import { checkAuth } from '../api/auth';
+import { checkAuth, logout } from '../api/auth';
 import { Link } from 'react-router-dom';
 import Spot from '../models/Spot';
 import FavoritesList from '../models/FavoritesList';
+import { toast } from 'react-toastify';
 
 const HeaderComponent = () => {
   const [openSignIn, setOpenSignIn] = useState(false);
   const [openSignUp, setOpenSignUp] = useState(false);
   const [user, setUser] = useState(null);
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark'); // Default to dark theme
 
   const swapModels = () => {
     setOpenSignIn(openSignUp);
     setOpenSignUp(openSignIn);
   };
 
-  // Hàm lấy thông tin người dùng từ localStorage
+  // Load user from localStorage
   const loadUserFromStorage = () => {
     const userData = localStorage.getItem("userLogin");
     if (userData) {
       setUser(JSON.parse(userData));
     } else {
-      setUser(null); // Nếu không có dữ liệu, đặt user về null
+      setUser(null);
     }
   };
 
-  // Xác minh auth khi không có dữ liệu trong localStorage
+  // Verify authentication if no user data in localStorage
   const verifyAuth = async () => {
-    const userData = await checkAuth();
-    if (userData) {
-      console.log('userData', userData);
-      setUser(userData);
-      localStorage.setItem("userLogin", JSON.stringify(userData));
+    try {
+      const userData = await checkAuth();
+      if (userData) {
+        setUser(userData);
+        localStorage.setItem("userLogin", JSON.stringify(userData));
+      } else {
+        setUser(null);
+        localStorage.removeItem("userLogin");
+      }
+    } catch (err) {
+      console.error('Error verifying auth:', err);
+      setUser(null);
+      localStorage.removeItem("userLogin");
     }
+  };
+
+  // Toggle theme between light and dark
+  const toggleTheme = () => {
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    document.documentElement.classList.toggle('dark', newTheme === 'dark');
   };
 
   useEffect(() => {
-    // Load thông tin từ localStorage khi mount
+    // Load user from localStorage on mount
     loadUserFromStorage();
 
+    // Verify auth if no user data in localStorage
     if (!localStorage.getItem("userLogin")) {
-      console.log('me');
       verifyAuth();
     }
 
-    // Lắng nghe sự kiện userUpdated từ UserInfo
+    // Load theme from localStorage and apply it
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    setTheme(savedTheme);
+    document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+
+    // Listen for user updates from UserInfo
     const handleUserUpdated = () => {
-      console.log('User updated event received');
-      loadUserFromStorage(); // Cập nhật lại user từ localStorage
+      loadUserFromStorage();
     };
 
     window.addEventListener("userUpdated", handleUserUpdated);
 
-    // Cleanup listener khi component unmount
+    // Cleanup listener on unmount
     return () => {
       window.removeEventListener("userUpdated", handleUserUpdated);
     };
   }, []);
 
-  const handleLogout = () => {
-    document.cookie = 'user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-    setUser(null);
-    localStorage.removeItem("userLogin");
-    window.location.reload();
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setUser(null);
+      localStorage.removeItem("userLogin");
+      toast.success("Logout successful", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "dark",
+      });
+    } catch (err) {
+      toast.error(err.error || 'Logout failed', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "dark",
+      });
+    }
   };
 
   return (
@@ -98,7 +140,7 @@ const HeaderComponent = () => {
         <Search />
         {user ? (
           <>
-            <FavoritesList userId={user.user_id} />
+            <FavoritesList />
             <Spot value={user.points} />
             <Dropdown
               theme={{
@@ -137,11 +179,20 @@ const HeaderComponent = () => {
                 </p>
               </Dropdown.Item>
               <Dropdown.Item
+                onClick={toggleTheme}
                 className="hover:text-gray-400 transition flex text-start items-center gap-x-3 py-[6px] px-3"
               >
-                <MdWbSunny className="text-base w-4 p-0 m-0 hidden" />
-                <IoMoon className="text-base w-4 p-0 m-0" />
-                <p>Dark</p>
+                {theme === 'dark' ? (
+                  <>
+                    <MdWbSunny className="text-base w-4 p-0 m-0" />
+                    <p>Light</p>
+                  </>
+                ) : (
+                  <>
+                    <IoMoon className="text-base w-4 p-0 m-0" />
+                    <p>Dark</p>
+                  </>
+                )}
               </Dropdown.Item>
               <Dropdown.Item
                 onClick={handleLogout}

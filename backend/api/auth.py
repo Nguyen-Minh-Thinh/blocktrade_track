@@ -10,17 +10,12 @@ from email.mime.multipart import MIMEMultipart
 from .clickhouse_config import execute_clickhouse_query, DATABASE  # Nhập từ clickhouse_config.py
 import requests
 from werkzeug.utils import secure_filename
-
 from flask_jwt_extended import create_access_token, create_refresh_token, set_access_cookies, set_refresh_cookies
-from flask_jwt_extended import get_jwt_identity
-from flask_jwt_extended import jwt_required
-
-from datetime import timedelta
+from flask_jwt_extended import get_jwt_identity, jwt_required, unset_jwt_cookies
 
 # Initialize the Blueprint for auth routes
 auth_bp = Blueprint('auth', __name__)
 CORS(auth_bp, supports_credentials=True, origins="*")
-
 
 # Imgur Client ID (https://api.imgur.com/)
 IMGUR_CLIENT_ID = "7a5dd71412cf78d"
@@ -222,6 +217,7 @@ def login():
         data = request.get_json()
         username = data.get('username')
         password = data.get('password')
+        remember = data.get('remember', False)  # Default to False if not provided
 
         # Validate required fields
         if not all([username, password]):
@@ -258,48 +254,62 @@ def login():
         if not verify_password(password, password_hash):
             return jsonify({'error': 'Invalid username or password'}), 401
 
-        # Create response and set cookie
-        # response = make_response(jsonify({'message': 'Login successful', 'user_id': user_id}), 200)
-        # access_token = create_access_token(identity=user_id, expires_delta=timedelta(seconds=30))
-        access_token = create_access_token(identity=user_id)
-        refresh_token = create_refresh_token(identity=user_id)
-        resp = jsonify({"msg": "Login successful"})
+        # Generate JWT tokens
+        access_token = create_access_token(identity=user_id, expires_delta=timedelta(minutes=15))
+        # Adjust refresh token expiration based on "remember"
+        refresh_expiry = timedelta(days=30) if remember else timedelta(days=7)
+        refresh_token = create_refresh_token(identity=user_id, expires_delta=refresh_expiry)
+
+        # Set tokens in cookies
+        resp = jsonify({"message": "Login successful", "user_id": user_id})
         set_access_cookies(resp, access_token)
         set_refresh_cookies(resp, refresh_token)
-        # return jsonify(access_token=access_token)
         return resp, 200
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# Refresh token endpoint (Requires refresh token)
 @auth_bp.route("/refresh", methods=["POST"])
-@jwt_required(refresh=True) # Default: Automatically read refresh token
+@jwt_required(refresh=True)
 def refresh():
-    current_user = get_jwt_identity()
-    new_access_token = create_access_token(identity=current_user)
+    try:
+        current_user = get_jwt_identity()
+        new_access_token = create_access_token(identity=current_user, expires_delta=timedelta(minutes=15))
 
-    resp = jsonify({"msg": "Token refreshed"})
-    set_access_cookies(resp, new_access_token)
-    return resp, 200
+        resp = jsonify({"message": "Token refreshed"})
+        set_access_cookies(resp, new_access_token)
+        return resp, 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-# Test
+# Logout endpoint (Clears JWT cookies)
+@auth_bp.route('/logout', methods=['POST'])
+@jwt_required()
+def logout():
+    try:
+        resp = jsonify({"message": "Logout successful"})
+        unset_jwt_cookies(resp)
+        return resp, 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Protected test endpoint (Requires access token)
 @auth_bp.route("/protected", methods=["GET"])
 @jwt_required()
 def protected():
-    # Access the identity of the current user with get_jwt_identity
-    current_user = get_jwt_identity()
-    return jsonify(logged_in_as=current_user), 200
+    try:
+        current_user = get_jwt_identity()
+        return jsonify(logged_in_as=current_user), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-
-# Check authentication endpoint
+# Check authentication endpoint (Requires access token)
 @auth_bp.route('/me', methods=['GET'])
-@jwt_required() # Default: Automatically read access token
+@jwt_required()
 def check_auth():
     try:
-        # user_id = request.cookies.get('user')
         user_id = get_jwt_identity()
-        if not user_id:
-            return jsonify({'error': 'Unauthorized'}), 401
         print(f"[DEBUG] user_id from token: {user_id}")
         query = f"""
         SELECT user_id, name, email, image_url, username, created_at, points
@@ -313,21 +323,23 @@ def check_auth():
 
         user_data = result['data'][0]
         return jsonify(user_data), 200
-
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# Update user profile endpoint
+# Update user profile endpoint (Requires access token)
 @auth_bp.route('/update', methods=['PUT'])
+@jwt_required()
 def update_user():
     try:
+        # Get the authenticated user's ID from JWT
+        user_id = get_jwt_identity()
+
         # Handle form data (multipart/form-data)
-        user_id = request.form.get('user_id')
         name = request.form.get('name')
         email = request.form.get('email')
         username = request.form.get('username')
         password = request.form.get('password')
-        image_url = request.form.get('image_url')  # URL từ frontend nếu không gửi file
+        image_url = request.form.get('image_url')  # URL from frontend if no file is sent
 
         # Handle image file upload to Imgur if file is provided
         if 'image' in request.files:
@@ -346,10 +358,6 @@ def update_user():
             else:
                 return jsonify({'error': 'Invalid file type. Only PNG, JPG, JPEG, GIF allowed'}), 400
 
-        # Validate required fields
-        if not user_id:
-            return jsonify({'error': 'Missing user_id'}), 400
-
         # Validate user_id
         user_data = validate_user(user_id)
         if not user_data:
@@ -362,7 +370,7 @@ def update_user():
             updates.append(f"name = %(name)s")
         if email:
             updates.append(f"email = %(email)s")
-        if image_url is not None:  # Chỉ cập nhật image_url nếu có file hoặc URL mới
+        if image_url is not None:  # Only update image_url if a file or new URL is provided
             updates.append(f"image_url = %(image_url)s")
         if username:
             updates.append(f"username = %(username)s")
