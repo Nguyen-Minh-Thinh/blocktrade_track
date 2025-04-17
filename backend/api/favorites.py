@@ -5,11 +5,7 @@ import uuid
 from flask_cors import CORS
 import logging
 from .clickhouse_config import execute_clickhouse_query, DATABASE
-
-from flask_jwt_extended import create_access_token, create_refresh_token, set_access_cookies, set_refresh_cookies
-from flask_jwt_extended import get_jwt_identity
-from flask_jwt_extended import jwt_required
-
+from flask_jwt_extended import get_jwt_identity, jwt_required
 
 # Initialize the Blueprint for favorites routes
 favorites_bp = Blueprint('favorites', __name__)
@@ -52,21 +48,25 @@ def is_favorite(user_id, coin_id):
         logger.error(f"Error checking if coin {coin_id} is favorite for user {user_id}: {str(e)}")
         raise
 
-# Add a coin to the user's favorites
+# Add a coin to the user's favorites (Requires access token)
 @favorites_bp.route('/add', methods=['POST'])
 @jwt_required()
 def add_to_favorites():
     try:
+        # Get the authenticated user's ID from JWT
         user_id = get_jwt_identity()
+        logger.info(f"Adding favorite for user_id: {user_id}")
+
         # Validate user_id
         if not validate_user(user_id):
             return jsonify({'error': 'Invalid user_id'}), 404
+
         data = request.get_json()
         coin_id = data.get('coin_id')
 
         # Validate required fields
-        if not all([user_id, coin_id]):
-            return jsonify({'error': 'Missing required fields (user_id, coin_id)'}), 400
+        if not coin_id:
+            return jsonify({'error': 'Missing required field: coin_id'}), 400
 
         # Validate coin_id
         if not validate_coin(coin_id):
@@ -98,21 +98,25 @@ def add_to_favorites():
         logger.error(f"Error in add_to_favorites: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
-# Remove a coin from the user's favorites
+# Remove a coin from the user's favorites (Requires access token)
 @favorites_bp.route('/remove', methods=['POST'])
 @jwt_required()
 def remove_from_favorites():
     try:
+        # Get the authenticated user's ID from JWT
         user_id = get_jwt_identity()
+        logger.info(f"Removing favorite for user_id: {user_id}")
+
         # Validate user_id
         if not validate_user(user_id):
             return jsonify({'error': 'Invalid user_id'}), 404
+
         data = request.get_json()
         coin_id = data.get('coin_id')
 
         # Validate required fields
-        if not all([user_id, coin_id]):
-            return jsonify({'error': 'Missing required fields (user_id, coin_id)'}), 400
+        if not coin_id:
+            return jsonify({'error': 'Missing required field: coin_id'}), 400
 
         # Validate coin_id
         if not validate_coin(coin_id):
@@ -135,59 +139,37 @@ def remove_from_favorites():
         logger.error(f"Error in remove_from_favorites: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
-# Get the user's favorite coins
+# Get the user's favorite coins (Requires access token)
 @favorites_bp.route('/', methods=['GET'])
 @jwt_required()
 def get_favorites():
     try:
-# <<<<<<< new-feature
-        user_id = request.args.get('user_id')
+        # Get the authenticated user's ID from JWT
+        user_id = get_jwt_identity()
         logger.info(f"Fetching favorites for user_id: {user_id}")
 
-        if not user_id:
-            return jsonify({'error': 'Missing user_id parameter'}), 400
-
+        # Validate user_id
         if not validate_user(user_id):
             return jsonify({'error': 'Invalid user_id'}), 404
 
-        # Fetch favorite coins with coin details and market data
-# =======
-#         user_id = get_jwt_identity()
-#         # Validate user_id
-#         if not validate_user(user_id):
-#             return jsonify({'error': 'Invalid user_id'}), 404
-
-        # if not user_id:
-        #     return jsonify({'error': 'Missing user_id parameter'}), 400
-        # if not validate_user(user_id):
-        #     return jsonify({'error': 'Invalid user_id'}), 404
-
-        # Fetch favorite coins with coin details
-# >>>>>>> main
+        # Fetch favorite coins with coin details and the latest market data
         query = f"""
+        SELECT f.user_id, f.coin_id, c.name, c.symbol, c.image_url, f.added_at
         SELECT 
-    f.favorite_id,
-    f.user_id, 
-    f.coin_id AS coin_id,
-    c.name, 
-    c.symbol, 
-    c.image_url, 
-    f.added_at,
-    toString(m.price) AS price,
-    toString(m.price_change_24h) AS price_change_24h
-FROM {DATABASE}.favorites f
-JOIN {DATABASE}.coins c 
-    ON f.coin_id = c.coin_id
-JOIN {DATABASE}.market_data m 
-    ON f.coin_id = m.coin_id
-JOIN (
-    SELECT 
-        coin_id, 
-        max(updated_date) AS max_updated
-    FROM {DATABASE}.market_data
-    GROUP BY coin_id
-) latest
-    ON m.coin_id = latest.coin_id AND m.updated_date = latest.max_updated
+            f.favorite_id,
+            f.user_id, 
+            f.coin_id AS coin_id,  -- Alias to fix field name
+            c.name, 
+            c.symbol, 
+            c.image_url, 
+            f.added_at,
+            toString(m.price) AS price,  -- Cast to string
+            toString(m.price_change_24h) AS price_change_24h  -- Cast to string
+        FROM {DATABASE}.favorites f
+        LEFT JOIN {DATABASE}.coins c ON f.coin_id = c.coin_id
+        LEFT JOIN {DATABASE}.market_data m ON f.coin_id = m.coin_id
+        WHERE f.user_id = %(user_id)s
+        ORDER BY f.added_at DESC
         """
         logger.info(f"Executing query: {query}")
         result = execute_clickhouse_query(query, params={"user_id": user_id})
@@ -231,6 +213,10 @@ JOIN (
             except Exception as e:
                 logger.error(f"Error parsing row {row}: {str(e)}")
                 continue
+
+        if not favorites:
+            logger.info(f"No favorites found for user_id: {user_id}")
+            return jsonify({'favorites': []}), 200
 
         logger.info(f"Returning {len(favorites)} favorites for user_id: {user_id}")
         return jsonify({'favorites': favorites}), 200

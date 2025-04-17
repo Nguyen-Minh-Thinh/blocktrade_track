@@ -3,21 +3,22 @@ import { Checkbox, Label, Modal, TextInput } from "flowbite-react";
 import { Link } from "react-router-dom";
 import ButtonComponent from '../components/ButtonComponent';
 import { login } from '../api/auth';
-import { HiEye, HiEyeOff } from 'react-icons/hi'; // Add icons from react-icons
-import { checkAuth } from '../api/auth'
+import { HiEye, HiEyeOff } from 'react-icons/hi';
+import { checkAuth } from '../api/auth';
 import { toast } from 'react-toastify';
 
 const SignIn = ({ openSI, setOpenSI, swapModels, setUser }) => {
   const [formData, setFormData] = useState({
     username: '',
-    password: ''
+    password: '',
+    remember: false, // Add remember field to formData
   });
   const [error, setError] = useState({
     username: '',
-    password: ''
+    password: '',
   });
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false); // Password hide/show status
+  const [showPassword, setShowPassword] = useState(false);
 
   const customStyles = {
     "body": {
@@ -36,13 +37,16 @@ const SignIn = ({ openSI, setOpenSI, swapModels, setUser }) => {
   };
 
   const handleChange = (e) => {
+    const { id, value, type, checked } = e.target;
+    const newValue = type === 'checkbox' ? checked : value;
+
     setError({
       ...error,
-      [e.target.id]: e.target.value.length <= 0 ? "This value cannot be empty" : ""
+      [id]: newValue.length <= 0 && id !== 'remember' ? "This value cannot be empty" : ""
     });
     setFormData({
       ...formData,
-      [e.target.id]: e.target.value
+      [id]: newValue
     });
   };
 
@@ -52,9 +56,8 @@ const SignIn = ({ openSI, setOpenSI, swapModels, setUser }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // setError(null);
-    let newErrors = { ...error };
+
+    let newErrors = { username: '', password: '' };
     if (!formData.username.trim()) {
       newErrors.username = "This value cannot be empty";
     }
@@ -62,30 +65,55 @@ const SignIn = ({ openSI, setOpenSI, swapModels, setUser }) => {
       newErrors.password = "This value cannot be empty";
     }
     setError(newErrors);
-    if(newErrors.username ==="" && newErrors.password===""){
+
+    if (newErrors.username === "" && newErrors.password === "") {
       setLoading(true);
       try {
         await login(
           formData.username,
-          formData.password
+          formData.password,
+          formData.remember // Pass the "remember" option to the login function
         );
         setOpenSI(false);
-        toast.success("Login success");
-        setFormData({username: '',password: ''});
-        const userData = await checkAuth(); // Lấy thông tin người dùng sau khi đăng nhập
-        setUser(userData); // Cập nhật state user trong HeaderComponent
+        toast.success("Login successful", {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "dark",
+        });
+        setFormData({ username: '', password: '', remember: false });
+        setError({ username: '', password: '' });
+        const userData = await checkAuth();
+        setUser(userData);
       } catch (err) {
-        // setError(err.error || 'Login failed');
-        toast.error(err.error);
+        toast.error(err.error || 'Login failed', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "dark",
+        });
       } finally {
         setLoading(false);
       }
     }
   };
 
+  const handleClose = () => {
+    setOpenSI(false);
+    setFormData({ username: '', password: '', remember: false });
+    setError({ username: '', password: '' });
+    setLoading(false); // Reset loading state on close
+  };
+
   return (
     <>
-      <Modal show={openSI} onClose={() => {setOpenSI(false) ;setError({username: '',password: ''}); setFormData({username: '',password: ''})} } initialFocus size='md' popup theme={customStyles}>
+      <Modal show={openSI} onClose={handleClose} initialFocus size='md' popup theme={customStyles}>
         <Modal.Header />
         <Modal.Body>
           <div className="my-2 px-4 text-white">
@@ -102,11 +130,11 @@ const SignIn = ({ openSI, setOpenSI, swapModels, setUser }) => {
                   placeholder="Enter your Username/Email"
                   value={formData.username}
                   onChange={handleChange}
-                  
+                  disabled={loading} // Disable input during loading
                 />
-                {error.username !== ""&&
+                {error.username !== "" && (
                   <span className="text-red-500 text-xs text-center mt-2">{error.username}</span>
-                }
+                )}
               </div>
               <div className="relative">
                 <div className="mb-2 mt-2 block">
@@ -116,29 +144,39 @@ const SignIn = ({ openSI, setOpenSI, swapModels, setUser }) => {
                   theme={customStyles}
                   color='custom-bg'
                   id="password"
-                  type={showPassword ? 'text' : 'password'} // Toggle between text and password
+                  type={showPassword ? 'text' : 'password'}
                   placeholder='Enter your password'
                   value={formData.password}
                   onChange={handleChange}
-                  
+                  disabled={loading} // Disable input during loading
                 />
                 <button
                   type="button"
                   className="absolute inset-y-0 right-0 flex items-center pr-3 mt-6 text-gray-400 hover:text-white"
                   onClick={togglePasswordVisibility}
+                  disabled={loading}
                 >
                   {showPassword ? <HiEyeOff size={20} /> : <HiEye size={20} />}
                 </button>
-                {error.password !== ""&&
+                {error.password !== "" && (
                   <span className="text-red-500 text-xs text-center mt-2">{error.password}</span>
-                }
+                )}
               </div>
               <div className="flex justify-between my-2">
                 <div className="flex items-center gap-2">
-                  <Checkbox id="remember" />
+                  <Checkbox
+                    id="remember"
+                    checked={formData.remember}
+                    onChange={handleChange}
+                    disabled={loading}
+                  />
                   <Label className='text-white' htmlFor="remember">Remember me</Label>
                 </div>
-                <Link to="/forgot" onClick={() => {setOpenSI(false) ;setError({username: '',password: ''}); setFormData({username: '',password: ''})}} className="text-sm text-gray-500 hover:text-white hover:underline">
+                <Link
+                  to="/forgot"
+                  onClick={handleClose}
+                  className="text-sm text-gray-500 hover:text-white hover:underline"
+                >
                   Lost Password?
                 </Link>
               </div>

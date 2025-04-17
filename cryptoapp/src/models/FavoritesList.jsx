@@ -1,60 +1,116 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FaStar } from "react-icons/fa";
-import { getFavorites, removeFavorite } from '../api/favorites';
+import { getFavorites, addFavorite, removeFavorite } from '../api/favorites';
+import { toast } from 'react-toastify';
 
-const FavoritesList = ({ userId }) => {
+const FavoritesList = ({ coin }) => {
   const [showFavoritesList, setShowFavoriteList] = useState(false);
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isFavorite, setIsFavorite] = useState(false);
 
   // Fetch favorites from the backend
   const fetchFavorites = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      console.log('Fetching favorites for userId:', userId);
-      const response = await getFavorites(userId);
-      console.log('API response:', response);
+      const response = await getFavorites();
       if (!response || !response.favorites) {
         throw new Error('Invalid response format: missing favorites property');
       }
-      console.log('Setting favorites:', response.favorites);
       setFavorites(response.favorites);
+
+      // Check if the current coin is in favorites (only if coin is provided)
+      if (coin) {
+        const isCoinFavorite = response.favorites.some(item => item.coin_id === coin.id);
+        setIsFavorite(isCoinFavorite);
+      }
     } catch (err) {
-      console.error('Error fetching favorites:', err);
       setError(err.error || 'Failed to load favorites. Please try again.');
       setFavorites([]);
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [coin]);
 
-  // Fetch favorites when the component mounts or userId changes
+  // Fetch favorites when the component mounts or coin changes
   useEffect(() => {
-    console.log('useEffect triggered with userId:', userId);
-    if (userId && typeof userId === 'string' && userId.trim() !== '') {
-      fetchFavorites();
-    } else {
-      setError('User ID is missing or invalid. Please log in.');
-      setFavorites([]);
+    fetchFavorites();
+  }, [fetchFavorites]);
+
+  // Handle adding a favorite
+  const handleAddFavorite = async (coinId) => {
+    try {
+      await addFavorite(coinId);
+      await fetchFavorites();
+      toast.success("Added to favorites", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "dark",
+      });
+    } catch (err) {
+      setError(err.error || 'Failed to add favorite. Please try again.');
+      toast.error(err.error || 'Failed to add favorite', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "dark",
+      });
     }
-  }, [userId, fetchFavorites]);
+  };
 
   // Handle removing a favorite
   const handleRemoveFavorite = async (coinId) => {
     try {
-      await removeFavorite(userId, coinId);
-      setFavorites(favorites.filter(item => item.coin_id !== coinId));
+      await removeFavorite(coinId);
+      await fetchFavorites();
+      toast.success("Removed from favorites", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "dark",
+      });
     } catch (err) {
       setError(err.error || 'Failed to remove favorite. Please try again.');
+      toast.error(err.error || 'Failed to remove favorite', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "dark",
+      });
     }
   };
 
   return (
     <div>
       <div onMouseLeave={() => setShowFavoriteList(false)} className='py-5 px-1 mx-2 relative'>
-        <FaStar onMouseEnter={() => setShowFavoriteList(true)} className='cursor-pointer text-xl text-yellow-300'/>
+        {/* Star icon to toggle favorites list and add/remove current coin */}
+        {coin ? (
+          <FaStar
+            onClick={() => isFavorite ? handleRemoveFavorite(coin.id) : handleAddFavorite(coin.id)}
+            onMouseEnter={() => setShowFavoriteList(true)}
+            className={`cursor-pointer text-xl ${isFavorite ? 'text-yellow-300' : 'text-gray-400'}`}
+          />
+        ) : (
+          <FaStar
+            onMouseEnter={() => setShowFavoriteList(true)}
+            className='cursor-pointer text-xl text-yellow-300'
+          />
+        )}
         {showFavoritesList && (
           <div className='bg-gray-900 min-w-[360px] absolute right-0 top-14 rounded-lg shadow-lg z-50'>
             <div className='w-full border-b border-gray-600'>
@@ -78,7 +134,10 @@ const FavoritesList = ({ userId }) => {
                   favorites.map(item => (
                     <div key={item.id} className='grid grid-cols-4 px-3 py-3 font-medium text-sm text-white cursor-pointer group hover:bg-gray-800 hover:rounded-lg'>
                       <div className='flex justify-start items-center col-span-2'>
-                        <FaStar onClick={() => handleRemoveFavorite(item.coin_id)} className='text-yellow-300 mr-3'/>
+                        <FaStar
+                          onClick={() => handleRemoveFavorite(item.coin_id)}
+                          className='text-yellow-300 mr-3 cursor-pointer'
+                        />
                         <img src={item.logo} alt="logo" className='w-5 h-5' />
                         <p className='ml-4'>{item.name}</p>
                       </div>
