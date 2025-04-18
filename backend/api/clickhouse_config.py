@@ -1,55 +1,47 @@
-import requests
+import clickhouse_connect
 from flask import Blueprint
 
-# Initialize the Blueprint for favorites routes
+# Initialize the Blueprint for ClickHouse config routes (optional, not used directly in routes)
 clickhouse_config_bp = Blueprint('clickhouse_config', __name__)
 
 # ClickHouse Configuration
-CLICKHOUSE_HOST = "http://localhost:8124"
+CLICKHOUSE_HOST = "localhost"
+CLICKHOUSE_PORT = 8124
 DATABASE = "blocktrade_track"
 CLICKHOUSE_USER = "default"
-CLICKHOUSE_PASSWORD = "123456"  
+CLICKHOUSE_PASSWORD = "123456"
 
-# Helper function to send a query to ClickHouse via HTTP API
+# Create ClickHouse client
+client = clickhouse_connect.get_client(
+    host=CLICKHOUSE_HOST,
+    port=CLICKHOUSE_PORT,
+    database=DATABASE,
+    username=CLICKHOUSE_USER,
+    password=CLICKHOUSE_PASSWORD
+)
+
+# Helper function to send a query to ClickHouse using clickhouse_connect
 def execute_clickhouse_query(query, params=None):
-    # Add FORMAT JSON to get structured JSON responses (for SELECT queries)
-    is_select_query = query.strip().upper().startswith("SELECT")
-    if is_select_query:
-        query = f"{query} FORMAT JSON"
-
-    # Manually substitute parameters into the query string
-    if params:
-        for key, value in params.items():
-            # Sanitize the value to prevent SQL injection
-            if isinstance(value, str):
-                # Escape single quotes by doubling them (ClickHouse uses '' for escaping)
-                escaped_value = value.replace("'", "''")
-                sanitized_value = f"'{escaped_value}'"
-            else:
-                sanitized_value = str(value)
-            query = query.replace(f"%({key})s", sanitized_value)
-
-    # Construct the URL with the database parameter
-    url = f"{CLICKHOUSE_HOST}/?database={DATABASE}"
-
     try:
-        # Use GET for SELECT queries (read-only), POST for modifying queries (INSERT, UPDATE, DELETE)
+        # Determine if it's a SELECT query
+        is_select_query = query.strip().upper().startswith("SELECT")
+
+        # Prepare parameters for safe substitution
+        query_params = params or {}
+
+        # Execute the query
         if is_select_query:
-            url = f"{url}&query={query}"
-            response = requests.get(url, auth=(CLICKHOUSE_USER, CLICKHOUSE_PASSWORD))
+            # For SELECT queries, request JSON-like data (list of dicts)
+            result = client.query(query, parameters=query_params)
+            # Convert rows to a JSON-like structure
+            data = [dict(zip(result.column_names, row)) for row in result.result_rows]
+            return {"data": data}
         else:
-            response = requests.post(url, data=query, headers={'Content-Type': 'text/plain'},
-                                   auth=(CLICKHOUSE_USER, CLICKHOUSE_PASSWORD))
+            # For INSERT, UPDATE, DELETE, etc., execute without expecting results
+            client.command(query, parameters=query_params)
+            return {"data": []}
 
-        if response.status_code != 200:
-            raise Exception(f"ClickHouse query failed: {response.text}")
-
-        # For SELECT queries, parse the JSON response
-        if is_select_query:
-            return response.json()
-        # For modifying queries, return an empty dict (ClickHouse doesn't return data for these)
-        return {"data": []}
-    except requests.exceptions.RequestException as e:
+    except clickhouse_connect.errors.DatabaseError as e:
         raise Exception(f"ClickHouse query failed: {str(e)}")
-    except ValueError as e:
-        raise Exception(f"Failed to parse ClickHouse response as JSON: {str(e)}")
+    except Exception as e:
+        raise Exception(f"ClickHouse query failed: {str(e)}")
