@@ -6,8 +6,10 @@ import { FaGlobe, FaFileAlt, FaReddit, FaGithub, FaStar } from "react-icons/fa";
 import { IoIosArrowDown } from "react-icons/io";
 import { ToggleCheck } from '../components/ToggleCheck';
 import { DropdownCustom } from '../components/DropdownCustom';
-import CustomAreaChart from '../components/AreaChartFillByValue';
+import AreaChartFillByValue from '../components/AreaChartFillByValue';
 import ButtonComponent from '../components/ButtonComponent';
+import CryptoChart from '../components/CryptoChart';
+import CryptoNewsCard from '../components/CryptoNewsCard';
 
 const CoinDetailPage = () => {
   const [check,setCheck] =useState(true)
@@ -129,6 +131,7 @@ const CoinDetailPage = () => {
               </div>
             </div>
           </div>
+          
           <div className="mt-6 text-white text-sm py-2 w-full rounded-lg space-y-4">
             <div className="flex items-center justify-between">
               <span>Website</span>
@@ -199,7 +202,44 @@ const CoinDetailPage = () => {
           </div>
         </div>
         <div className='col-span-2 border-2 border-gray-500'>
-          <CustomAreaChart/>
+          <div className=''>
+            {/* <AreaChartFillByValue/> */}
+            <CryptoChart/>
+          </div>
+          <div className='mt-6'>
+            <div className='my-2 grid grid-cols-2 gap-2 px-3'>
+              <CryptoNewsCard
+                avatar="https://i.imgur.com/1XGQ1Zf.png"
+                user="Crypto Rand"
+                time="8 hours"
+                content="Exchanges are running out of #Bitcoin supply. Imminent ₿ $BTC supply shock, read between the lines!..."
+                comments={9}
+                retweets={2}
+                likes={305}
+                views=""
+              />
+              <CryptoNewsCard
+                avatar="https://i.imgur.com/1XGQ1Zf.png"
+                user="Crypto Rand"
+                time="8 hours"
+                content="Exchanges are running out of #Bitcoin supply. Imminent ₿ $BTC supply shock, read between the lines!..."
+                comments={9}
+                retweets={2}
+                likes={305}
+                views=""
+              />
+              <CryptoNewsCard
+                avatar="https://i.imgur.com/1XGQ1Zf.png"
+                user="Crypto Rand"
+                time="8 hours"
+                content="Exchanges are running out of #Bitcoin supply. Imminent ₿ $BTC supply shock, read between the lines!..."
+                comments={9}
+                retweets={2}
+                likes={305}
+                views=""
+              />
+            </div>
+          </div>
         </div>
         <div className='p-4 py-10 border-y-2 border-gray-500'>
           <div>
@@ -295,6 +335,40 @@ const CoinDetailPage = () => {
               <TabItem title="Order History"></TabItem>
               <TabItem title="Trade History"></TabItem>
               <TabItem title="Bots"></TabItem>
+              <TabItem title="News">
+                <div className='my-2 flex gap-2'>
+                  <CryptoNewsCard
+                    avatar="https://i.imgur.com/1XGQ1Zf.png"
+                    user="Crypto Rand"
+                    time="8 hours"
+                    content="Exchanges are running out of #Bitcoin supply. Imminent ₿ $BTC supply shock, read between the lines!..."
+                    comments={9}
+                    retweets={2}
+                    likes={305}
+                    views=""
+                  />
+                  <CryptoNewsCard
+                    avatar="https://i.imgur.com/1XGQ1Zf.png"
+                    user="Crypto Rand"
+                    time="8 hours"
+                    content="Exchanges are running out of #Bitcoin supply. Imminent ₿ $BTC supply shock, read between the lines!..."
+                    comments={9}
+                    retweets={2}
+                    likes={305}
+                    views=""
+                  />
+                  <CryptoNewsCard
+                    avatar="https://i.imgur.com/1XGQ1Zf.png"
+                    user="Crypto Rand"
+                    time="8 hours"
+                    content="Exchanges are running out of #Bitcoin supply. Imminent ₿ $BTC supply shock, read between the lines!..."
+                    comments={9}
+                    retweets={2}
+                    likes={305}
+                    views=""
+                  />
+                </div>
+              </TabItem>
             </Tabs>
           </div>
           <div className='py-4 px-4'>
