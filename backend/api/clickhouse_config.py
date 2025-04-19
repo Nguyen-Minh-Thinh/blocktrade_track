@@ -42,7 +42,7 @@ def execute_clickhouse_query(query, params=None):
             client.command(query, parameters=query_params)
             return {"data": []}
 
-    except ClickHouseError  as e:
+    except ClickHouseError as e:
         raise Exception(f"ClickHouse query failed: {str(e)}")
     except Exception as e:
         raise Exception(f"ClickHouse query failed: {str(e)}")
