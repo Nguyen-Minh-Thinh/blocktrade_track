@@ -1,5 +1,6 @@
 import clickhouse_connect
 from flask import Blueprint
+from clickhouse_connect.driver.exceptions import ClickHouseError
 
 # Initialize the Blueprint for ClickHouse config routes (optional, not used directly in routes)
 clickhouse_config_bp = Blueprint('clickhouse_config', __name__)
@@ -41,7 +42,7 @@ def execute_clickhouse_query(query, params=None):
             client.command(query, parameters=query_params)
             return {"data": []}
 
-    except clickhouse_connect.errors.DatabaseError as e:
+    except ClickHouseError as e:
         raise Exception(f"ClickHouse query failed: {str(e)}")
     except Exception as e:
         raise Exception(f"ClickHouse query failed: {str(e)}")
