@@ -8,30 +8,34 @@ from api.historical_data import historical_data_bp
 # from api.chatbot import chatbot_bp
 from api.news import news_bp
 from api.coins import coins_bp
+from api.clickhouse_config import init_app  # Import ClickHouse client management
 
 from kafka import KafkaConsumer
 import json
 from collections import defaultdict
 from threading import Thread
 from flask_socketio import SocketIO
+import logging
 
 from flask_jwt_extended import JWTManager
 from datetime import timedelta
 
+# Initialize logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 # Initialize the Flask app
 app = Flask(__name__)
 CORS(app, supports_credentials=True, origins="*")
-app.config["JWT_SECRET_KEY"] = "abcdefghklmnopq123456"  # Change this!
+app.config["JWT_SECRET_KEY"] = "abcdefghklmnopq123456"  # Change this in production!
 app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
 app.config["JWT_ACCESS_COOKIE_NAME"] = "access_token"
 app.config["JWT_REFRESH_COOKIE_NAME"] = "refresh_token"
-app.config["JWT_COOKIE_CSRF_PROTECT"] = False  # Bật True khi production
+app.config["JWT_COOKIE_CSRF_PROTECT"] = False  # Enable in production
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(seconds=30)
 app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=7)
 
 jwt = JWTManager(app)
-
-
 
 # Register blueprints (API modules)
 app.register_blueprint(auth_bp, url_prefix='/auth')  # Routes for authentication (e.g., /auth/register)
@@ -42,6 +46,10 @@ app.register_blueprint(historical_data_bp, url_prefix='/historical_data')
 app.register_blueprint(news_bp, url_prefix='/news')
 app.register_blueprint(coins_bp, url_prefix='/coins')
 # app.register_blueprint(chatbot_bp, url_prefix='/chatbot')
+
+# Initialize ClickHouse client management
+init_app(app)
+
 # Optional: Add a root route to verify the server is running
 @app.route('/')
 def home():
@@ -103,4 +111,4 @@ if __name__ == '__main__':
     consumer_thread.daemon = True
     consumer_thread.start()
 
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    socketio.run(app, host='0.0.0.0', port=5000, debug=True)

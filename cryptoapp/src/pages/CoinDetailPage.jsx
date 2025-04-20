@@ -1,7 +1,8 @@
-import React, { useState } from 'react'
+import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom'; // Import useLocation to access navigation state
 import { TiStarOutline } from "react-icons/ti";
 import { IoShareSocialSharp } from "react-icons/io5";
-import {   TabItem, Tabs, Tooltip } from 'flowbite-react';
+import { TabItem, Tabs, Tooltip } from 'flowbite-react';
 import { FaGlobe, FaFileAlt, FaReddit, FaGithub, FaStar } from "react-icons/fa";
 import { IoIosArrowDown } from "react-icons/io";
 import { ToggleCheck } from '../components/ToggleCheck';
@@ -12,32 +13,38 @@ import CryptoChart from '../components/CryptoChart';
 import CryptoNewsCard from '../components/CryptoNewsCard';
 
 const CoinDetailPage = () => {
-  const [check,setCheck] =useState(true)
-  const [price,setPrice] =useState(0)
-  const [favorite, setFavorite] = useState(false)
-  const [titleSubmit, setTittleSubmit] = useState("Buy")
+  const location = useLocation(); // Initialize useLocation to access navigation state
+  const { coin_id } = location.state || {}; // Extract coin_id from navigation state, default to empty object if state is undefined
+  console.log('Coin ID:', coin_id); // Log the coin_id to verify it's being received
+
+  const [check, setCheck] = useState(true);
+  const [price, setPrice] = useState(0);
+  const [favorite, setFavorite] = useState(false);
+  const [titleSubmit, setTittleSubmit] = useState("Buy");
+
   const customStyle = {
-    tablist:{
-      variant:{
+    tablist: {
+      variant: {
         pills: "flex-wrap space-x-2 text-sm font-medium text-gray-600 dark:text-gray-400",
       },
-      tabitem:{
-        base:"flex flex-row-reverse gap-1 bg-gray-900 items-center justify-center rounded-t-lg py-2 px-4 text-sm font-medium first:ml-0 focus:outline-none disabled:cursor-not-allowed disabled:text-gray-400 disabled:dark:text-gray-500",
-        variant:{
-          pills:{
-            active:{
-              on:"rounded-lg bg-gray-800 text-white",
-              off:"rounded-lg hover:bg-gray-800 hover:text-white dark:hover:bg-gray-800 dark:hover:text-white",
+      tabitem: {
+        base: "flex flex-row-reverse gap-1 bg-gray-900 items-center justify-center rounded-t-lg py-2 px-4 text-sm font-medium first:ml-0 focus:outline-none disabled:cursor-not-allowed disabled:text-gray-400 disabled:dark:text-gray-500",
+        variant: {
+          pills: {
+            active: {
+              on: "rounded-lg bg-gray-800 text-white",
+              off: "rounded-lg hover:bg-gray-800 hover:text-white dark:hover:bg-gray-800 dark:hover:text-white",
             },
           },
-        }
+        },
       },
-    }
-  }
-  const toggleColor = (a)=> {
-    setCheck(a)
-  }
-  
+    },
+  };
+
+  const toggleColor = (a) => {
+    setCheck(a);
+  };
+
   return (  
     <div className='container mx-auto'>
       <div className='grid grid-cols-4 flex-row-reverse mt-20'>
@@ -63,7 +70,7 @@ const CoinDetailPage = () => {
           <div className="flex gap-2 py-2 text-3xl font-bold items-center text-white">
               <p>$82,719.83</p>
               <p className='text-green-400 text-sm flex items-center'>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" height="14px" width="14px" viewBox="0 0 24 24" class="sc-4c05d6ef-0 dMwnWW"><path d="M18.0566 16H5.94336C5.10459 16 4.68455 14.9782 5.27763 14.3806L11.3343 8.27783C11.7019 7.90739 12.2981 7.90739 12.6657 8.27783L18.7223 14.3806C19.3155 14.9782 18.8954 16 18.0566 16Z"></path></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" height="14px" width="14px" viewBox="0 0 24 24" className="sc-4c05d6ef-0 dMwnWW"><path d="M18.0566 16H5.94336C5.10459 16 4.68455 14.9782 5.27763 14.3806L11.3343 8.27783C11.7019 7.90739 12.2981 7.90739 12.6657 8.27783L18.7223 14.3806C19.3155 14.9782 18.8954 16 18.0566 16Z"></path></svg>
                 0.62% (1d)
               </p>
           </div>
@@ -75,7 +82,7 @@ const CoinDetailPage = () => {
                   <p className='text-sm'>$1.63T</p>
                 </Tooltip>
                 <p className='text-[11px] text-green-500 flex items-center'>
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" height="12px" width="12px" viewBox="0 0 24 24" class="sc-4c05d6ef-0 dMwnWW"><path d="M18.0566 16H5.94336C5.10459 16 4.68455 14.9782 5.27763 14.3806L11.3343 8.27783C11.7019 7.90739 12.2981 7.90739 12.6657 8.27783L18.7223 14.3806C19.3155 14.9782 18.8954 16 18.0566 16Z"></path></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" height="12px" width="12px" viewBox="0 0 24 24" className="sc-4c05d6ef-0 dMwnWW"><path d="M18.0566 16H5.94336C5.10459 16 4.68455 14.9782 5.27763 14.3806L11.3343 8.27783C11.7019 7.90739 12.2981 7.90739 12.6657 8.27783L18.7223 14.3806C19.3155 14.9782 18.8954 16 18.0566 16Z"></path></svg>
                   0.42%
                 </p>
               </div>
@@ -87,7 +94,7 @@ const CoinDetailPage = () => {
                   <p className='text-sm'>$13.66B</p>
                 </Tooltip>
                 <p className='text-[11px] text-red-500 flex items-center'>
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" height="12px" width="12px" viewBox="0 0 24 24" class="sc-4c05d6ef-0 dMwnWW" ><path d="M18.0566 8H5.94336C5.10459 8 4.68455 9.02183 5.27763 9.61943L11.3343 15.7222C11.7019 16.0926 12.2981 16.0926 12.6657 15.7222L18.7223 9.61943C19.3155 9.02183 18.8954 8 18.0566 8Z"></path></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" height="12px" width="12px" viewBox="0 0 24 24" className="sc-4c05d6ef-0 dMwnWW" ><path d="M18.0566 8H5.94336C5.10459 8 4.68455 9.02183 5.27763 9.61943L11.3343 15.7222C11.7019 16.0926 12.2981 16.0926 12.6657 15.7222L18.7223 9.61943C19.3155 9.02183 18.8954 8 18.0566 8Z"></path></svg>
                   27.79%
                 </p>
               </div>
@@ -264,9 +271,9 @@ const CoinDetailPage = () => {
                   <input 
                     type="text"                                                
                     placeholder="1000" 
-                    class="rtl text-right bg-gray-800 p-2 pl-10 border-none outline-none w-64 focus:border-none focus:outline-none focus:ring-0 focus:shadow-none"
+                    className="rtl text-right bg-gray-800 p-2 pl-10 border-none outline-none w-64 focus:border-none focus:outline-none focus:ring-0 focus:shadow-none"
                     pattern="^[0-9]*(\.[0-9]*)?$"   
-                    autocomplete="off"       
+                    autoComplete="off"       
                     value={price} 
                     onChange={(e)=>setPrice(e.target.value)}           
                   />
@@ -390,7 +397,7 @@ const CoinDetailPage = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default CoinDetailPage
+export default CoinDetailPage;

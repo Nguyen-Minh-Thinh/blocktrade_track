@@ -11,7 +11,7 @@ const SignIn = ({ openSI, setOpenSI, swapModels, setUser }) => {
   const [formData, setFormData] = useState({
     username: '',
     password: '',
-    remember: false, // Add remember field to formData
+    remember: false,
   });
   const [error, setError] = useState({
     username: '',
@@ -72,7 +72,7 @@ const SignIn = ({ openSI, setOpenSI, swapModels, setUser }) => {
         await login(
           formData.username,
           formData.password,
-          formData.remember // Pass the "remember" option to the login function
+          formData.remember
         );
         setOpenSI(false);
         toast.success("Login successful", {
@@ -86,8 +86,16 @@ const SignIn = ({ openSI, setOpenSI, swapModels, setUser }) => {
         });
         setFormData({ username: '', password: '', remember: false });
         setError({ username: '', password: '' });
+
+        // Fetch user data after successful login
         const userData = await checkAuth();
         setUser(userData);
+
+        // Store user data in localStorage
+        localStorage.setItem("userLogin", JSON.stringify(userData));
+
+        // Dispatch event to notify other components of user update
+        window.dispatchEvent(new Event("userUpdated"));
       } catch (err) {
         toast.error(err.error || 'Login failed', {
           position: "top-right",
@@ -108,7 +116,7 @@ const SignIn = ({ openSI, setOpenSI, swapModels, setUser }) => {
     setOpenSI(false);
     setFormData({ username: '', password: '', remember: false });
     setError({ username: '', password: '' });
-    setLoading(false); // Reset loading state on close
+    setLoading(false);
   };
 
   return (
@@ -130,7 +138,7 @@ const SignIn = ({ openSI, setOpenSI, swapModels, setUser }) => {
                   placeholder="Enter your Username/Email"
                   value={formData.username}
                   onChange={handleChange}
-                  disabled={loading} // Disable input during loading
+                  disabled={loading}
                 />
                 {error.username !== "" && (
                   <span className="text-red-500 text-xs text-center mt-2">{error.username}</span>
@@ -148,7 +156,7 @@ const SignIn = ({ openSI, setOpenSI, swapModels, setUser }) => {
                   placeholder='Enter your password'
                   value={formData.password}
                   onChange={handleChange}
-                  disabled={loading} // Disable input during loading
+                  disabled={loading}
                 />
                 <button
                   type="button"

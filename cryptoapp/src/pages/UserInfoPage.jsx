@@ -29,11 +29,11 @@ const UserInfo = () => {
   const [imageUrl, setImageUrl] = useState("");
   const [previewImage, setPreviewImage] = useState("");
   const [loading, setLoading] = useState(false);
-  const [profileErrorMessage, setProfileErrorMessage] = useState(""); // Lỗi cho phần thông tin
-  const [passwordErrorMessage, setPasswordErrorMessage] = useState(""); // Lỗi cho phần đổi mật khẩu
-  const [profileSuccessMessage, setProfileSuccessMessage] = useState(""); // Thành công cho phần thông tin
-  const [passwordSuccessMessage, setPasswordSuccessMessage] = useState(""); // Thành công cho phần đổi mật khẩu
-  const navigate = useNavigate(); // Hook để điều hướng
+  const [profileErrorMessage, setProfileErrorMessage] = useState("");
+  const [passwordErrorMessage, setPasswordErrorMessage] = useState("");
+  const [profileSuccessMessage, setProfileSuccessMessage] = useState("");
+  const [passwordSuccessMessage, setPasswordSuccessMessage] = useState("");
+  const navigate = useNavigate();
 
   const portfolioData = [
     { key: 1, coin: "Bitcoin", symbol: "btc", amount: 2, price: 50000, totalValue: 100000 },
@@ -58,33 +58,104 @@ const UserInfo = () => {
 
   const [filteredTradeHistoryData, setFilteredTradeHistoryData] = useState(tradeHistoryData);
 
+  // Load user from localStorage
+  const loadUserFromStorage = () => {
+    const userData = localStorage.getItem("userLogin");
+    if (userData) {
+      const parsedUser = JSON.parse(userData);
+      setFormData({
+        user_id: parsedUser.user_id || "",
+        name: parsedUser.name || "",
+        email: parsedUser.email || "",
+        username: parsedUser.username || "",
+        password: "",
+        points: parsedUser.points || 0,
+      });
+      setImageUrl(parsedUser.image_url || "");
+      return parsedUser;
+    }
+    return null;
+  };
+
   useEffect(() => {
     const fetchUserInfo = async () => {
       setLoading(true);
       try {
-        const userData = await checkAuth();
-        if (userData) {
-          setFormData({
-            user_id: userData.user_id || "",
-            name: userData.name || "",
-            email: userData.email || "",
-            username: userData.username || "",
-            password: "",
-            points: userData.points || 0,
-          });
-          setImageUrl(userData.image_url || "");
+        // First, try to load user from localStorage
+        const localUser = loadUserFromStorage();
+
+        // If localStorage has user data, attempt to verify with checkAuth
+        if (localUser) {
+          const userData = await checkAuth();
+          if (userData) {
+            // Update formData with the latest data from the server
+            setFormData({
+              user_id: userData.user_id || "",
+              name: userData.name || "",
+              email: userData.email || "",
+              username: userData.username || "",
+              password: "",
+              points: userData.points || 0,
+            });
+            setImageUrl(userData.image_url || "");
+            // Update localStorage with the latest user data
+            localStorage.setItem("userLogin", JSON.stringify(userData));
+          } else {
+            // If checkAuth fails, clear localStorage but don't redirect immediately
+            localStorage.removeItem("userLogin");
+            window.dispatchEvent(new Event("userUpdated"));
+            setProfileErrorMessage("Session expired. Please log in again.");
+            setTimeout(() => {
+              setProfileErrorMessage("");
+              navigate("/"); // Redirect after showing the error message
+            }, 2000);
+          }
         } else {
-          navigate("/"); // Điều hướng về trang chủ nếu không đăng nhập
+          // If no user in localStorage, try checkAuth
+          const userData = await checkAuth();
+          if (userData) {
+            setFormData({
+              user_id: userData.user_id || "",
+              name: userData.name || "",
+              email: userData.email || "",
+              username: userData.username || "",
+              password: "",
+              points: userData.points || 0,
+            });
+            setImageUrl(userData.image_url || "");
+            localStorage.setItem("userLogin", JSON.stringify(userData));
+          } else {
+            setProfileErrorMessage("Please log in to access this page.");
+            setTimeout(() => {
+              setProfileErrorMessage("");
+              navigate("/");
+            }, 2000);
+          }
         }
       } catch (error) {
-        setProfileErrorMessage("Failed to load user info");
-        setTimeout(() => setProfileErrorMessage(""), 2000);
-        navigate("/"); // Điều hướng về trang chủ nếu có lỗi
+        setProfileErrorMessage("Failed to load user info. Please log in again.");
+        setTimeout(() => {
+          setProfileErrorMessage("");
+          navigate("/");
+        }, 2000);
       } finally {
         setLoading(false);
       }
     };
+
     fetchUserInfo();
+
+    // Listen for user updates from other components
+    const handleUserUpdated = () => {
+      loadUserFromStorage();
+    };
+
+    window.addEventListener("userUpdated", handleUserUpdated);
+
+    // Cleanup listener on unmount
+    return () => {
+      window.removeEventListener("userUpdated", handleUserUpdated);
+    };
   }, [navigate]);
 
   const handleChange = (e) => {
@@ -109,7 +180,10 @@ const UserInfo = () => {
     setProfileSuccessMessage("");
     if (!formData.user_id) {
       setProfileErrorMessage("User ID is missing. Please log in.");
-      navigate("/"); // Điều hướng nếu không có user_id
+      setTimeout(() => {
+        setProfileErrorMessage("");
+        navigate("/");
+      }, 2000);
       return;
     }
 

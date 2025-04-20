@@ -61,7 +61,10 @@ def add_to_favorites():
         if not validate_user(user_id):
             return jsonify({'error': 'Invalid user_id'}), 404
 
+        # Parse and validate JSON body
         data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Invalid or missing JSON body'}), 400
         coin_id = data.get('coin_id')
 
         # Validate required fields
@@ -96,7 +99,7 @@ def add_to_favorites():
 
     except Exception as e:
         logger.error(f"Error in add_to_favorites: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': 'An unexpected error occurred while adding to favorites'}), 500
 
 # Remove a coin from the user's favorites (Requires access token)
 @favorites_bp.route('/remove', methods=['POST'])

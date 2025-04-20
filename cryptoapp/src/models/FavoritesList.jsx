@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate for navigation
 import { FaStar } from "react-icons/fa";
 import { getFavorites, addFavorite, removeFavorite } from '../api/favorites';
 import { toast } from 'react-toastify';
@@ -9,6 +10,7 @@ const FavoritesList = ({ coin }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isFavorite, setIsFavorite] = useState(false);
+  const navigate = useNavigate(); // Initialize useNavigate
 
   // Fetch favorites from the backend
   const fetchFavorites = useCallback(async () => {
@@ -23,7 +25,7 @@ const FavoritesList = ({ coin }) => {
 
       // Check if the current coin is in favorites (only if coin is provided)
       if (coin) {
-        const isCoinFavorite = response.favorites.some(item => item.coin_id === coin.id);
+        const isCoinFavorite = response.favorites.some(item => item.coin_id === coin.coin_id);
         setIsFavorite(isCoinFavorite);
       }
     } catch (err) {
@@ -34,9 +36,19 @@ const FavoritesList = ({ coin }) => {
     }
   }, [coin]);
 
-  // Fetch favorites when the component mounts or coin changes
+  // Fetch favorites when the component mounts or coin changes, and listen for updates
   useEffect(() => {
     fetchFavorites();
+
+    const handleFavoritesUpdated = () => {
+      fetchFavorites();
+    };
+
+    window.addEventListener("favoritesUpdated", handleFavoritesUpdated);
+
+    return () => {
+      window.removeEventListener("favoritesUpdated", handleFavoritesUpdated);
+    };
   }, [fetchFavorites]);
 
   // Handle adding a favorite
@@ -53,6 +65,8 @@ const FavoritesList = ({ coin }) => {
         draggable: true,
         theme: "dark",
       });
+      // Dispatch event to notify other components
+      window.dispatchEvent(new Event("favoritesUpdated"));
     } catch (err) {
       setError(err.error || 'Failed to add favorite. Please try again.');
       toast.error(err.error || 'Failed to add favorite', {
@@ -68,7 +82,8 @@ const FavoritesList = ({ coin }) => {
   };
 
   // Handle removing a favorite
-  const handleRemoveFavorite = async (coinId) => {
+  const handleRemoveFavorite = async (coinId, e) => {
+    e.stopPropagation(); // Prevent row click from triggering navigation
     try {
       await removeFavorite(coinId);
       await fetchFavorites();
@@ -81,6 +96,8 @@ const FavoritesList = ({ coin }) => {
         draggable: true,
         theme: "dark",
       });
+      // Dispatch event to notify other components
+      window.dispatchEvent(new Event("favoritesUpdated"));
     } catch (err) {
       setError(err.error || 'Failed to remove favorite. Please try again.');
       toast.error(err.error || 'Failed to remove favorite', {
@@ -95,13 +112,18 @@ const FavoritesList = ({ coin }) => {
     }
   };
 
+  // Navigate to coin detail page
+  const handleRowClick = (coinId) => {
+    navigate('/coindetail', { state: { coin_id: coinId } });
+  };
+
   return (
     <div>
       <div onMouseLeave={() => setShowFavoriteList(false)} className='py-5 px-1 mx-2 relative'>
         {/* Star icon to toggle favorites list and add/remove current coin */}
         {coin ? (
           <FaStar
-            onClick={() => isFavorite ? handleRemoveFavorite(coin.id) : handleAddFavorite(coin.id)}
+            onClick={() => isFavorite ? handleRemoveFavorite(coin.coin_id) : handleAddFavorite(coin.coin_id)}
             onMouseEnter={() => setShowFavoriteList(true)}
             className={`cursor-pointer text-xl ${isFavorite ? 'text-yellow-300' : 'text-gray-400'}`}
           />
@@ -132,10 +154,14 @@ const FavoritesList = ({ coin }) => {
                   </div>
                 ) : favorites.length > 0 ? (
                   favorites.map(item => (
-                    <div key={item.id} className='grid grid-cols-4 px-3 py-3 font-medium text-sm text-white cursor-pointer group hover:bg-gray-800 hover:rounded-lg'>
+                    <div 
+                      key={item.id} 
+                      className='grid grid-cols-4 px-3 py-3 font-medium text-sm text-white cursor-pointer group hover:bg-gray-800 hover:rounded-lg'
+                      onClick={() => handleRowClick(item.coin_id)} // Navigate on row click
+                    >
                       <div className='flex justify-start items-center col-span-2'>
                         <FaStar
-                          onClick={() => handleRemoveFavorite(item.coin_id)}
+                          onClick={(e) => handleRemoveFavorite(item.coin_id, e)}
                           className='text-yellow-300 mr-3 cursor-pointer'
                         />
                         <img src={item.logo} alt="logo" className='w-5 h-5' />

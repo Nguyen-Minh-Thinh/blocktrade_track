@@ -222,6 +222,7 @@ def get_coins():
                 # Construct the coin data object
                 coin = {
                     'index': idx,  # Row number
+                    'coin_id': row.get('coin_id', 'unknown'),
                     'name': row.get('name', 'Unknown'),
                     'image_url': row.get('image_url', "https://via.placeholder.com/20"),
                     'price': f"${binance_data['price']:,.2f}" if binance_data['price'] is not None else "N/A",

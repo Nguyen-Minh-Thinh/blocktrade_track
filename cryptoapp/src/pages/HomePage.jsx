@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate for navigation
 import { TiStarOutline } from "react-icons/ti";
 import { FaStar } from "react-icons/fa";
+import { FaSpinner } from "react-icons/fa";
 import ButtonComponent from '../components/ButtonComponent';
 import SignUp from '../models/SignUp';
 import { List } from 'flowbite-react';
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   Tooltip,
@@ -15,6 +17,9 @@ import {
 } from 'recharts';
 import { Link } from 'react-router-dom';
 import { fetchCoins } from '../api/coins';
+import { getFavorites, addFavorite, removeFavorite } from '../api/favorites';
+import { checkAuth } from '../api/auth';
+import { toast } from 'react-toastify';
 
 const HomePage = () => {
   const [started, setStarted] = useState(false);
@@ -22,19 +27,94 @@ const HomePage = () => {
   const [coins, setCoins] = useState([]);
   const [favorites, setFavorites] = useState({});
   const [chartData, setChartData] = useState({});
+  const [user, setUser] = useState(null);
+  const [togglingFavorites, setTogglingFavorites] = useState({});
+  const navigate = useNavigate(); // Initialize useNavigate
 
-  // Fetch coin data from the backend
+  // Load user from localStorage
+  const loadUserFromStorage = () => {
+    const userData = localStorage.getItem("userLogin");
+    if (userData) {
+      setUser(JSON.parse(userData));
+    } else {
+      setUser(null);
+    }
+  };
+
+  // Verify authentication if no user data in localStorage
+  const verifyAuth = async () => {
+    try {
+      const userData = await checkAuth();
+      if (userData) {
+        setUser(userData);
+        localStorage.setItem("userLogin", JSON.stringify(userData));
+      } else {
+        setUser(null);
+        localStorage.removeItem("userLogin");
+      }
+    } catch (err) {
+      console.error('Error verifying auth:', err);
+      setUser(null);
+      localStorage.removeItem("userLogin");
+    }
+  };
+
+  // Fetch favorites from the backend
+  const fetchFavorites = async () => {
+    if (user) {
+      try {
+        const favoritesData = await getFavorites();
+        const favoritesMap = favoritesData.favorites.reduce((acc, favorite) => {
+          acc[favorite.coin_id] = true;
+          return acc;
+        }, {});
+        setFavorites({ ...favoritesMap });
+      } catch (error) {
+        console.error('Error fetching favorites:', error);
+        toast.error(error.error || 'Failed to load favorites', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "dark",
+        });
+      }
+    } else {
+      setFavorites({});
+    }
+  };
+
+  // Fetch user on mount
   useEffect(() => {
-    const loadCoins = async () => {
+    loadUserFromStorage();
+    if (!localStorage.getItem("userLogin")) {
+      verifyAuth();
+    }
+
+    const handleUserUpdated = () => {
+      loadUserFromStorage();
+    };
+
+    window.addEventListener("userUpdated", handleUserUpdated);
+
+    return () => {
+      window.removeEventListener("userUpdated", handleUserUpdated);
+    };
+  }, []);
+
+  // Fetch coins and favorites when user changes
+  useEffect(() => {
+    const loadCoinsAndFavorites = async () => {
       try {
         const response = await fetchCoins();
         const fetchedCoins = response.coins || [];
         setCoins(fetchedCoins);
 
-        // Fetch historical data for all coins
         const fetchChartData = async () => {
           const endTime = Date.now();
-          const startTime = endTime - 7 * 24 * 60 * 60 * 1000; // 7 days ago
+          const startTime = endTime - 7 * 24 * 60 * 60 * 1000;
 
           const promises = fetchedCoins.map(async (coin) => {
             try {
@@ -70,21 +150,91 @@ const HomePage = () => {
           setChartData(chartDataMap);
         };
 
-        fetchChartData();
+        await fetchChartData();
+        await fetchFavorites();
       } catch (error) {
         console.error('Error fetching coins from backend:', error);
+        toast.error(error.error || 'Failed to load coins', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "dark",
+        });
       }
     };
 
-    loadCoins();
-  }, []);
+    loadCoinsAndFavorites();
+  }, [user]);
 
   // Toggle favorite status for a specific coin
-  const toggleFavorite = (coinIndex) => {
-    setFavorites((prev) => ({
-      ...prev,
-      [coinIndex]: !prev[coinIndex],
-    }));
+  const toggleFavorite = async (coinId, e) => {
+    e.stopPropagation(); // Prevent row click from triggering navigation
+    if (!user) {
+      toast.error('Please sign in to manage favorites', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "dark",
+      });
+      return;
+    }
+
+    setTogglingFavorites((prev) => ({ ...prev, [coinId]: true }));
+
+    try {
+      const isFavorite = favorites[coinId];
+      if (isFavorite) {
+        await removeFavorite(coinId);
+        toast.success('Removed from favorites', {
+          position: "top-right",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "dark",
+        });
+      } else {
+        await addFavorite(coinId);
+        toast.success('Added to favorites', {
+          position: "top-right",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "dark",
+        });
+      }
+
+      await fetchFavorites();
+      window.dispatchEvent(new CustomEvent("favoritesUpdated", { detail: { timestamp: Date.now() } }));
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+      toast.error(error.error || 'Failed to update favorite', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "dark",
+      });
+      await fetchFavorites();
+    } finally {
+      setTogglingFavorites((prev) => ({ ...prev, [coinId]: false }));
+    }
+  };
+
+  // Navigate to coin detail page
+  const handleRowClick = (coinId) => {
+    navigate('/coindetail', { state: { coin_id: coinId } });
   };
 
   return (
@@ -151,10 +301,19 @@ const HomePage = () => {
             <tbody>
               {coins.length > 0 ? (
                 coins.slice(0, 5).map((coin) => (
-                  <tr key={coin.index} className='text-sm border-y border-gray-700 hover:bg-slate-900 cursor-pointer'>
+                  <tr 
+                    key={coin.index} 
+                    className='text-sm border-y border-gray-700 hover:bg-slate-900 cursor-pointer'
+                    onClick={() => handleRowClick(coin.coin_id)} // Navigate on row click
+                  >
                     <td>
-                      <div onClick={() => toggleFavorite(coin.index)} className='text-start p-2'>
-                        {favorites[coin.index] ? (
+                      <div 
+                        onClick={(e) => toggleFavorite(coin.coin_id, e)} 
+                        className='text-start p-2'
+                      >
+                        {togglingFavorites[coin.coin_id] ? (
+                          <FaSpinner className='text-[18px] text-gray-500 animate-spin' />
+                        ) : favorites[coin.coin_id] ? (
                           <FaStar className='text-[18px] text-yellow-300' />
                         ) : (
                           <TiStarOutline className='text-[18px] text-gray-500' />
@@ -199,7 +358,7 @@ const HomePage = () => {
                       <div style={{ width: '70%', height: '65px' }}>
                         {chartData[coin.index] && chartData[coin.index].length > 0 ? (
                           <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={chartData[coin.index]} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+                            <AreaChart data={chartData[coin.index]} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
                               <CartesianGrid strokeDasharray="3 3" stroke="#444" />
                               <XAxis hide dataKey="date" />
                               <YAxis hide dataKey="price" />
@@ -207,14 +366,14 @@ const HomePage = () => {
                                 contentStyle={{ backgroundColor: '#333', border: 'none', borderRadius: '5px', color: '#fff' }}
                                 labelStyle={{ color: '#fff' }}
                               />
-                              <Line
+                              <Area
                                 type="monotone"
                                 dataKey="price"
                                 stroke={coin.price_change_7d.includes('-') ? '#ff0000' : '#00ff00'}
-                                strokeWidth={2}
-                                dot={false}
+                                fill={coin.price_change_7d.includes('-') ? '#ff0000' : '#00ff00'}
+                                fillOpacity={0.3}
                               />
-                            </LineChart>
+                            </AreaChart>
                           </ResponsiveContainer>
                         ) : (
                           <p>Loading chart...</p>
