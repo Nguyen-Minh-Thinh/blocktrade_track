@@ -3,12 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { FaUserCircle, FaUser, FaChevronCircleDown } from "react-icons/fa";
 import { TbLogout } from "react-icons/tb";
 import { MdWbSunny } from "react-icons/md";
-import { IoMoon } from "react-icons/io5";
 import SignIn from '../models/SignIn';
 import SignUp from '../models/SignUp';
 import ButtonComponent from './ButtonComponent';
 import Search from '../models/Search';
-import { checkAuth, logout } from '../api/auth';
+import { checkAuth, logout, refreshToken } from '../api/auth';
 import { Link } from 'react-router-dom';
 import Spot from '../models/Spot';
 import FavoritesList from '../models/FavoritesList';
@@ -18,7 +17,6 @@ const HeaderComponent = () => {
   const [openSignIn, setOpenSignIn] = useState(false);
   const [openSignUp, setOpenSignUp] = useState(false);
   const [user, setUser] = useState(null);
-  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark'); // Default to dark theme
 
   const swapModels = () => {
     setOpenSignIn(openSignUp);
@@ -53,12 +51,18 @@ const HeaderComponent = () => {
     }
   };
 
-  // Toggle theme between light and dark
-  const toggleTheme = () => {
-    const newTheme = theme === 'dark' ? 'light' : 'dark';
-    setTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
-    document.documentElement.classList.toggle('dark', newTheme === 'dark');
+  // Function to refresh token if expired
+  const checkAndRefreshToken = async () => {
+    try {
+      // Attempt to refresh the token
+      await refreshToken();
+    } catch (error) {
+      // If token refresh fails, logout the user
+      console.error('Error refreshing token:', error);
+      setUser(null);
+      localStorage.removeItem("userLogin");
+      window.location.reload(); // Optionally reload the page
+    }
   };
 
   useEffect(() => {
@@ -69,11 +73,6 @@ const HeaderComponent = () => {
     if (!localStorage.getItem("userLogin")) {
       verifyAuth();
     }
-
-    // Load theme from localStorage and apply it
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    setTheme(savedTheme);
-    document.documentElement.classList.toggle('dark', savedTheme === 'dark');
 
     // Listen for user updates from UserInfo
     const handleUserUpdated = () => {
@@ -90,6 +89,10 @@ const HeaderComponent = () => {
 
   const handleLogout = async () => {
     try {
+      // Before logging out, refresh the token if expired
+      await checkAndRefreshToken();
+
+      // Proceed with logout
       await logout();
       setUser(null);
       localStorage.removeItem("userLogin");
@@ -102,6 +105,7 @@ const HeaderComponent = () => {
         draggable: true,
         theme: "dark",
       });
+      window.location.reload();
     } catch (err) {
       toast.error(err.error || 'Logout failed', {
         position: "top-right",
@@ -140,7 +144,7 @@ const HeaderComponent = () => {
         <Search />
         {user ? (
           <>
-            <FavoritesList />
+            <FavoritesList user_id={user.user_id} />
             <Spot value={user.points} />
             <Dropdown
               theme={{
@@ -179,20 +183,10 @@ const HeaderComponent = () => {
                 </p>
               </Dropdown.Item>
               <Dropdown.Item
-                onClick={toggleTheme}
                 className="hover:text-gray-400 transition flex text-start items-center gap-x-3 py-[6px] px-3"
               >
-                {theme === 'dark' ? (
-                  <>
-                    <MdWbSunny className="text-base w-4 p-0 m-0" />
-                    <p>Light</p>
-                  </>
-                ) : (
-                  <>
-                    <IoMoon className="text-base w-4 p-0 m-0" />
-                    <p>Dark</p>
-                  </>
-                )}
+                <MdWbSunny className="text-base w-4 p-0 m-0" />
+                <p>Light</p>
               </Dropdown.Item>
               <Dropdown.Item
                 onClick={handleLogout}
