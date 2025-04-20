@@ -285,7 +285,7 @@ def refresh():
 
 # Logout endpoint (Clears JWT cookies)
 @auth_bp.route('/logout', methods=['POST'])
-@jwt_required()
+@jwt_required(optional=True)
 def logout():
     try:
         resp = jsonify({"message": "Logout successful"})

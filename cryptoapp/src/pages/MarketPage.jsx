@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate for navigation
 import { TiStarOutline } from "react-icons/ti";
 import { FaStar } from "react-icons/fa";
+import { FaSpinner } from "react-icons/fa";
 import axios from 'axios';
 import { BsFire } from "react-icons/bs";
 import { IoMdTime } from "react-icons/io";
@@ -15,10 +17,16 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
+  CartesianGrid,
 } from 'recharts';
 import MarketChart from '../components/MarketChart';
 import CryptoNewsCard from '../components/CryptoNewsCard';
 import LineChart from '../components/LineChart';
+import { fetchCoins } from '../api/coins';
+import { getFavorites, addFavorite, removeFavorite } from '../api/favorites';
+import { checkAuth } from '../api/auth';
+import { toast } from 'react-toastify';
+
 const coinList = [
   {
     id: 1,
@@ -28,19 +36,13 @@ const coinList = [
     change: "0.20%",
     img: "https://s2.coinmarketcap.com/static/img/coins/64x64/33597.png",
     isPositive: true,
-    
   },
-  { id: 2,
-    name: 'TRUMP', 
-    symbol: 'USDC', 
-    price: '$7.93', 
-    change: '1.28%',
-    img: "https://s2.coinmarketcap.com/static/img/coins/64x64/33597.png",
-    isPositive: false, },
+  { id: 2, name: 'TRUMP', symbol: 'USDC', price: '$7.93', change: '1.28%', img: "https://s2.coinmarketcap.com/static/img/coins/64x64/33597.png", isPositive: false },
   { id: 3, name: 'Fartcoin', symbol: 'USDC', price: '$0.8469', change: '6.57%', isPositive: false, img: "https://s2.coinmarketcap.com/static/img/coins/64x64/33597.png" },
   { id: 4, name: 'Fur', symbol: 'SOL', price: '$0.003747', change: '7017%', img: "https://s2.coinmarketcap.com/static/img/coins/64x64/33597.png", isPositive: true },
-  { id: 5, name: 'RAY', symbol: 'SOL', price: '$2.11', change: '2.31%',  img: "https://s2.coinmarketcap.com/static/img/coins/64x64/33597.png", isPositive: true },
+  { id: 5, name: 'RAY', symbol: 'SOL', price: '$2.11', change: '2.31%', img: "https://s2.coinmarketcap.com/static/img/coins/64x64/33597.png", isPositive: true },
 ];
+
 const coinListTrending = [
   {
     id: 1,
@@ -74,47 +76,226 @@ const coinListTrending = [
   },
 ];
 
-
 const MarketPage = () => {
-  const [listTabs2, setListTabs2] = useState("popular")
-  const [data, setData] = useState([]);
-  const [favorites, setFavorites] = useState(false)
+  const [listTabs2, setListTabs2] = useState("popular");
+  const [coins, setCoins] = useState([]);
+  const [favorites, setFavorites] = useState({});
+  const [chartData, setChartData] = useState({});
+  const [togglingFavorites, setTogglingFavorites] = useState({});
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate(); // Initialize useNavigate
 
-  useEffect(() => {
-    // Hàm lấy dữ liệu từ API Binance
-    const fetchBitcoinData = async () => {
+  // Load user from localStorage
+  const loadUserFromStorage = () => {
+    const userData = localStorage.getItem("userLogin");
+    if (userData) {
+      setUser(JSON.parse(userData));
+    } else {
+      setUser(null);
+    }
+  };
+
+  // Verify authentication if no user data in localStorage
+  const verifyAuth = async () => {
+    try {
+      const userData = await checkAuth();
+      if (userData) {
+        setUser(userData);
+        localStorage.setItem("userLogin", JSON.stringify(userData));
+      } else {
+        setUser(null);
+        localStorage.removeItem("userLogin");
+      }
+    } catch (err) {
+      console.error('Error verifying auth:', err);
+      setUser(null);
+      localStorage.removeItem("userLogin");
+    }
+  };
+
+  // Fetch favorites from the backend
+  const fetchFavorites = useCallback(async () => {
+    if (user) {
       try {
-        const endTime = Date.now();
-        const startTime = endTime - 7 * 24 * 60 * 60 * 1000; // 7 ngày trước
+        const favoritesData = await getFavorites();
+        const favoritesMap = favoritesData.favorites.reduce((acc, favorite) => {
+          acc[favorite.coin_id] = true;
+          return acc;
+        }, {});
+        setFavorites({ ...favoritesMap });
+      } catch (error) {
+        console.error('Error fetching favorites:', error);
+        toast.error(error.error || 'Failed to load favorites', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "dark",
+        });
+      }
+    } else {
+      setFavorites({});
+    }
+  }, [user]);
 
-        const url = 'https://api.binance.com/api/v1/klines';
-        const params = {
-          symbol: 'BTCUSDT', // Cặp giao dịch Bitcoin với USD
-          interval: '1d', // Lấy dữ liệu theo ngày
-          startTime: startTime,
-          endTime: endTime,
-          limit: 7, // Lấy 7 ngày
+  // Fetch user and set up event listeners on mount
+  useEffect(() => {
+    loadUserFromStorage();
+    if (!localStorage.getItem("userLogin")) {
+      verifyAuth();
+    }
+
+    const handleUserUpdated = () => {
+      loadUserFromStorage();
+    };
+
+    window.addEventListener("userUpdated", handleUserUpdated);
+
+    return () => {
+      window.removeEventListener("userUpdated", handleUserUpdated);
+    };
+  }, []);
+
+  // Fetch coins and favorites when user changes
+  useEffect(() => {
+    const loadCoinsAndFavorites = async () => {
+      try {
+        const response = await fetchCoins();
+        const fetchedCoins = response.coins || [];
+        setCoins(fetchedCoins);
+
+        const fetchChartData = async () => {
+          const endTime = Date.now();
+          const startTime = endTime - 7 * 24 * 60 * 60 * 1000;
+
+          const promises = fetchedCoins.map(async (coin) => {
+            try {
+              const url = 'https://api.binance.com/api/v3/klines';
+              const params = {
+                symbol: coin.symbol,
+                interval: '1d',
+                startTime: startTime,
+                endTime: endTime,
+                limit: 7,
+              };
+
+              const response = await axios.get(url, { params });
+              const data = response.data.map((item) => ({
+                date: new Date(item[0]).toISOString().split('T')[0],
+                price: parseFloat(item[4]),
+              }));
+
+              return { index: coin.index, data };
+            } catch (error) {
+              console.error(`Error fetching chart data for ${coin.symbol}:`, error);
+              return { index: coin.index, data: [] };
+            }
+          });
+
+          const results = await Promise.all(promises);
+          const chartDataMap = results.reduce((acc, { index, data }) => {
+            acc[index] = data;
+            return acc;
+          }, {});
+          setChartData(chartDataMap);
         };
 
-        const response = await axios.get(url, { params });
+        await fetchChartData();
 
-        // Chuyển đổi dữ liệu thành định dạng phù hợp cho biểu đồ
-        const chartData = response.data.map((item) => ({
-          date: new Date(item[0]).toISOString().split('T')[0], // Lấy ngày
-          uv: parseFloat(item[4]), // Giá đóng cửa (Close)
-        }));
-
-        setData(chartData);
+        if (user) {
+          await fetchFavorites();
+        } else {
+          setFavorites({});
+        }
       } catch (error) {
-        console.error('Error fetching data from Binance API:', error);
+        console.error('Error fetching coins from backend:', error);
+        toast.error(error.error || 'Failed to load coins', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "dark",
+        });
       }
     };
 
-    fetchBitcoinData();
-  }, []);
+    loadCoinsAndFavorites();
+  }, [user, fetchFavorites]);
+
+  // Toggle favorite status for a specific coin
+  const toggleFavorite = async (coinId, e) => {
+    e.stopPropagation(); // Prevent the row's onClick from firing
+    if (!user) {
+      toast.error('Please sign in to manage favorites', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "dark",
+      });
+      return;
+    }
+
+    setTogglingFavorites((prev) => ({ ...prev, [coinId]: true }));
+
+    try {
+      const isFavorite = favorites[coinId];
+      if (isFavorite) {
+        await removeFavorite(coinId);
+        toast.success('Removed from favorites', {
+          position: "top-right",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "dark",
+        });
+      } else {
+        await addFavorite(coinId);
+        toast.success('Added to favorites', {
+          position: "top-right",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "dark",
+        });
+      }
+
+      await fetchFavorites();
+      window.dispatchEvent(new CustomEvent("favoritesUpdated", { detail: { timestamp: Date.now() } }));
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+      toast.error(error.error || 'Failed to update favorite', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "dark",
+      });
+      await fetchFavorites();
+    } finally {
+      setTogglingFavorites((prev) => ({ ...prev, [coinId]: false }));
+    }
+  };
+
+  // Navigate to coin detail page
+  const handleRowClick = (coinId) => {
+    navigate('/coindetail', { state: { coin_id: coinId } });
+  };
+
   return (
     <div className='px-14 mt-[130px] mb-36 container mx-auto'>
-      
       <div className='grid grid-cols-4 text-white gap-x-2'>
         <div className='rounded-lg bg-gray-800 p-4'>
           <div className='flex justify-between items-center font-medium'>
@@ -144,12 +325,10 @@ const MarketPage = () => {
                       <LineChart />
                     </div>
                   </div>
-                  {/* Biểu đồ phần trăm có thể thêm vào đây nếu có */}
                 </div>
               </div>
             ))}
           </div>
-
         </div>
         <div className='rounded-lg bg-gray-800 p-4'>
           <div className='flex justify-between items-center font-medium'>
@@ -158,7 +337,6 @@ const MarketPage = () => {
               <p className='px-2 py-1 bg-gray-800 rounded-lg'><PiDiamondsFour className='text-white text-xs'/></p>
               <p className='px-2 py-1 '><LuSprout className='text-white text-sm'/></p>
               <p className='px-2 py-1 '><TfiCup className='text-white text-xs'/></p>
-              
             </div>
           </div>
           <div className='mt-3'>
@@ -179,12 +357,11 @@ const MarketPage = () => {
                   <p className={`flex items-center justify-end gap-1 text-xs font-medium ${coin.isPositive ? 'text-green-600' : 'text-red-600'}`}>
                     {coin.isPositive ? 
                       (<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" height="12px" width="12px" viewBox="0 0 24 24" className="h-3 w-3">
-                        <path d="M18.0566 16H5.94336C5.10459 16 4.68455 14.9782 5.27763 14.3806L11.3343 8.27783C11.7019 7.90739 12.2981 7.90739 12.6657 8.27783L18.7223 14.3806C19.3155 14.9782 18.8954 16 18.0566 16Z"></path>:
-                      </svg>):
-                      (
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" height="24px" width="24px" viewBox="0 0 24 24" class="sc-4c05d6ef-0 dMwnWW" className="h-3 w-3 text-red-600">
-                          <path d="M18.0566 8H5.94336C5.10459 8 4.68455 9.02183 5.27763 9.61943L11.3343 15.7222C11.7019 16.0926 12.2981 16.0926 12.6657 15.7222L18.7223 9.61943C19.3155 9.02183 18.8954 8 18.0566 8Z"></path>
-                        </svg>)
+                        <path d="M18.0566 16H5.94336C5.10459 16 4.68455 14.9782 5.27763 14.3806L11.3343 8.27783C11.7019 7.90739 12.2981 7.90739 12.6657 8.27783L18.7223 14.3806C19.3155 14.9782 18.8954 16 18.0566 16Z"></path>
+                      </svg>) :
+                      (<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" height="24px" width="24px" viewBox="0 0 24 24" className="h-3 w-3 text-red-600">
+                        <path d="M18.0566 8H5.94336C5.10459 8 4.68455 9.02183 5.27763 9.61943L11.3343 15.7222C11.7019 16.0926 12.2981 16.0926 12.6657 15.7222L18.7223 9.61943C19.3155 9.02183 18.8954 8 18.0566 8Z"></path>
+                      </svg>)
                     }
                     {coin.change}
                   </p>
@@ -192,7 +369,6 @@ const MarketPage = () => {
               </div>
             ))}
           </div>
-
         </div>
         <div>
           <div className='grid grid-cols-2 gap-2 max-h-[288px]'>
@@ -200,8 +376,10 @@ const MarketPage = () => {
               <p className='text-[14px] mb-2'>Market Cap</p>
               <p className='text-base'>$2.7T</p>
               <p className='flex items-center gap-1 text-[10px] text-red-600 font-medium'>
-              <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" height="24px" width="24px" viewBox="0 0 24 24" class="sc-4c05d6ef-0 dMwnWW" className="h-3 w-3 text-red-600"><path d="M18.0566 8H5.94336C5.10459 8 4.68455 9.02183 5.27763 9.61943L11.3343 15.7222C11.7019 16.0926 12.2981 16.0926 12.6657 15.7222L18.7223 9.61943C19.3155 9.02183 18.8954 8 18.0566 8Z"></path></svg>
-              0,12%
+                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" height="24px" width="24px" viewBox="0 0 24 24" className="h-3 w-3 text-red-600">
+                  <path d="M18.0566 8H5.94336C5.10459 8 4.68455 9.02183 5.27763 9.61943L11.3343 15.7222C11.7019 16.0926 12.2981 16.0926 12.6657 15.7222L18.7223 9.61943C19.3155 9.02183 18.8954 8 18.0566 8Z"></path>
+                </svg>
+                0,12%
               </p>
               <div className=''>
                 <MarketChart/>
@@ -211,11 +389,12 @@ const MarketPage = () => {
               <p className='text-[14px] mb-2'>CMC100</p>
               <p className='text-base'>$162.53</p>
               <p className='flex items-center gap-1 text-[10px] text-green-600 font-medium'>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" height="24px" width="24px" viewBox="0 0 24 24" class="sc-4c05d6ef-0 dMwnWW" className="h-3 w-3 text-green-600"><path d="M18.0566 16H5.94336C5.10459 16 4.68455 14.9782 5.27763 14.3806L11.3343 8.27783C11.7019 7.90739 12.2981 7.90739 12.6657 8.27783L18.7223 14.3806C19.3155 14.9782 18.8954 16 18.0566 16Z"></path></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" height="24px" width="24px" viewBox="0 0 24 24" className="h-3 w-3 text-green-600">
+                  <path d="M18.0566 16H5.94336C5.10459 16 4.68455 14.9782 5.27763 14.3806L11.3343 8.27783C11.7019 7.90739 12.2981 7.90739 12.6657 8.27783L18.7223 14.3806C19.3155 14.9782 18.8954 16 18.0566 16Z"></path>
+                </svg>
                 0,20%
               </p>
-              <div >
-
+              <div>
                 <MarketChart/>
               </div>
             </div>
@@ -293,19 +472,18 @@ const MarketPage = () => {
         </div>
       </div>
       
-      
-      <div className=' mt-[100px]'>
+      <div className='mt-[100px]'>
         <h1 className='text-white text-4xl text-center font-medium my-6'>Crypto Market Trade And Metrics</h1>
-        <div className='flex justify-center gap-3 '>
+        <div className='flex justify-center gap-3'>
           <p onClick={() => {setListTabs2("popular")}} className={`${listTabs2 === "popular" && "border-b-2 border-blue-700 text-white"} text-[18px] text-gray-500 font-medium pb-1 px-1 cursor-pointer`}>Popular</p>
           <p onClick={() => {setListTabs2("topGainers")}} className={`${listTabs2 === "topGainers" && "border-b-2 border-blue-700 text-white"} text-[18px] text-gray-500 font-medium pb-1 px-1 cursor-pointer`}>Top Gainers</p>
           <p onClick={() => {setListTabs2("topVolume")}} className={`${listTabs2 === "topVolume" && "border-b-2 border-blue-700 text-white"} text-[18px] text-gray-500 font-medium pb-1 px-1 cursor-pointer`}>Top Volume</p>
           <p onClick={() => {setListTabs2("newListings")}} className={`${listTabs2 === "newListings" && "border-b-2 border-blue-700 text-white"} text-[18px] text-gray-500 font-medium pb-1 px-1 cursor-pointer`}>New Listings</p>
         </div>
         <div className='my-3 flex items-center justify-center'>
-          <table className='text-white font-medium ' >
+          <table className='text-white font-medium'>
             <colgroup>
-              <col/>
+              <col />
               <col className='w-12' />
               <col className='w-52' />
               <col />
@@ -315,10 +493,10 @@ const MarketPage = () => {
               <col className='w-48' />
               <col className='w-48' />
               <col className='w-48' />
-              <col className='w-52'/>
+              <col className='w-52' />
             </colgroup>
             <thead>
-              <tr className='border-b border-gray-700'>
+              <tr className='border-b text-sm border-gray-700'>
                 <th></th>
                 <th className='text-start p-2'>#</th>
                 <th className='text-start p-2'>Name</th>
@@ -327,69 +505,106 @@ const MarketPage = () => {
                 <th className='text-end p-2'>24h%</th>
                 <th className='text-end p-2'>7d%</th>
                 <th className='text-end p-2'>Market Cap</th>
-                <th className='text-end p-2'>Volume(24h)</th>
+                <th className='text-end p-2'>Volume (<span className='text-[10px]'>24h</span>)</th>
                 <th className='text-end p-2'>Circulating Supply</th>
                 <th className='text-end p-2'>Last 7 Days</th>
               </tr>
             </thead>
             <tbody>
-              <tr className='border-y border-gray-700 hover:bg-slate-900 cursor-pointer'>
-                <td >
-                  <div onClick={()=>{setFavorites(!favorites)}} className='text-start p-2'>
-                    {favorites ? <FaStar className='text-[18px] text-yellow-300'/>
-                             : <TiStarOutline className='text-[18px] text-gray-500'/> }
-                  </div>
-                </td>
-                <td className='text-start p-2'>1</td>
-                <td>
-                  <div className='flex justify-between p-2'>
-                    <p>BitCoin BTC</p>
-                    <p className='px-2 text-xs border-2 border-blue-500 rounded-full'>Buy</p>
-                  </div>
-                </td>
-                <td className='text-end p-2'>$84,198.38</td>
-                <td className='text-end p-2 text-red-600'>0.13%</td>
-                <td className='text-end p-2 text-green-600'>0.12%</td>
-                <td className='text-end p-2 text-green-600'>0.17%</td>
-                <td className='text-end p-2'>$1,671,064,518,944</td>
-                <td className='text-end p-2'>
-                  <div>
-                    <p>$9,431,294,831</p>
-                    <p className='text-xs'>112.12K BTC</p>
-                  </div>
-                </td>
-                <td className='text-end p-2'>19.84M BTC</td>
-                <td className='p-2 flex justify-end items-end '>
-                  {/* Biểu đồ mini cho Last 7 Days */}
-                  <div style={{ width: '70%', height: '65px'}} >
-                    {data.length > 0 ? (
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={data}>
-                          
-                          <XAxis hide  dataKey="date" />
-                          <YAxis hide dataKey="uv"/>
-                          <Tooltip />
-                          <Area
-                            type="monotone"
-                            dataKey="uv"
-                            stroke="#8884d8"
-                            fill="#8884d8"
-                          />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    ) : (
-                      <p>Loading data...</p>
-                    )}
-                  </div>
-                </td>
-              </tr>
+              {coins.length > 0 ? (
+                coins.map((coin) => (
+                  <tr 
+                    key={coin.index} 
+                    className='text-sm border-y border-gray-700 hover:bg-slate-900 cursor-pointer'
+                    onClick={() => handleRowClick(coin.coin_id)} // Navigate on row click
+                  >
+                    <td>
+                      <div 
+                        onClick={(e) => toggleFavorite(coin.coin_id, e)} 
+                        className='text-start p-2'
+                      >
+                        {togglingFavorites[coin.coin_id] ? (
+                          <FaSpinner className='text-[18px] text-gray-500 animate-spin' />
+                        ) : favorites[coin.coin_id] ? (
+                          <FaStar className='text-[18px] text-yellow-300' />
+                        ) : (
+                          <TiStarOutline className='text-[18px] text-gray-500' />
+                        )}
+                      </div>
+                    </td>
+                    <td className='text-start p-2'>{coin.index}</td>
+                    <td>
+                      <div className='flex justify-between items-center p-2'>
+                        <div className='flex gap-2 items-center'>
+                          <img src={coin.image_url} alt={coin.name} className='w-5 h-5' />
+                          <p className='max-h-[60px] line-clamp-3'>{coin.name} {coin.symbol.replace('USDT', '')}</p>
+                        </div>
+                        <div>
+                          <p className='px-2 text-[10px] border-2 border-blue-500 rounded-full'>Buy</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className='text-end p-2'>{coin.price}</td>
+                    <td className={`text-end p-2 ${coin.price_change_1h.includes('-') ? 'text-red-600' : 'text-green-600'}`}>
+                      {coin.price_change_1h}
+                    </td>
+                    <td className={`text-end p-2 ${coin.price_change_24h.includes('-') ? 'text-red-600' : 'text-green-600'}`}>
+                      {coin.price_change_24h}
+                    </td>
+                    <td className={`text-end p-2 ${coin.price_change_7d.includes('-') ? 'text-red-600' : 'text-green-600'}`}>
+                      {coin.price_change_7d}
+                    </td>
+                    <td className='text-end p-2'>{coin.market_cap}</td>
+                    <td className='text-end p-2'>
+                      <div>
+                        <p>{coin.volume_24h}</p>
+                        <p className='text-[10px]'>
+                          {coin.price !== "N/A" && coin.volume_24h !== "N/A"
+                            ? (parseFloat(coin.volume_24h.replace('$', '').replace(/,/g, '')) / parseFloat(coin.price.replace('$', '').replace(/,/g, ''))).toFixed(2) + ` ${coin.symbol.replace('USDT', '')}`
+                            : 'N/A'}
+                        </p>
+                      </div>
+                    </td>
+                    <td className='text-end p-2'>{coin.circulating_supply} {coin.symbol.replace('USDT', '')}</td>
+                    <td className='p-2 flex justify-end items-end'>
+                      <div style={{ width: '70%', height: '65px' }}>
+                        {chartData[coin.index] && chartData[coin.index].length > 0 ? (
+                          <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={chartData[coin.index]} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                              <XAxis hide dataKey="date" />
+                              <YAxis hide dataKey="price" />
+                              <Tooltip
+                                contentStyle={{ backgroundColor: '#333', border: 'none', borderRadius: '5px', color: '#fff' }}
+                                labelStyle={{ color: '#fff' }}
+                              />
+                              <Area
+                                type="monotone"
+                                dataKey="price"
+                                stroke={coin.price_change_7d.includes('-') ? '#ff0000' : '#00ff00'}
+                                fill={coin.price_change_7d.includes('-') ? '#ff0000' : '#00ff00'}
+                                fillOpacity={0.3}
+                              />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                        ) : (
+                          <p>Loading chart...</p>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="11" className='text-center p-4'>Loading coins...</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
       </div>
-      
     </div>
-  )
-}
+  );
+};
 
-export default MarketPage
+export default MarketPage;
