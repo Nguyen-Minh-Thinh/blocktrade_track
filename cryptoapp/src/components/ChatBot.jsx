@@ -2,6 +2,7 @@ import { useState } from "react";
 import { X } from "lucide-react";
 import { IoIosSend } from "react-icons/io";
 import { SiWechat } from "react-icons/si";
+import { chatBot } from "../api/chat";
 
 export default function ChatBot() {
   const [open, setOpen] = useState(false);
@@ -19,20 +20,8 @@ export default function ChatBot() {
     setLoading(true);
 
     try {
-      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer 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`,
-        },
-        body: JSON.stringify({
-          model: "gpt-4", 
-          prompt: input,
-          max_tokens: 50,
-        }),
-      });
-      const data = await response.json();
-      const botMessage = { sender: "bot", text: data.choices[0].text.trim() };
+      const response = await chatBot(input)
+      const botMessage = { sender: "bot", text: response?.answer };
       setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
       setMessages((prev) => [...prev, { sender: "bot", text: "Xin lỗi, có lỗi xảy ra!" }]);
@@ -51,11 +40,11 @@ export default function ChatBot() {
               <X className="w-5 h-5 text-gray-400" />
             </button>
           </div>
-          <div className="h-64 overflow-y-auto flex flex-col gap-2 p-2">
+          <div className="h-64 overflow-y-auto flex flex-col gap-2 p-2 custom-scroll">
             {messages.map((msg, index) => (
               <div
                 key={index}
-                className={`p-2 rounded-lg text-sm max-w-[80%] ${
+                className={`p-2 rounded-lg text-sm max-w-[80%] break-words whitespace-pre-wrap ${
                   msg.sender === "bot" ? "bg-blue-600 self-start" : "bg-gray-700 self-end"
                 }`}
               >

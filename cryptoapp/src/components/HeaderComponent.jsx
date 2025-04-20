@@ -9,7 +9,6 @@ import SignUp from '../models/SignUp';
 import ButtonComponent from './ButtonComponent';
 import Search from '../models/Search';
 import { checkAuth, logout } from '../api/auth';
-import { Link } from 'react-router-dom';
 import Spot from '../models/Spot';
 import FavoritesList from '../models/FavoritesList';
 import { toast } from 'react-toastify';
@@ -131,7 +130,7 @@ const HeaderComponent = () => {
         setOpenSU={setOpenSignUp}
         swapModels={swapModels}
       />
-      <Navbar.Brand as={Link} to="/">
+      <Navbar.Brand href="/">
         <div>
           <img src="/logo.png" alt="" className="w-28" />
         </div>
@@ -216,11 +215,10 @@ const HeaderComponent = () => {
         <Navbar.Toggle />
       </div>
       <Navbar.Collapse className="">
-        <Navbar.Link className="text-white" href="#">Home</Navbar.Link>
-        <Navbar.Link className="text-white" href="#">About</Navbar.Link>
-        <Navbar.Link className="text-white" href="#">Services</Navbar.Link>
-        <Navbar.Link className="text-white" href="#">Pricing</Navbar.Link>
-        <Navbar.Link className="text-white" href="#">Contact</Navbar.Link>
+        <Navbar.Link className="text-white" href="/">Home</Navbar.Link>
+        <Navbar.Link className="text-white" href="market">Market Cap</Navbar.Link>
+        <Navbar.Link className="text-white" href="news">News</Navbar.Link>
+        <Navbar.Link className="text-white" href="about">About Us</Navbar.Link>
       </Navbar.Collapse>
     </Navbar>
   );

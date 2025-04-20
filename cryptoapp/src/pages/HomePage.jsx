@@ -150,7 +150,7 @@ const HomePage = () => {
             </thead>
             <tbody>
               {coins.length > 0 ? (
-                coins.map((coin) => (
+                coins.slice(0, 5).map((coin) => (
                   <tr key={coin.index} className='text-sm border-y border-gray-700 hover:bg-slate-900 cursor-pointer'>
                     <td>
                       <div onClick={() => toggleFavorite(coin.index)} className='text-start p-2'>
@@ -163,12 +163,14 @@ const HomePage = () => {
                     </td>
                     <td className='text-start p-2'>{coin.index}</td>
                     <td>
-                      <div className='flex justify-between p-2'>
+                      <div className='flex justify-between items-center p-2'>
                         <div className='flex gap-2 items-center'>
                           <img src={coin.image_url} alt={coin.name} className='w-5 h-5' />
-                          <p>{coin.name} {coin.symbol.replace('USDT', '')}</p>
+                          <p className='max-h-[60px] line-clamp-3'>{coin.name} {coin.symbol.replace('USDT', '')}</p>
                         </div>
-                        <p className='px-2 text-[10px] border-2 border-blue-500 rounded-full'>Buy</p>
+                        <div>
+                          <p className='px-2 text-[10px] border-2 border-blue-500 rounded-full'>Buy</p>
+                        </div>
                       </div>
                     </td>
                     <td className='text-end p-2'>{coin.price}</td>
@@ -230,7 +232,7 @@ const HomePage = () => {
           </table>
         </div>
         <div className='flex justify-end my-2 py-1 text-blue-900 font-medium'>
-          <p className='w-fit hover:text-blue-500 cursor-pointer'>View other Crypto</p>
+          <Link to="/market" className='w-fit hover:text-blue-500 cursor-pointer'>View other Crypto</Link>
         </div>
       </div>
       <div>
