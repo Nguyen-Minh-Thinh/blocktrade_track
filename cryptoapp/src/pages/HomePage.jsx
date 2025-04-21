@@ -233,8 +233,8 @@ const HomePage = () => {
   };
 
   // Navigate to coin detail page
-  const handleRowClick = (coinId) => {
-    navigate('/coindetail', { state: { coin_id: coinId } });
+  const handleRowClick = (coinId, symbol) => {
+    navigate('/coindetail', { state: { coin_id: coinId, symbol: symbol } });
   };
 
   return (
@@ -304,7 +304,7 @@ const HomePage = () => {
                   <tr 
                     key={coin.index} 
                     className='text-sm border-y border-gray-700 hover:bg-slate-900 cursor-pointer'
-                    onClick={() => handleRowClick(coin.coin_id)} // Navigate on row click
+                    onClick={() => handleRowClick(coin.coin_id, coin.symbol)} // Navigate on row click
                   >
                     <td>
                       <div 

@@ -216,6 +216,7 @@ def get_favorites():
                     'user_id': row.get('user_id', 'unknown_user'),
                     'coin_id': row.get('coin_id', 'unknown_coin'),
                     'name': row.get('name', 'Unknown'),
+                    'symbol': row.get('symbol', 'Unknown'),
                     'price': f"${price:,.2f}" if price is not None else "N/A",
                     'change': f"{price_change:.2f}%" if price_change is not None else "N/A",
                     'logo': row.get('image_url', "https://via.placeholder.com/20"),
