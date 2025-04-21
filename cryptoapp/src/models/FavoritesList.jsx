@@ -113,8 +113,8 @@ const FavoritesList = ({ coin }) => {
   };
 
   // Navigate to coin detail page
-  const handleRowClick = (coinId) => {
-    navigate('/coindetail', { state: { coin_id: coinId } });
+  const handleRowClick = (coinId, symbol) => {
+    navigate('/coindetail', { state: { coin_id: coinId, symbol: symbol } });
   };
 
   return (
@@ -157,7 +157,7 @@ const FavoritesList = ({ coin }) => {
                     <div 
                       key={item.id} 
                       className='grid grid-cols-4 px-3 py-3 font-medium text-sm text-white cursor-pointer group hover:bg-gray-800 hover:rounded-lg'
-                      onClick={() => handleRowClick(item.coin_id)} // Navigate on row click
+                      onClick={() => handleRowClick(item.coin_id, item.symbol)} // Navigate on row click
                     >
                       <div className='flex justify-start items-center col-span-2'>
                         <FaStar
