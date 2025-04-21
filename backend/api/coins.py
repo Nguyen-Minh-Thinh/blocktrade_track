@@ -16,7 +16,7 @@ CORS(coins_bp, supports_credentials=True, origins="*")
 logger = logging.getLogger(__name__)
 
 # Timeout configuration for HTTP requests
-TIMEOUT = 5  # 5 seconds timeout for each API request
+TIMEOUT = 300  # 300 seconds timeout for each API request
 
 # Redis connection for caching
 try:
@@ -27,7 +27,7 @@ except redis.RedisError as e:
     logger.warning(f"Failed to connect to Redis: {str(e)}. Proceeding without caching.")
     redis_client = None
 
-CACHE_TTL = 300  # Cache for 5 minutes (300 seconds)
+CACHE_TTL = 1800  # Cache for 30 minutes (1800 seconds)
 
 # Fetch CoinGecko coin list and create symbol-to-ID mapping at startup
 try:
@@ -219,9 +219,12 @@ def get_coins():
                 coingecko_id = coin_id_map.get(symbol)
                 coingecko_coin_data = coingecko_data.get(coingecko_id, {}) if coingecko_id else {}
 
+                # Store the raw market_cap value for sorting
+                market_cap_raw = coingecko_coin_data.get('market_cap', 0)
+
                 # Construct the coin data object
                 coin = {
-                    'index': idx,  # Row number
+                    'index': idx,  # Row number (will be updated after sorting)
                     'coin_id': row.get('coin_id', 'unknown'),
                     'name': row.get('name', 'Unknown'),
                     'image_url': row.get('image_url', "https://via.placeholder.com/20"),
@@ -229,10 +232,12 @@ def get_coins():
                     'price_change_1h': f"{binance_data['price_change_1h']:.2f}%" if binance_data['price_change_1h'] is not None else "N/A",
                     'price_change_24h': f"{binance_data['price_change_24h']:.2f}%" if binance_data['price_change_24h'] is not None else "N/A",
                     'price_change_7d': f"{binance_data['price_change_7d']:.2f}%" if binance_data['price_change_7d'] is not None else "N/A",
-                    'market_cap': f"{coingecko_coin_data.get('market_cap', 0):,.2f}" if coingecko_coin_data.get('market_cap') is not None else "N/A",
+                    'market_cap': f"{market_cap_raw:,.2f}" if market_cap_raw is not None else "N/A",
                     'volume_24h': f"{binance_data['volume_24h']:,.2f}" if binance_data['volume_24h'] is not None else "N/A",
                     'circulating_supply': f"{coingecko_coin_data.get('circulating_supply', 0):,.2f}" if coingecko_coin_data.get('circulating_supply') is not None else "N/A",
-                    'symbol': symbol
+                    'symbol': symbol,
+                    'coingecko_id': coingecko_id or "N/A",
+                    'market_cap_raw': market_cap_raw  # Store raw market cap for sorting
                 }
                 coins.append(coin)
             except Exception as e:
@@ -243,7 +248,15 @@ def get_coins():
             logger.info("No coins found")
             return jsonify({'coins': []}), 200
 
-        logger.info(f"Returning {len(coins)} coins")
+        # Sort coins by market_cap in descending order (highest to lowest)
+        coins.sort(key=lambda x: x['market_cap_raw'], reverse=True)
+
+        # Update the index after sorting
+        for idx, coin in enumerate(coins, start=1):
+            coin['index'] = idx
+            del coin['market_cap_raw']  # Remove the raw market cap field from the response
+
+        logger.info(f"Returning {len(coins)} coins sorted by market cap")
         return jsonify({'coins': coins}), 200
 
     except Exception as e:
