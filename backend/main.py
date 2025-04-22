@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 
 # Initialize the Flask app
 app = Flask(__name__)
+app.secret_key = 'abcdefgh123456'  # Đặt một chuỗi bí mật cho Flask sessions
 CORS(app, supports_credentials=True, origins="*")
 app.config["JWT_SECRET_KEY"] = "abcdefghklmnopq123456"  # Change this in production!
 app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
