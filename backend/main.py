@@ -6,7 +6,7 @@ from api.transactions import transactions_bp
 from api.favorites import favorites_bp
 from api.historical_data import historical_data_bp
 from api.coindetail import coindetail_bp
-# from api.chatbot import chatbot_bp
+from api.chatbot import chatbot_bp
 from api.news import news_bp
 from api.coins import coins_bp
 from api.clickhouse_config import init_app  # Import ClickHouse client management
@@ -47,7 +47,7 @@ app.register_blueprint(historical_data_bp, url_prefix='/historical_data')
 app.register_blueprint(news_bp, url_prefix='/news')
 app.register_blueprint(coins_bp, url_prefix='/coins')
 app.register_blueprint(coindetail_bp, url_prefix='/coindetail')
-# app.register_blueprint(chatbot_bp, url_prefix='/chatbot')
+app.register_blueprint(chatbot_bp, url_prefix='/chatbot')
 
 # Initialize ClickHouse client management
 init_app(app)

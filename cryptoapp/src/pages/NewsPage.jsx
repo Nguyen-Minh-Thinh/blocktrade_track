@@ -3,11 +3,11 @@ import ButtonComponent from '../components/ButtonComponent';
 
 const NewsCard = ({ title, news_link, updated_at, source_name, coin_name, coin_symbol, coin_image_url }) => (
   <div className="bg-white shadow-md rounded-lg overflow-hidden min-h-[200px]">
-    <a href={news_link} target="_blank" rel="noopener noreferrer" className="block h-full">
+    <a href={news_link} target="_blank" rel="noopener noreferrer" className="block h-full ">
       <div className="p-4 flex flex-col h-full justify-between">
         <div>
           <p className="text-blue-600 text-xs font-bold">{source_name} - {updated_at}</p>
-          <h3 className="text-lg font-semibold mt-2 hover:underline" title={title}>
+          <h3 className="text-lg font-semibold mt-2 hover:underline line-clamp-2" title={title}>
             {title}
           </h3>
         </div>
