@@ -26,34 +26,87 @@ ChartJS.register(
   zoomPlugin
 );
 
-const CryptoChart = () => {
+const CryptoChart = ({ symbol }) => {
   const [dataPoints, setDataPoints] = useState([]);
-  const [filter, setFilter] = useState('All');
-  const getTimeRange = (filter) => {
-    const now = new Date("2018-05-01"); // ngày cuối cùng trong dữ liệu mẫu
+  const [filter, setFilter] = useState('1d');
+
+  const [minDate, setMinDate] = useState(new Date());
+  const [maxDate, setMaxDate] = useState(new Date());
+  
+  // Hàm tính khoảng thời gian
+  const getTimeRange = (filter, data) => {
+    const timestamps = data.map(item => item.x.getTime());
+    const latest = new Date(Math.max(...timestamps));
+    const earliest = new Date(Math.min(...timestamps));
+  
     switch (filter) {
-      case '1d':
-        return [new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000), now];
-      case '1m':
-        return [new Date(now.getFullYear(), now.getMonth() - 1, now.getDate()), now];
-      case '1y':
-        return [new Date(now.getFullYear() - 1, now.getMonth(), now.getDate()), now];
+      case "1d":
+        return [
+          earliest,
+          latest,
+        ];
+      case "7d":
+        return [
+          new Date(latest.getFullYear(), latest.getMonth() - 1, latest.getDate()),
+          latest,
+        ];
+      case "1m":
+        return [
+          new Date(latest.getFullYear() - 1, latest.getMonth(), latest.getDate()),
+          latest,
+        ];
+      case "All":
+        return [
+          new Date(latest.getFullYear() - 1, latest.getMonth(), latest.getDate()),
+          latest,
+        ];
       default:
-        return [new Date("2017-05-01"), new Date("2018-05-01")];
+        return [earliest, latest];
     }
   };
-  const [minDate, maxDate] = getTimeRange(filter);  
-  useEffect(() => {
-    fetch("https://canvasjs.com/data/gallery/react/btcusd2017-18.json")
+
+  // Hàm gọi API và xử lý dữ liệu
+  const fetchData = () => {
+    console.log(symbol);
+    fetch(`http://localhost:5000/realtime_data?coin_symbol=${symbol}`)
       .then(res => res.json())
       .then(data => {
+        if (data.error) {
+          setDataPoints([]);
+          return;
+        }
+  
         const formatted = data.map(item => ({
-          x: new Date(item.date),
+          x: new Date(item.timestamp),
           y: Number(item.close)
         }));
-        setDataPoints(formatted);
+  
+        if (JSON.stringify(formatted) !== JSON.stringify(dataPoints)) {
+          setDataPoints(formatted);
+  
+          // ✅ Cập nhật minDate và maxDate luôn tại đây
+          const [min, max] = getTimeRange(filter, formatted);
+          setMinDate(min);
+          setMaxDate(max);
+        }
       });
-  }, []);
+  };
+  
+
+  // Gọi API ngay lần đầu tiên khi component mount
+  useEffect(() => {
+    fetchData();  // Gọi hàm fetchData lần đầu tiên khi component mount
+
+    const intervalId = setInterval(() => {
+      fetchData();  // Cập nhật dữ liệu sau mỗi 2 phút
+    }, 2 * 60 * 1000); // 2 phút (2 * 60 * 1000 ms)
+
+    // Dọn dẹp interval khi component unmount
+    return () => clearInterval(intervalId);
+  }, []);  // Chạy một lần khi component mount và sau đó chạy mỗi 2 phút
+
+  
+  
 
   const chartData = {
     datasets: [
@@ -82,11 +135,13 @@ const CryptoChart = () => {
       x: {
         type: 'time',
         time: {
-          unit: 'month',
-          tooltipFormat: 'MMM dd yyyy'
+          unit: 'minute', // hoặc 'second' nếu muốn chi tiết hơn
+          displayFormats: {
+            minute: 'MMM dd yyyy HH:mm:ss',
+            second: 'MMM dd yyyy HH:mm:ss'
+          },
+          tooltipFormat: 'MMM dd yyyy HH:mm:ss'
         },
-        // min: new Date("2017-05-01").getTime(),  // giống navigator.slider.minimum
-        // max: new Date("2018-05-01").getTime(),  // giống navigator.slider.maximum
         min: minDate.getTime(),
         max: maxDate.getTime(),
         ticks: {
@@ -105,7 +160,6 @@ const CryptoChart = () => {
             return (value / Math.pow(1000, order)).toFixed(1) + suffixes[order];
           },
           color: "#ccc",
-        
         },
         grid: {
           display: true
@@ -140,18 +194,19 @@ const CryptoChart = () => {
         },
         limits: {
           x: {
-            min: new Date("2017-01-01").getTime(), // thay bằng min thực tế
-            max: new Date("2019-01-01").getTime(), // thay bằng max thực tế
+            min: minDate.getTime(), // ✅ Sửa ở đây
+            max: maxDate.getTime()  // ✅ Và đây nữa
           }
         }
       }
     }
   };
 
+
   return (
     <div className='h-[450px] mt-8 relative'>
-      <div className=' ml-4 px-2 py-1 w-fit z-10 relative'>
-        {['1d', '1m', '1y', 'All'].map(item => (
+      <div className='ml-4 px-2 py-1 w-fit z-10 relative'>
+        {['1d', '7d', '1m', 'All'].map(item => (
           <button
             key={item}
             onClick={() => setFilter(item)}
@@ -164,11 +219,17 @@ const CryptoChart = () => {
           </button>
         ))}
       </div>
+  
       <div className="absolute inset-x-0 bottom-0 top-[60px]">
-        <Line data={chartData} options={chartOptions} />
+        {dataPoints.length > 0 ? (
+          <Line data={chartData} options={chartOptions} />
+        ) : (
+          <div className="text-white text-center mt-20">Đang tải dữ liệu...</div>
+        )}
       </div>
     </div>
   );
+  
   
 };
 

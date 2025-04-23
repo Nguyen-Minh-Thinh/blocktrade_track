@@ -323,7 +323,7 @@ const CoinDetailPage = () => {
         </div>
         <div className='col-span-2 border-2 border-gray-500'>
           <div className=''>
-            <CryptoChart />
+            <CryptoChart symbol={symbol} />  
           </div>
           <div className='mt-6'>
             <div className='my-2 grid grid-cols-2 gap-2 px-3'>
