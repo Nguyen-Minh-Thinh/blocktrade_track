@@ -400,7 +400,7 @@ const HomePage = () => {
           <div className='w-[500px]'>
             <div className='flex justify-between my-6 font-medium'>
               <h1 className='text-3xl'>News</h1>
-              <Link to={"newpage"} className='text-blue-600 cursor-pointer'>View All</Link>
+              <Link to={"news"} className='text-blue-600 cursor-pointer'>View All</Link>
             </div>
             <div className='font-medium'>
               <div className='p-5 my-3 bg-gray-900 rounded-xl cursor-pointer'>
