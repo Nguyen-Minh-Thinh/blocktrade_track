@@ -11,8 +11,6 @@ const NewsCard = ({ title, news_link, updated_at, source_name, coin_name, coin_s
             {title}
           </h3>
         </div>
-
-        {/* Hiển thị thông tin về Coin */}
         <div className="mt-4 flex items-center">
           <img src={coin_image_url} alt={coin_name} className="w-8 h-8 mr-2" />
           <p className="text-sm font-bold">{coin_name} ({coin_symbol})</p>
@@ -25,6 +23,7 @@ const NewsCard = ({ title, news_link, updated_at, source_name, coin_name, coin_s
 const NewsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [newsData, setNewsData] = useState([]);
+  const [visibleCount, setVisibleCount] = useState(12); // Số lượng tin hiển thị ban đầu
 
   useEffect(() => {
     async function fetchNews() {
@@ -45,21 +44,20 @@ const NewsPage = () => {
   }, []);
 
   const filteredNews = searchTerm
-  ? newsData.filter(news => {
-      const search = searchTerm.toLowerCase();
-      const symbol = news.coin_symbol.toLowerCase();
-      const name = news.coin_name.toLowerCase();
+    ? newsData.filter(news => {
+        const search = searchTerm.toLowerCase();
+        return (
+          news.coin_symbol.toLowerCase().includes(search) ||
+          news.coin_name.toLowerCase().includes(search)
+        );
+      })
+    : newsData;
 
-      if (search.length === 1) {
-       
-        return symbol.includes(search) || name.includes(search);
-      } else {
-        
-        return symbol.includes(search) || name.includes(search);
-      }
-    })
-  : newsData;
+  const visibleNews = filteredNews.slice(0, visibleCount);
 
+  const handleShowMore = () => {
+    setVisibleCount(prev => prev + 8);
+  };
 
   return (
     <div className="bg-custom-radial mx-auto p-6">
@@ -74,18 +72,31 @@ const NewsPage = () => {
           <input
             type="text"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setVisibleCount(12); // Reset khi tìm kiếm mới
+            }}
             placeholder="Search"
-            className="text-black font-bold text-sm p-1 border rounded-lg w-40"
+            className="text-black font-bold text-sm p-1 border rounded-lg w-32"
           />
           <span className="text-white font-bold text-lg ml-2"> Company News</span>
         </div>
 
         <div className="grid md:grid-cols-4 gap-6 mt-6">
-          {filteredNews.map((news) => (
+          {visibleNews.map((news) => (
             <NewsCard key={news.news_id} {...news} />
           ))}
         </div>
+
+        {visibleCount < filteredNews.length && (
+          <div className="flex justify-center mt-8 ">
+            <div onClick={handleShowMore}>
+              
+              <ButtonComponent contentButton={"Show More"}></ButtonComponent>
+            
+              </div>
+          </div>
+        )}
       </div>
     </div>
   );
