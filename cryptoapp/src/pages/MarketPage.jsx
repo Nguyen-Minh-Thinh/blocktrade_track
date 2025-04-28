@@ -30,54 +30,88 @@ import { toast } from 'react-toastify';
 const coinList = [
   {
     id: 1,
-    name: "Fartcoin",
-    symbol: "SQL",
-    price: "$0.8266",
-    change: "0.20%",
-    img: "https://s2.coinmarketcap.com/static/img/coins/64x64/33597.png",
+    name: "Bitcoin",
+    symbol: "BTC",
+    price: "$93,500",
+    change: "+2.14%",
+    img: "https://s2.coinmarketcap.com/static/img/coins/64x64/1.png",
     isPositive: true,
   },
-  { id: 2, name: 'TRUMP', symbol: 'USDC', price: '$7.93', change: '1.28%', img: "https://s2.coinmarketcap.com/static/img/coins/64x64/33597.png", isPositive: false },
-  { id: 3, name: 'Fartcoin', symbol: 'USDC', price: '$0.8469', change: '6.57%', isPositive: false, img: "https://s2.coinmarketcap.com/static/img/coins/64x64/33597.png" },
-  { id: 4, name: 'Fur', symbol: 'SOL', price: '$0.003747', change: '7017%', img: "https://s2.coinmarketcap.com/static/img/coins/64x64/33597.png", isPositive: true },
-  { id: 5, name: 'RAY', symbol: 'SOL', price: '$2.11', change: '2.31%', img: "https://s2.coinmarketcap.com/static/img/coins/64x64/33597.png", isPositive: true },
+  {
+    id: 2,
+    name: "Ethereum",
+    symbol: "ETH",
+    price: "$3,100",
+    change: "-1.05%",
+    img: "https://s2.coinmarketcap.com/static/img/coins/64x64/1027.png",
+    isPositive: false,
+  },
+  {
+    id: 3,
+    name: "Solana",
+    symbol: "SOL",
+    price: "$145.67",
+    change: "+5.21%",
+    img: "https://s2.coinmarketcap.com/static/img/coins/64x64/5426.png",
+    isPositive: true,
+  },
+  {
+    id: 4,
+    name: "Ripple",
+    symbol: "XRP",
+    price: "$0.527",
+    change: "-0.89%",
+    img: "https://s2.coinmarketcap.com/static/img/coins/64x64/52.png",
+    isPositive: false,
+  },
+  {
+    id: 5,
+    name: "Dogecoin",
+    symbol: "DOGE",
+    price: "$0.142",
+    change: "+3.67%",
+    img: "https://s2.coinmarketcap.com/static/img/coins/64x64/74.png",
+    isPositive: true,
+  },
 ];
 
 const coinListTrending = [
   {
     id: 1,
     name: 'BTC',
-    price: '$0.1430',
+    price: '$93,500',
     image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1.png'
   },
   {
     id: 2,
     name: 'ETH',
-    price: '$0.0930',
+    price: '$3,100',
     image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1027.png'
   },
   {
     id: 3,
-    name: 'DOGE',
-    price: '$0.0045',
-    image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/74.png'
+    name: 'BNB',
+    price: '$350.21',
+    image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/2710.png'
   },
   {
     id: 4,
-    name: 'DOGE',
-    price: '$0.0045',
-    image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/74.png'
+    name: 'ADA',
+    price: '$0.83',
+    image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/2010.png'
   },
   {
     id: 5,
-    name: 'DOGE',
-    price: '$0.0045',
-    image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/74.png'
+    name: 'DOT',
+    price: '$24.75',
+    image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/6636.png'
   },
 ];
 
+
+
+
 const MarketPage = () => {
-  const [listTabs2, setListTabs2] = useState("popular");
   const [coins, setCoins] = useState([]);
   const [favorites, setFavorites] = useState({});
   const [chartData, setChartData] = useState({});
@@ -448,7 +482,7 @@ const MarketPage = () => {
         <div>
           <div className="max-h-[288px] flex flex-col items-center gap-y-2">
             <CryptoNewsCard
-              avatar="https://i.imgur.com/1XGQ1Zf.png"
+              avatar="https://s3.coinmarketcap.com/static-gravity/image/291a8a31f1d44a649d0a9572251e345d.jpg"
               user="Crypto Rand"
               time="8 hours"
               content="Exchanges are running out of #Bitcoin supply. Imminent ₿ $BTC supply shock, read between the lines!..."
@@ -458,7 +492,7 @@ const MarketPage = () => {
               views=""
             />
             <CryptoNewsCard
-              avatar="https://i.imgur.com/dKMUjZk.png"
+              avatar="https://s3.coinmarketcap.com/static-gravity/image/834969bc316043e196e18f24eee50f0c.jpg"
               user="Cointelegraph"
               time="1 hour"
               content="Bitcoin death cross still present despite rally to $86K — Should BTC traders be afraid?"
@@ -473,13 +507,7 @@ const MarketPage = () => {
       </div>
       
       <div className='mt-[100px]'>
-        <h1 className='text-white text-4xl text-center font-medium my-6'>Crypto Market Trade And Metrics</h1>
-        <div className='flex justify-center gap-3'>
-          <p onClick={() => {setListTabs2("popular")}} className={`${listTabs2 === "popular" && "border-b-2 border-blue-700 text-white"} text-[18px] text-gray-500 font-medium pb-1 px-1 cursor-pointer`}>Popular</p>
-          <p onClick={() => {setListTabs2("topGainers")}} className={`${listTabs2 === "topGainers" && "border-b-2 border-blue-700 text-white"} text-[18px] text-gray-500 font-medium pb-1 px-1 cursor-pointer`}>Top Gainers</p>
-          <p onClick={() => {setListTabs2("topVolume")}} className={`${listTabs2 === "topVolume" && "border-b-2 border-blue-700 text-white"} text-[18px] text-gray-500 font-medium pb-1 px-1 cursor-pointer`}>Top Volume</p>
-          <p onClick={() => {setListTabs2("newListings")}} className={`${listTabs2 === "newListings" && "border-b-2 border-blue-700 text-white"} text-[18px] text-gray-500 font-medium pb-1 px-1 cursor-pointer`}>New Listings</p>
-        </div>
+        <h1 className='text-white text-4xl text-center font-medium my-6 mb-10'>Crypto Market Trade And Metrics</h1>
         <div className='my-3 flex items-center justify-center'>
           <table className='text-white font-medium'>
             <colgroup>

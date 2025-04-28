@@ -144,28 +144,30 @@ const SignIn = ({ openSI, setOpenSI, swapModels, setUser }) => {
                   <span className="text-red-500 text-xs text-center mt-2">{error.username}</span>
                 )}
               </div>
-              <div className="relative">
+              <div className="">
                 <div className="mb-2 mt-2 block">
                   <Label className='text-white' htmlFor="password" value="Your password" />
                 </div>
-                <TextInput
-                  theme={customStyles}
-                  color='custom-bg'
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder='Enter your password'
-                  value={formData.password}
-                  onChange={handleChange}
-                  disabled={loading}
-                />
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 mt-6 text-gray-400 hover:text-white"
-                  onClick={togglePasswordVisibility}
-                  disabled={loading}
-                >
-                  {showPassword ? <HiEyeOff size={20} /> : <HiEye size={20} />}
-                </button>
+                <div className='relative'>
+                  <TextInput
+                    theme={customStyles}
+                    color='custom-bg'
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder='Enter your password'
+                    value={formData.password}
+                    onChange={handleChange}
+                    disabled={loading}
+                  />
+                  <button
+                    type="button"
+                    className="absolute bottom-1/4 right-2 text-gray-400 hover:text-white"
+                    onClick={togglePasswordVisibility}
+                    disabled={loading}
+                  >
+                    {showPassword ? <HiEyeOff size={20} /> : <HiEye size={20} />}
+                  </button>
+                </div>
                 {error.password !== "" && (
                   <span className="text-red-500 text-xs text-center mt-2">{error.password}</span>
                 )}
