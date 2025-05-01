@@ -118,7 +118,7 @@ const MarketPage = () => {
   const [togglingFavorites, setTogglingFavorites] = useState({});
   const [user, setUser] = useState(null);
   const navigate = useNavigate(); // Initialize useNavigate
-
+  const [showInput, setShowInput] = useState(false);
   // Load user from localStorage
   const loadUserFromStorage = () => {
     const userData = localStorage.getItem("userLogin");
@@ -405,101 +405,53 @@ const MarketPage = () => {
           </div>
         </div>
         <div>
-          <div className='grid grid-cols-2 gap-2 max-h-[288px]'>
-            <div className='font-medium rounded-lg bg-gray-800 px-4 py-3'>
-              <p className='text-[14px] mb-2'>Market Cap</p>
-              <p className='text-base'>$2.7T</p>
-              <p className='flex items-center gap-1 text-[10px] text-red-600 font-medium'>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" height="24px" width="24px" viewBox="0 0 24 24" className="h-3 w-3 text-red-600">
-                  <path d="M18.0566 8H5.94336C5.10459 8 4.68455 9.02183 5.27763 9.61943L11.3343 15.7222C11.7019 16.0926 12.2981 16.0926 12.6657 15.7222L18.7223 9.61943C19.3155 9.02183 18.8954 8 18.0566 8Z"></path>
-                </svg>
-                0,12%
-              </p>
-              <div className=''>
-                <MarketChart/>
-              </div>
+          <div className="grid grid-rows-2 gap-2 max-h-[288px] h-[288px]">
+            <div className="font-medium rounded-lg bg-gray-800 px-4 py-3 flex justify-center items-center text-2xl  h-full">
+              <p className="font-semibold" > 51 Coins</p>
             </div>
-            <div className='font-medium rounded-lg bg-gray-800 px-4 py-3'>
-              <p className='text-[14px] mb-2'>CMC100</p>
-              <p className='text-base'>$162.53</p>
-              <p className='flex items-center gap-1 text-[10px] text-green-600 font-medium'>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" height="24px" width="24px" viewBox="0 0 24 24" className="h-3 w-3 text-green-600">
-                  <path d="M18.0566 16H5.94336C5.10459 16 4.68455 14.9782 5.27763 14.3806L11.3343 8.27783C11.7019 7.90739 12.2981 7.90739 12.6657 8.27783L18.7223 14.3806C19.3155 14.9782 18.8954 16 18.0566 16Z"></path>
-                </svg>
-                0,20%
-              </p>
-              <div>
-                <MarketChart/>
-              </div>
-            </div>
-            <div className='font-medium rounded-lg bg-gray-800 px-4 py-3'>
-              <p className='text-[14px]'>Fear & Greed</p>
-              <div className='relative flex justify-center items-center py-1 px-2'>
-                <svg width="130" height="79" viewBox="0 0 130 79">
-                  <path d="M 12 71 A 53 53 0 0 1 18.91676873622339 44.82108107103576" stroke="#EA3943" stroke-width="6" stroke-linecap="round" fill="none"></path>
-                  <path d="M 23.008648902174897 38.66230631323281 A 53 53 0 0 1 44.46167391803855 22.141252965809464" stroke="#EA8C00" stroke-width="6" stroke-linecap="round" fill="none"></path>
-                  <path d="M 51.46137482940311 19.75836040396365 A 53 53 0 0 1 78.5386251705969 19.75836040396365" stroke="#F3D42F" stroke-width="6" stroke-linecap="round" fill="none"></path>
-                  <path d="M 85.53832608196146 22.14125296580947 A 53 53 0 0 1 106.99135109782512 38.662306313232826" stroke="#93D900" stroke-width="6" stroke-linecap="round" fill="none"></path>
-                  <path d="M 111.08323126377661 44.82108107103576 A 53 53 0 0 1 118 71" stroke="#16C784" stroke-width="6" stroke-linecap="round" fill="none"></path>
-                  <path d="M 12 71 A 53 53 0 0 1 18.91676873622339 44.82108107103576" stroke="none" stroke-width="6" stroke-linecap="round" fill="none"></path>
-                  <path d="M 23.008648902174897 38.66230631323281 A 53 53 0 0 1 35.20958097383708 27.164729563448226" stroke="none" stroke-width="6" stroke-linecap="round" fill="none"></path>
-                  <circle cx="35.20958097383708" cy="27.164729563448226" r="6" fill="none" stroke="var(--c-color-gray-100)" stroke-width="2"></circle>
-                  <circle cx="35.20958097383708" cy="27.164729563448226" r="5" fill="white"></circle>
-                </svg>
-                <div className='absolute text-center w-full bottom-2'>
-                  <p className='text-xl font-bold'>31</p>
-                  <p className='text-gray-600 text-xs'>Fear</p>
-                </div>
-              </div>
-            </div>
-            <div className='font-medium rounded-lg bg-gray-800 px-4 py-3'>
-              <p className='text-[14px] mb-2'>Altcoin Season</p>
-              <div className='mb-2'>
-                <span className='text-xl font-medium'>16</span>
-                <span className='text-gray-600 text-[18px]'>/100</span>
-              </div>
-              <div>
-                <div className='flex justify-between items-center text-[10px] text-gray-500 font-medium mb-2'>
-                  <span>Bitcoin</span>
-                  <span>Altcoin</span>
-                </div>
-                <div className="w-full h-[5px] flex justify-center items-center relative flex-col">
-                  <div className="w-full"></div>
-                  <div className="relative w-full">
-                    <div className="h-[5px] rounded-[3px] flex overflow-hidden">
-                      <div className="bg-[#f68819] w-[43px] h-full rounded-l-[3px]"></div>
-                      <div className="bg-[#fcdbb9] w-[40px] h-full"></div>
-                      <div className="bg-[#c1ccfd] w-[40px] h-full"></div>
-                      <div className="bg-[#3156fa] w-[43px] h-full rounded-r-[3px]"></div>
-                    </div>
-                    <div className="absolute left-[26.56px] top-1/2 w-[18px] h-[18px] bg-white border-[4px] border-gray-950 rounded-full transform -translate-x-1/2 -translate-y-1/2 z-10 shadow-[0px_8px_32px_0px_rgba(128,138,157,0.24),0px_1px_2px_0px_rgba(128,138,157,0.12)]"></div>
-                  </div>
-                </div>
-              </div>
+            <div className="font-medium rounded-lg bg-gray-800 px-4 py-3 flex justify-center items-center text-2xl  h-full">
+            <p className="font-semibold" > 193 News</p>
             </div>
           </div>
         </div>
         <div>
-          <div className="max-h-[288px] flex flex-col items-center gap-y-2">
+          <div className="grid grid-rows-2 gap-2 max-h-[288px] h-[288px]">
+          <CryptoNewsCard
+            avatar="https://s2.coinmarketcap.com/static/img/coins/64x64/22861.png"
+            user="Celestia"
+            time="8 hours"
+            content={
+              <a 
+                href="https://coinmarketcap.com/community/articles/67a3b72ecd6835482020786c/" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-blue-400 hover:underline"
+              >
+                Celestia (TIA) and Optimism (OP) Testing Key Support Amid Significant Correction: Is a Bounce Back Ahead?
+              </a>
+            }
+            comments={9}
+            retweets={2}
+            likes={305}
+            views=""
+          />
             <CryptoNewsCard
-              avatar="https://s3.coinmarketcap.com/static-gravity/image/291a8a31f1d44a649d0a9572251e345d.jpg"
-              user="Crypto Rand"
+              avatar="https://s2.coinmarketcap.com/static/img/coins/64x64/1.png"
+              user="Bitcoin"
               time="8 hours"
-              content="Exchanges are running out of #Bitcoin supply. Imminent ₿ $BTC supply shock, read between the lines!..."
+              content={
+                <a 
+                  href="https://coinmarketcap.com/community/articles/your-article-id" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-blue-400 hover:underline"
+                >
+                  Bitcoin Users Targeted in Sophisticated Address Poisoning Scam, Warns Jameson Lopp
+                </a>
+              }
               comments={9}
               retweets={2}
               likes={305}
-              views=""
-            />
-            <CryptoNewsCard
-              avatar="https://s3.coinmarketcap.com/static-gravity/image/834969bc316043e196e18f24eee50f0c.jpg"
-              user="Cointelegraph"
-              time="1 hour"
-              content="Bitcoin death cross still present despite rally to $86K — Should BTC traders be afraid?"
-              image="https://i.imgur.com/L6sMREs.png"
-              comments={0}
-              retweets={0}
-              likes={0}
               views=""
             />
           </div>
@@ -508,6 +460,36 @@ const MarketPage = () => {
       
       <div className='mt-[100px]'>
         <h1 className='text-white text-4xl text-center font-medium my-6 mb-10'>Crypto Market Trade And Metrics</h1>
+        <div className="relative w-full h-10 mb-4">
+        <div className="relative w-full h-10 mb-4 flex justify-end items-center pr-6">
+      <div 
+        className="text-gray-400 cursor-pointer"
+        onClick={() => setShowInput(!showInput)} 
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1116.65 7.65a7.5 7.5 0 010 10.6z"
+          />
+        </svg>
+      </div>
+      {showInput && (
+        <input
+          type="text"
+          placeholder="Search"
+          className="text-black font-bold text-sm p-1 border rounded-lg w-32 ml-2 transition-all duration-300"
+        />
+      )}
+    </div>
+        </div>
         <div className='my-3 flex items-center justify-center'>
           <table className='text-white font-medium'>
             <colgroup>
