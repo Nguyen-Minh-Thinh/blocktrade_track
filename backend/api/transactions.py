@@ -18,10 +18,9 @@ def validate_user(user_id):
 
 # Get the user's transaction history
 @transactions_bp.route('/', methods=['GET'])
-@jwt_required()
 def get_transactions():
     try:
-        user_id = get_jwt_identity()
+        user_id = request.args.get('user_id')
         # Validate user_id
         if not validate_user(user_id):
             return jsonify({'error': 'Invalid user_id'}), 404
@@ -74,7 +73,7 @@ def get_transactions():
             }
             for row in result.get('data', [])
         ]
-
+        # print(transactions)
         return jsonify({'transactions': transactions}), 200
 
     except Exception as e:

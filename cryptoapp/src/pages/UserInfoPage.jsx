@@ -3,6 +3,7 @@ import { Menu, Table, Button, Space, DatePicker } from "antd";
 import { AppstoreOutlined, EditOutlined, HistoryOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom"; 
 import { checkAuth, updateUser, verifyOldPassword } from '../api/auth';
+import axios from 'axios';
 
 const DarkHeaderCell = (props) => (
   <th {...props} style={{ backgroundColor: "#1f2b3a", color: "#fff", padding: "8px", border: "1px solid #2d3748", fontWeight: 500, ...props.style }} />
@@ -33,13 +34,14 @@ const UserInfo = () => {
   const [passwordErrorMessage, setPasswordErrorMessage] = useState("");
   const [profileSuccessMessage, setProfileSuccessMessage] = useState("");
   const [passwordSuccessMessage, setPasswordSuccessMessage] = useState("");
+  const [portfolioData, setPortfolioData] = useState([]);
   const navigate = useNavigate();
 
-  const portfolioData = [
-    { key: 1, coin: "Bitcoin", symbol: "btc", amount: 2, price: 50000, totalValue: 100000 },
-    { key: 2, coin: "Ethereum", symbol: "eth", amount: 5, price: 2000, totalValue: 10000 },
-    { key: 3, coin: "Litecoin", symbol: "ltc", amount: 10, price: 150, totalValue: 1500 },
-  ];
+  // const portfolioData = [
+  //   { key: 1, coin: "Bitcoin", symbol: "btc", amount: 2, price: 50000, totalValue: 100000 },
+  //   { key: 2, coin: "Ethereum", symbol: "eth", amount: 5, price: 2000, totalValue: 10000 },
+  //   { key: 3, coin: "Litecoin", symbol: "ltc", amount: 10, price: 150, totalValue: 1500 },
+  // ];
 
   const coinIcons = {
     btc: "https://cryptologos.cc/logos/bitcoin-btc-logo.png",
@@ -157,6 +159,31 @@ const UserInfo = () => {
       window.removeEventListener("userUpdated", handleUserUpdated);
     };
   }, [navigate]);
+  
+  useEffect(() => {
+    const fetchPortfolio = async () => {
+      try {
+        const response = await axios.get(`http://localhost:5000/portfolio?user_id=${formData.user_id}`);
+        const rawData = response.data.portfolio;
+        
+        const formattedData = rawData.map((item, index) => ({
+          key: index + 1,
+          coin: item.coin_name,
+          symbol: item.coin_symbol,
+          amount: item.amount,
+          price: item.purchase_price,
+          totalValue: item.amount * item.purchase_price,
+          image: item.coin_image_url,
+        }));
+
+        setPortfolioData(formattedData);
+      } catch (error) {
+        console.error("Lỗi khi fetch dữ liệu portfolio:", error);
+      }
+    };
+
+    fetchPortfolio();
+  }, [formData.user_id]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -276,16 +303,16 @@ const UserInfo = () => {
                 {
                   title: "Coin",
                   dataIndex: "coin",
-                  render: (text, record) => (
+                  render: (_text, record) => (
                     <Space>
-                      <img src={coinIcons[record.symbol]} alt={record.coin} style={{ width: 24, height: 24 }} />
-                      <span className="text-white">{text}</span>
+                      <img src={record.image} alt={record.coin} style={{ width: 24, height: 24 }} />
+                      <span className="text-black">{record.coin}</span>
                     </Space>
                   ),
                 },
                 { title: "Quantity", dataIndex: "amount" },
-                { title: "Price", dataIndex: "price", render: (price) => `$${price.toFixed(2)}` },
-                { title: "Total Value", dataIndex: "totalValue", render: (totalValue) => `$${totalValue.toFixed(2)}` },
+                { title: "Price", dataIndex: "price", render: (price) => `${price.toFixed(2)} USDT` },
+                { title: "Total Value", dataIndex: "totalValue", render: (totalValue) => `${totalValue.toFixed(2)} USDT` },
               ]}
               pagination={false}
               bordered
