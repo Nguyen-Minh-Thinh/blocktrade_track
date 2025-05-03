@@ -179,12 +179,7 @@ const HeaderComponent = () => {
                   {user.name}
                 </p>
               </Dropdown.Item>
-              <Dropdown.Item
-                className="hover:text-gray-400 transition flex text-start items-center gap-x-3 py-[6px] px-3"
-              >
-                <MdWbSunny className="text-base w-4 p-0 m-0" />
-                <p>Light</p>
-              </Dropdown.Item>
+              
               <Dropdown.Item
                 onClick={handleLogout}
                 className="hover:text-gray-400 transition flex text-start items-center gap-x-3 py-[6px] px-3"

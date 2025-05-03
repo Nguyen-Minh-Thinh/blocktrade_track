@@ -3,14 +3,16 @@ import { Link, useLocation, useParams, useNavigate } from 'react-router-dom';
 import { TiStarOutline } from "react-icons/ti";
 import { IoShareSocialSharp } from "react-icons/io5";
 import { FaRegCopy } from "react-icons/fa";
-import { FaFileAlt, FaGithub } from 'react-icons/fa';
+import dayjs from "dayjs";
+
+// import { FaFileAlt, FaGithub } from 'react-icons/fa';  
 
 import { MdOutlineKeyboardArrowUp } from "react-icons/md";
-import { FaStar, FaRegStar, FaTwitter, FaTelegram, FaReddit, FaGlobe, FaCaretUp, FaCaretDown } from 'react-icons/fa';
+import { FaStar, FaFileAlt, FaGithub, FaReddit, FaGlobe, FaCaretUp, FaCaretDown } from 'react-icons/fa';
 import { IoMdWallet } from 'react-icons/io';
 import { TabItem, Tabs, Tooltip } from 'flowbite-react';
-import { Tooltip } from 'flowbite-react';
-import { FaGlobe, FaFileAlt, FaReddit, FaGithub, FaStar } from "react-icons/fa";
+// import { Tooltip } from 'flowbite-react';
+// import { FaGlobe, FaFileAlt, FaReddit, FaGithub, FaStar } from "react-icons/fa";
 import { IoIosArrowDown } from "react-icons/io";
 import { ToggleCheck } from '../components/ToggleCheck';
 import { DropdownCustom } from '../components/DropdownCustom';
@@ -1247,7 +1249,7 @@ const CoinDetailPage = () => {
                               <span className="font-medium">{ownedCoins.amount.toFixed(8)} {displaySymbol}</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-sm text-gray-300">Average Purchase Price</span>
+                              <span className="text-sm text-gray-300">Purchase Price</span>
                               <span className="font-medium">${ownedCoins.purchase_price.toFixed(2)}</span>
                             </div>
                             <div className="flex justify-between">
@@ -1476,9 +1478,9 @@ const CoinDetailPage = () => {
                                   </span>
                                 </td>
                                 <td className="px-4 py-4 whitespace-nowrap text-sm">
-                                  {formatDate(transaction.date)}
+                                  {dayjs(transaction.date).format("YYYY-MM-DD HH:mm:ss")}
                                   <div className="text-xs text-gray-500 mt-1">
-                                    Raw: {transaction.date || 'null'}
+                                    {/* Raw: {transaction.date || 'null'} */}
                                   </div>
                                 </td>
                                 <td className="px-4 py-4 whitespace-nowrap text-right font-medium">
