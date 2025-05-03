@@ -6,7 +6,6 @@ import { MdWbSunny } from "react-icons/md";
 import SignIn from '../models/SignIn';
 import SignUp from '../models/SignUp';
 import ButtonComponent from './ButtonComponent';
-import Search from '../models/Search';
 import { checkAuth, logout, refreshToken } from '../api/auth';
 import Spot from '../models/Spot';
 import FavoritesList from '../models/FavoritesList';
@@ -140,7 +139,6 @@ const HeaderComponent = () => {
         </div>
       </Navbar.Brand>
       <div className="flex md:order-2 items-center">
-        <Search />
         {user ? (
           <>
             <FavoritesList user_id={user.user_id} />

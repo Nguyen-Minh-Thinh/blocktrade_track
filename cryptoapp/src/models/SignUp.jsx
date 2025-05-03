@@ -215,54 +215,58 @@ const SignUp = ({ openSU, setOpenSU, swapModels }) => {
                   <span className="text-red-500 text-xs text-center mt-2">{error.email}</span>
                 )}
               </div>
-              <div className="relative">
+              <div className="">
                 <div className="mb-2 block mt-2">
                   <Label className="text-white" htmlFor="password" value="Password" />
                 </div>
-                <TextInput
-                  theme={customStyles}
-                  color='custom-bg'
-                  id="password"
-                  placeholder="Enter your password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={formData.password}
-                  onChange={handleChange}
-                  disabled={loading}
-                />
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 mt-6 text-gray-400 hover:text-white"
-                  onClick={togglePasswordVisibility}
-                  disabled={loading}
-                >
-                  {showPassword ? <HiEyeOff size={20} /> : <HiEye size={20} />}
-                </button>
+                <div className='relative'>
+                  <TextInput
+                    theme={customStyles}
+                    color='custom-bg'
+                    id="password"
+                    placeholder="Enter your password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={formData.password}
+                    onChange={handleChange}
+                    disabled={loading}
+                  />
+                  <button
+                    type="button"
+                    className="absolute bottom-1/4 right-2 text-gray-400 hover:text-white"
+                    onClick={togglePasswordVisibility}
+                    disabled={loading}
+                  >
+                    {showPassword ? <HiEyeOff size={20} /> : <HiEye size={20} />}
+                  </button>
+                </div>
                 {error.password !== "" && (
                   <span className="text-red-500 text-xs text-center mt-2">{error.password}</span>
                 )}
               </div>
-              <div className="relative">
+              <div className="">
                 <div className="mb-2 block mt-2">
                   <Label className="text-white" htmlFor="confirmPassword" value="Password confirmation" />
                 </div>
-                <TextInput
-                  theme={customStyles}
-                  color='custom-bg'
-                  id="confirmPassword"
-                  placeholder="Confirm your password"
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  disabled={loading}
-                />
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 mt-6 text-gray-400 hover:text-white"
-                  onClick={toggleConfirmPasswordVisibility}
-                  disabled={loading}
-                >
-                  {showConfirmPassword ? <HiEyeOff size={20} /> : <HiEye size={20} />}
-                </button>
+                <div className='relative'>
+                  <TextInput
+                    theme={customStyles}
+                    color='custom-bg'
+                    id="confirmPassword"
+                    placeholder="Confirm your password"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    disabled={loading}
+                  />
+                  <button
+                    type="button"
+                    className="absolute bottom-1/4 right-2 text-gray-400 hover:text-white"
+                    onClick={toggleConfirmPasswordVisibility}
+                    disabled={loading}
+                  >
+                    {showConfirmPassword ? <HiEyeOff size={20} /> : <HiEye size={20} />}
+                  </button>
+                </div>
                 {error.confirmPassword !== "" && (
                   <span className="text-red-500 text-xs text-center mt-2">{error.confirmPassword}</span>
                 )}
