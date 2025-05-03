@@ -9,6 +9,8 @@ import { MdOutlineKeyboardArrowUp } from "react-icons/md";
 import { FaStar, FaRegStar, FaTwitter, FaTelegram, FaReddit, FaGlobe, FaCaretUp, FaCaretDown } from 'react-icons/fa';
 import { IoMdWallet } from 'react-icons/io';
 import { TabItem, Tabs, Tooltip } from 'flowbite-react';
+import { Tooltip } from 'flowbite-react';
+import { FaGlobe, FaFileAlt, FaReddit, FaGithub, FaStar } from "react-icons/fa";
 import { IoIosArrowDown } from "react-icons/io";
 import { ToggleCheck } from '../components/ToggleCheck';
 import { DropdownCustom } from '../components/DropdownCustom';
