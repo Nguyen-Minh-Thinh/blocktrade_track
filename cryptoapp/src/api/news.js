@@ -1,37 +1,29 @@
-// Địa chỉ server backend (chỉnh sửa nếu BE chạy ở cổng khác)
-const BASE_URL = "http://localhost:5000/news";
+import axios from 'axios';
 
-// Hàm lấy tất cả tin tức
-async function fetchAllNews() {
-    try {
-        const response = await fetch(`${BASE_URL}/all`);
-        const data = await response.json();
-        if (response.ok) {
-            console.log("Tất cả tin tức:", data.news);
-            renderNews(data.news);
-        } else {
-            console.error("Lỗi:", data.error);
-        }
-    } catch (error) {
-        console.error("Lỗi kết nối đến API:", error);
-    }
-}
+// Base URL of the news API
+const API_URL = 'http://localhost:5000/news';
 
-// Hàm lấy tin tức theo coin_id
-async function fetchNewsByCoinId(coinId) {
-    try {
-        const response = await fetch(`${BASE_URL}/coin?coin_id=${coinId}`);
-        const data = await response.json();
-        if (response.ok) {
-            console.log(`Tin tức của coin ${coinId}:`, data.news);
-            renderNews(data.news);
-        } else {
-            console.error("Lỗi:", data.error);
-        }
-    } catch (error) {
-        console.error("Lỗi kết nối đến API:", error);
-    }
-}
+// Function to get all news
+export const getAllNews = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/all`);
+    return response.data;
+  } catch (error) {
+    console.error('Lỗi kết nối đến API tin tức:', error);
+    throw error.response?.data || { error: 'Failed to fetch news' };
+  }
+};
+
+// Function to get news for a specific coin
+export const getCoinNews = async (coinId) => {
+  try {
+    const response = await axios.get(`${API_URL}/coin/${coinId}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Lỗi kết nối đến API tin tức cho coin ${coinId}:`, error);
+    throw error.response?.data || { error: 'Failed to fetch coin news' };
+  }
+};
 
 // Hàm hiển thị danh sách tin tức ra HTML
 function renderNews(newsList) {
