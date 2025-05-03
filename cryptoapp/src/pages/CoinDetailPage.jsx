@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { TiStarOutline } from "react-icons/ti";
 import { IoShareSocialSharp } from "react-icons/io5";
 import { TabItem, Tabs, Tooltip } from 'flowbite-react';
@@ -7,10 +7,9 @@ import { FaGlobe, FaFileAlt, FaReddit, FaGithub, FaStar } from "react-icons/fa";
 import { IoIosArrowDown } from "react-icons/io";
 import { ToggleCheck } from '../components/ToggleCheck';
 import { DropdownCustom } from '../components/DropdownCustom';
-import AreaChartFillByValue from '../components/AreaChartFillByValue';
+// import AreaChartFillByValue from '../components/AreaChartFillByValue';
 import ButtonComponent from '../components/ButtonComponent';
 import CryptoChart from '../components/CryptoChart';
-import CryptoNewsCard from '../components/CryptoNewsCard';
 import { getCoinDetail } from '../api/coindetail';
 import { getFavorites, addFavorite, removeFavorite } from '../api/favorites';
 
@@ -30,6 +29,7 @@ const CoinDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(null); // null: unknown, true: logged in, false: not logged in
+  const [newsData, setNewsData] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -92,7 +92,23 @@ const CoinDetailPage = () => {
 
     fetchData();
   }, [coin_id, symbol]);
-
+  useEffect(() => {
+      async function fetchNews() {
+        try {
+          const response = await fetch("http://localhost:5000/news/all");
+          const data = await response.json();
+          if (response.ok) {
+            setNewsData(data.news);
+          } else {
+            console.error("Lỗi API:", data.error);
+          }
+        } catch (error) {
+          console.error("Lỗi kết nối đến API:", error);
+        }
+      }
+  
+      fetchNews();
+    }, []);
   const handleToggleFavorite = async () => {
     if (!isLoggedIn) {
       alert('Please log in to manage favorites.');
@@ -113,24 +129,24 @@ const CoinDetailPage = () => {
     }
   };
 
-  const customStyle = {
-    tablist: {
-      variant: {
-        pills: "flex-wrap space-x-2 text-sm font-medium text-gray-600 dark:text-gray-400",
-      },
-      tabitem: {
-        base: "flex flex-row-reverse gap-1 bg-gray-900 items-center justify-center rounded-t-lg py-2 px-4 text-sm font-medium first:ml-0 focus:outline-none disabled:cursor-not-allowed disabled:text-gray-400 disabled:dark:text-gray-500",
-        variant: {
-          pills: {
-            active: {
-              on: "rounded-lg bg-gray-800 text-white",
-              off: "rounded-lg hover:bg-gray-800 hover:text-white dark:hover:bg-gray-800 dark:hover:text-white",
-            },
-          },
-        },
-      },
-    },
-  };
+  // const customStyle = {
+  //   tablist: {
+  //     variant: {
+  //       pills: "flex-wrap space-x-2 text-sm font-medium text-gray-600 dark:text-gray-400",
+  //     },
+  //     tabitem: {
+  //       base: "flex flex-row-reverse gap-1 bg-gray-900 items-center justify-center rounded-t-lg py-2 px-4 text-sm font-medium first:ml-0 focus:outline-none disabled:cursor-not-allowed disabled:text-gray-400 disabled:dark:text-gray-500",
+  //       variant: {
+  //         pills: {
+  //           active: {
+  //             on: "rounded-lg bg-gray-800 text-white",
+  //             off: "rounded-lg hover:bg-gray-800 hover:text-white dark:hover:bg-gray-800 dark:hover:text-white",
+  //           },
+  //         },
+  //       },
+  //     },
+  //   },
+  // };
 
   const toggleColor = (a) => {
     setCheck(a);
@@ -158,7 +174,7 @@ const CoinDetailPage = () => {
 
   return (  
     <div className='container mx-auto'>
-      <div className='grid grid-cols-4 flex-row-reverse mt-20'>
+      <div className='grid grid-cols-4 flex-row-reverse mt-20 mb-10'>
         <div className='p-4 py-8 border-y-2 border-gray-500'>
           <div className='text-white flex justify-between items-center py-2'>
             <div className='flex items-center gap-2'>
@@ -323,40 +339,36 @@ const CoinDetailPage = () => {
         </div>
         <div className='col-span-2 border-2 border-gray-500'>
           <div className=''>
-            <CryptoChart />
+            <CryptoChart symbol={symbol} />  
           </div>
           <div className='mt-6'>
-            <div className='my-2 grid grid-cols-2 gap-2 px-3'>
-              <CryptoNewsCard
-                avatar="https://i.imgur.com/1XGQ1Zf.png"
-                user="Crypto Rand"
-                time="8 hours"
-                content={`Exchanges are running out of #${coinDetail.name || 'Coin'} supply. Imminent ₿ $${displaySymbol} supply shock, read between the lines!...`}
-                comments={9}
-                retweets={2}
-                likes={305}
-                views=""
-              />
-              <CryptoNewsCard
-                avatar="https://i.imgur.com/1XGQ1Zf.png"
-                user="Crypto Rand"
-                time="8 hours"
-                content={`Exchanges are running out of #${coinDetail.name || 'Coin'} supply. Imminent ₿ $${displaySymbol} supply shock, read between the lines!...`}
-                comments={9}
-                retweets={2}
-                likes={305}
-                views=""
-              />
-              <CryptoNewsCard
-                avatar="https://i.imgur.com/1XGQ1Zf.png"
-                user="Crypto Rand"
-                time="8 hours"
-                content={`Exchanges are running out of #${coinDetail.name || 'Coin'} supply. Imminent ₿ $${displaySymbol} supply shock, read between the lines!...`}
-                comments={9}
-                retweets={2}
-                likes={305}
-                views=""
-              />
+            <div className='grid grid-cols-2 gap-3 px-3 my-2 mb-4 text-white'>
+              {newsData.length > 0 ? (
+                newsData.filter(news => news.coin_id === coin_id).map((news) => (
+                  <div key={news.news_id} className='font-medium'>
+                    <div className=''>
+                        <div className="bg-[#ffffff14] hover:bg-[#414141] hover:bg-opacity-70 border border-[#ffffff1f] shadow-md rounded-lg overflow-hidden h-full">
+                          <Link to={news.news_link} target="_blank" rel="noopener noreferrer" className="block h-full">
+                            <div className="p-5 pt-6 flex flex-col min-h-[178px] h-full justify-between ">
+                              <div className=''>
+                                <p className="text-[#3760c7] text-xs font-bold">{news.source_name} - {news.updated_at}</p>
+                                <h3 className="text-lg font-semibold mt-2 line-clamp-3 pr-4" >
+                                  {news.title}
+                                </h3>
+                              </div>
+                              <div className=" flex items-center justify-end">
+                                →
+                              </div>
+                            </div>
+                          </Link>
+                        </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p>Loading news...</p>
+              )}
+              
             </div>
           </div>
         </div>
@@ -446,50 +458,38 @@ const CoinDetailPage = () => {
           </div>
         </div>
       </div>
-      <div>
+      {/* <div>
         <div className='grid grid-cols-4 h-64'>
           <div className='py-4 col-span-3 px-4 border-r-2 border-gray-500'>
             <Tabs aria-label="Default tabs" variant="pills" theme={customStyle}>
-              <TabItem active title="Balance">
-              </TabItem>
-              <TabItem title="Positions"></TabItem>
-              <TabItem title="Open Orders"></TabItem>
-              <TabItem title="Trigger Orders"></TabItem>
-              <TabItem title="Order History"></TabItem>
-              <TabItem title="Trade History"></TabItem>
-              <TabItem title="Bots"></TabItem>
-              <TabItem title="News">
-                <div className='my-2 flex gap-2'>
-                  <CryptoNewsCard
-                    avatar="https://i.imgur.com/1XGQ1Zf.png"
-                    user="Crypto Rand"
-                    time="8 hours"
-                    content={`Exchanges are running out of #${coinDetail.name || 'Coin'} supply. Imminent ₿ $${displaySymbol} supply shock, read between the lines!...`}
-                    comments={9}
-                    retweets={2}
-                    likes={305}
-                    views=""
-                  />
-                  <CryptoNewsCard
-                    avatar="https://i.imgur.com/1XGQ1Zf.png"
-                    user="Crypto Rand"
-                    time="8 hours"
-                    content={`Exchanges are running out of #${coinDetail.name || 'Coin'} supply. Imminent ₿ $${displaySymbol} supply shock, read between the lines!...`}
-                    comments={9}
-                    retweets={2}
-                    likes={305}
-                    views=""
-                  />
-                  <CryptoNewsCard
-                    avatar="https://i.imgur.com/1XGQ1Zf.png"
-                    user="Crypto Rand"
-                    time="8 hours"
-                    content={`Exchanges are running out of #${coinDetail.name || 'Coin'} supply. Imminent ₿ $${displaySymbol} supply shock, read between the lines!...`}
-                    comments={9}
-                    retweets={2}
-                    likes={305}
-                    views=""
-                  />
+              <TabItem active title="News">
+                <div className='grid grid-cols-4 gap-5'>
+                  {newsData.length > 0 ? (
+                    newsData.slice(0, 8).map((news) => (
+                      <div key={news.news_id} className='font-medium'>
+                        <div className=''>
+                            <div className="bg-[#ffffff14] hover:bg-[#414141] hover:bg-opacity-70 border border-[#ffffff1f] shadow-md rounded-lg overflow-hidden h-full">
+                              <Link to={news.news_link} target="_blank" rel="noopener noreferrer" className="block h-full">
+                                <div className="p-5 pt-6 flex flex-col min-h-[178px] h-full justify-between ">
+                                  <div className=''>
+                                    <p className="text-[#3760c7] text-xs font-bold">{news.source_name} - {news.updated_at}</p>
+                                    <h3 className="text-lg font-semibold mt-2 line-clamp-3 pr-4" >
+                                      {news.title}
+                                    </h3>
+                                  </div>
+                                  <div className=" flex items-center justify-end">
+                                    →
+                                  </div>
+                                </div>
+                              </Link>
+                            </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p>Loading news...</p>
+                  )}
+                  
                 </div>
               </TabItem>
             </Tabs>
@@ -511,7 +511,7 @@ const CoinDetailPage = () => {
             </Tabs>
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };

@@ -5,7 +5,6 @@ import { FaStar } from "react-icons/fa";
 import { FaSpinner } from "react-icons/fa";
 import ButtonComponent from '../components/ButtonComponent';
 import SignUp from '../models/SignUp';
-import { List } from 'flowbite-react';
 import {
   AreaChart,
   Area,
@@ -23,14 +22,13 @@ import { toast } from 'react-toastify';
 
 const HomePage = () => {
   const [started, setStarted] = useState(false);
-  const [listTabs2, setListTabs2] = useState("popular");
   const [coins, setCoins] = useState([]);
   const [favorites, setFavorites] = useState({});
   const [chartData, setChartData] = useState({});
   const [user, setUser] = useState(null);
   const [togglingFavorites, setTogglingFavorites] = useState({});
   const navigate = useNavigate(); // Initialize useNavigate
-
+const [newsData, setNewsData] = useState([]); // State for news data  
   // Load user from localStorage
   const loadUserFromStorage = () => {
     const userData = localStorage.getItem("userLogin");
@@ -85,6 +83,23 @@ const HomePage = () => {
       setFavorites({});
     }
   };
+  useEffect(() => {
+    async function fetchNews() {
+      try {
+        const response = await fetch("http://localhost:5000/news/all");
+        const data = await response.json();
+        if (response.ok) {
+          setNewsData(data.news);
+        } else {
+          console.error("Lỗi API:", data.error);
+        }
+      } catch (error) {
+        console.error("Lỗi kết nối đến API:", error);
+      }
+    }
+
+    fetchNews();
+  }, []);
 
   // Fetch user on mount
   useEffect(() => {
@@ -261,13 +276,7 @@ const HomePage = () => {
         </div>
       </div>
       <div className='mt-[250px]'>
-        <h1 className='text-white text-4xl text-center font-medium my-6'>Crypto Market Trade And Metrics</h1>
-        <div className='flex justify-center gap-3'>
-          <p onClick={() => { setListTabs2("popular") }} className={`${listTabs2 === "popular" && "border-b-2 border-blue-700 text-white"} text-base text-gray-500 font-medium pb-1 px-1 cursor-pointer`}>Popular</p>
-          <p onClick={() => { setListTabs2("topGainers") }} className={`${listTabs2 === "topGainers" && "border-b-2 border-blue-700 text-white"} text-base text-gray-500 font-medium pb-1 px-1 cursor-pointer`}>Top Gainers</p>
-          <p onClick={() => { setListTabs2("topVolume") }} className={`${listTabs2 === "topVolume" && "border-b-2 border-blue-700 text-white"} text-base text-gray-500 font-medium pb-1 px-1 cursor-pointer`}>Top Volume</p>
-          <p onClick={() => { setListTabs2("newListings") }} className={`${listTabs2 === "newListings" && "border-b-2 border-blue-700 text-white"} text-base text-gray-500 font-medium pb-1 px-1 cursor-pointer`}>New Listings</p>
-        </div>
+        <h1 className='text-white text-4xl text-center font-medium my-6 mb-10'>Crypto Market Trade And Metrics</h1>
         <div className='my-3 flex items-center justify-center'>
           <table className='text-white font-medium'>
             <colgroup>
@@ -390,71 +399,46 @@ const HomePage = () => {
             </tbody>
           </table>
         </div>
-        <div className='flex justify-end my-2 py-1 text-blue-900 font-medium'>
-          <Link to="/market" className='w-fit hover:text-blue-500 cursor-pointer'>View other Crypto</Link>
+        <div className='flex justify-end my-2 py-1 text-blue-500 '>
+          <Link to="/market" className='w-fit hover:text-blue-500 cursor-pointer hover:underline'>View other Crypto &raquo;</Link>
         </div>
       </div>
       <div>
-        <h1 className='text-4xl text-white font-medium text-center mt-40 mb-6'>News And Learn</h1>
-        <div className='flex justify-center text-white gap-x-16'>
-          <div className='w-[500px]'>
-            <div className='flex justify-between my-6 font-medium'>
-              <h1 className='text-3xl'>News</h1>
-              <Link to={"news"} className='text-blue-600 cursor-pointer'>View All</Link>
-            </div>
-            <div className='font-medium'>
-              <div className='p-5 my-3 bg-gray-900 rounded-xl cursor-pointer'>
-                <Link to={"newdetail"}>
-                  <p className='truncate'>Crypto.com Surpasses 100 Million Global Users</p>
-                  <p className='truncate text-gray-500'>New Major Milestone Reached Following Latest Marketing Campaign</p>
-                </Link>
-              </div>
-              <div className='p-5 my-3 bg-gray-900 rounded-xl cursor-pointer'>
-                <p className='truncate'>Crypto.com’s Dubai Entity Receives Full Operational Approval</p>
-                <p className='truncate text-gray-500'>Crypto.com Exchange for Institutional Investors Launches as First Operational Milestone</p>
-              </div>
-              <div className='p-5 my-3 bg-gray-900 rounded-xl cursor-pointer'>
-                <p className='truncate'>Crypto.com’s Dubai Entity Receives Full Operational Approval</p>
-                <p className='truncate text-gray-500'>Crypto.com Exchange for Institutional Investors Launches as First Operational Milestone</p>
-              </div>
-              <div className='p-5 my-3 bg-gray-900 rounded-xl cursor-pointer'>
-                <p className='truncate'>Crypto.com’s Dubai Entity Receives Full Operational Approval</p>
-                <p className='truncate text-gray-500'>Crypto.com Exchange for Institutional Investors Launches as First Operational Milestone</p>
-              </div>
-            </div>
+        <div className=' text-white mt-20 gap-x-16'>
+          <div className='flex items-center mb-10 justify-between'>
+            <h1 className='text-4xl text-center'>Featured News</h1>
+            <Link to="/news" className='text-blue-500 text-medium hover:underline '>More News &raquo;</Link>
           </div>
-          <div className='w-[500px]'>
-            <div className='flex justify-between my-6 font-medium'>
-              <h1 className='text-3xl'>Learn</h1>
-              <p className='text-blue-600 cursor-pointer'>View All</p>
-            </div>
-            <div className='font-medium'>
-              <div className='p-5 my-3 bg-gray-900 rounded-xl cursor-pointer'>
-                <p>Liquidity in Crypto Markets: What It Is and Why It Matters</p>
-                <List className='text-blue-600 font-medium'>
-                  <List.Item>Beginner</List.Item>
-                </List>
-              </div>
-              <div className='p-5 my-3 bg-gray-900 rounded-xl cursor-pointer'>
-                <p>What Is Render Network and How to Buy the RNDR Crypto Token</p>
-                <List className='text-blue-600 font-medium'>
-                  <List.Item>Beginner</List.Item>
-                </List>
-              </div>
-              <div className='p-5 my-3 bg-gray-900 rounded-xl cursor-pointer'>
-                <p>What Is Render Network and How to Buy the RNDR Crypto Token</p>
-                <List className='text-blue-600 font-medium'>
-                  <List.Item>Beginner</List.Item>
-                </List>
-              </div>
-              <div className='p-5 my-3 bg-gray-900 rounded-xl cursor-pointer'>
-                <p>What Is Render Network and How to Buy the RNDR Crypto Token</p>
-                <List className='text-blue-600 font-medium'>
-                  <List.Item>Beginner</List.Item>
-                </List>
-              </div>
-            </div>
+          <div className='grid grid-cols-4 gap-5'>
+            {newsData.length > 0 ? (
+              newsData.slice(0, 8).map((news) => (
+                <div key={news.news_id} className='font-medium'>
+                  <div className=''>
+                      <div className="bg-[#ffffff14] hover:bg-[#414141] hover:bg-opacity-70 border border-[#ffffff1f] shadow-md rounded-lg overflow-hidden h-full">
+                        <Link to={news.news_link} target="_blank" rel="noopener noreferrer" className="block h-full">
+                          <div className="p-5 pt-6 flex flex-col min-h-[178px] h-full justify-between ">
+                            <div className=''>
+                              <p className="text-[#3760c7] text-xs font-bold">{news.source_name} - {news.updated_at}</p>
+                              <h3 className="text-lg font-semibold mt-2 line-clamp-3 pr-4" >
+                                {news.title}
+                              </h3>
+                            </div>
+                            <div className=" flex items-center justify-end">
+                              →
+                            </div>
+                          </div>
+                        </Link>
+                      </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p>Loading news...</p>
+            )}
+            
           </div>
+          
+          
         </div>
       </div>
     </div>

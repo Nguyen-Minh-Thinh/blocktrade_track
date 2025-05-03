@@ -176,10 +176,9 @@ def add_to_portfolio():
 
 # Get the user's portfolio
 @portfolio_bp.route('/', methods=['GET'])
-@jwt_required()
 def get_portfolio():
     try:
-        user_id = get_jwt_identity()
+        user_id = request.args.get('user_id')
         # Validate user_id
         if not validate_user(user_id):
             return jsonify({'error': 'Invalid user_id'}), 404

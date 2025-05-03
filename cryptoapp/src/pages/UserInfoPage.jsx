@@ -3,6 +3,9 @@ import { Menu, Table, Button, Space, DatePicker } from "antd";
 import { AppstoreOutlined, EditOutlined, HistoryOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom"; 
 import { checkAuth, updateUser, verifyOldPassword } from '../api/auth';
+import axios from 'axios';
+import dayjs from "dayjs";
+import TradeHistory from '../components/TradeHistory'
 
 const DarkHeaderCell = (props) => (
   <th {...props} style={{ backgroundColor: "#1f2b3a", color: "#fff", padding: "8px", border: "1px solid #2d3748", fontWeight: 500, ...props.style }} />
@@ -33,30 +36,10 @@ const UserInfo = () => {
   const [passwordErrorMessage, setPasswordErrorMessage] = useState("");
   const [profileSuccessMessage, setProfileSuccessMessage] = useState("");
   const [passwordSuccessMessage, setPasswordSuccessMessage] = useState("");
+  const [portfolioData, setPortfolioData] = useState([]);
   const navigate = useNavigate();
 
-  const portfolioData = [
-    { key: 1, coin: "Bitcoin", symbol: "btc", amount: 2, price: 50000, totalValue: 100000 },
-    { key: 2, coin: "Ethereum", symbol: "eth", amount: 5, price: 2000, totalValue: 10000 },
-    { key: 3, coin: "Litecoin", symbol: "ltc", amount: 10, price: 150, totalValue: 1500 },
-  ];
-
-  const coinIcons = {
-    btc: "https://cryptologos.cc/logos/bitcoin-btc-logo.png",
-    eth: "https://cryptologos.cc/logos/ethereum-eth-logo.png",
-    ltc: "https://cryptologos.cc/logos/litecoin-ltc-logo.png",
-  };
-
-  const tradeHistoryData = [
-    { key: 1, time: "2021-01-25", symbol: "COMP/USDT Perpetual", side: "Sell", price: 615.0, quantity: 14.15, fee: "0.0583000 USDT", realizedProfit: "0.124999 USDT" },
-    { key: 2, time: "2021-01-25", symbol: "COMP/USDT Perpetual", side: "Sell", price: 615.0, quantity: 39.37, fee: "0.149159 USDT", realizedProfit: "0.000000 USDT" },
-    { key: 3, time: "2021-01-25", symbol: "BNB/USDT Perpetual", side: "Sell", price: 535.6, quantity: 14.15, fee: "0.0583000 USDT", realizedProfit: "0.124999 USDT" },
-    { key: 4, time: "2021-01-25", symbol: "BNB/USDT Perpetual", side: "Sell", price: 536.4, quantity: 44.8, fee: "0.186325 USDT", realizedProfit: "0.312345 USDT" },
-    { key: 5, time: "2021-01-25", symbol: "ETH/USDT Perpetual", side: "Sell", price: 2145.12, quantity: 2.35, fee: "0.012345 USDT", realizedProfit: "1.234567 USDT" },
-    { key: 6, time: "2021-01-25", symbol: "ETH/USDT Perpetual", side: "Sell", price: 2105.62, quantity: 2.14, fee: "0.010100 USDT", realizedProfit: "0.888888 USDT" },
-  ];
-
-  const [filteredTradeHistoryData, setFilteredTradeHistoryData] = useState(tradeHistoryData);
+  // const [filteredTradeHistoryData, setFilteredTradeHistoryData] = useState(tradeHistoryData);
 
   // Load user from localStorage
   const loadUserFromStorage = () => {
@@ -157,6 +140,32 @@ const UserInfo = () => {
       window.removeEventListener("userUpdated", handleUserUpdated);
     };
   }, [navigate]);
+  
+  useEffect(() => {
+    const fetchPortfolio = async () => {
+      try {
+        const response = await axios.get(`http://localhost:5000/portfolio?user_id=${formData.user_id}`);
+        const rawData = response.data.portfolio;
+        
+        const formattedData = rawData.map((item, index) => ({
+          key: index + 1,
+          coin: item.coin_name,
+          coin_id: item.coin_id,
+          symbol: item.coin_symbol,
+          amount: item.amount,
+          price: item.purchase_price,
+          totalValue: item.amount * item.purchase_price,
+          image: item.coin_image_url
+        }));
+
+        setPortfolioData(formattedData);
+      } catch (error) {
+        console.error("Lỗi khi fetch dữ liệu portfolio:", error);
+      }
+    };
+
+    fetchPortfolio();
+  }, [formData.user_id]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -254,16 +263,11 @@ const UserInfo = () => {
     }
   };
 
-  const handleSearch = () => {
-    let filteredData = tradeHistoryData;
-    if (selectedSymbol.trim() !== "") {
-      filteredData = filteredData.filter((trade) =>
-        trade.symbol.toLowerCase().includes(selectedSymbol.toLowerCase())
-      );
-    }
-    setFilteredTradeHistoryData(filteredData);
-  };
+  // const [filteredTradeHistoryData, setFilteredTradeHistoryData] = useState([]);
 
+
+
+  
   const renderContent = () => {
     switch (activeKey) {
       case "portfolio":
@@ -276,71 +280,30 @@ const UserInfo = () => {
                 {
                   title: "Coin",
                   dataIndex: "coin",
-                  render: (text, record) => (
+                  render: (_text, record) => (
                     <Space>
-                      <img src={coinIcons[record.symbol]} alt={record.coin} style={{ width: 24, height: 24 }} />
-                      <span className="text-white">{text}</span>
+                      <img src={record.image} alt={record.coin} style={{ width: 24, height: 24 }} />
+                      <span className="text-black">{record.coin}</span>
                     </Space>
                   ),
                 },
                 { title: "Quantity", dataIndex: "amount" },
-                { title: "Price", dataIndex: "price", render: (price) => `$${price.toFixed(2)}` },
-                { title: "Total Value", dataIndex: "totalValue", render: (totalValue) => `$${totalValue.toFixed(2)}` },
+                { title: "Price", dataIndex: "price", render: (price) => `${price.toFixed(2)} USDT` },
+                { title: "Total Value", dataIndex: "totalValue", render: (totalValue) => `${totalValue.toFixed(2)} USDT` },
               ]}
               pagination={false}
               bordered
               components={{ header: { cell: DarkHeaderCell }, body: { cell: DarkBodyCell } }}
+              onRow={(record) => ({
+                onClick: () => navigate("/coindetail", { state: { coin_id: record.coin_id, symbol: record.symbol } }),
+                style: { cursor: "pointer" }, // Đổi con trỏ chuột để gợi ý người dùng có thể click
+              })}
             />
           </div>
         );
 
       case "transactionHistory":
-        const tradeHistoryColumns = [
-          { title: "Time", dataIndex: "time", key: "time" },
-          { title: "Symbol", dataIndex: "symbol", key: "symbol" },
-          { title: "Side", dataIndex: "side", key: "side" },
-          { title: "Price", dataIndex: "price", key: "price", render: (price) => price.toFixed(2) },
-          { title: "Quantity", dataIndex: "quantity", key: "quantity", render: (qty) => qty.toFixed(4) },
-          { title: "Fee", dataIndex: "fee", key: "fee" },
-          { title: "Realized Profit", dataIndex: "realizedProfit", key: "realizedProfit" },
-        ];
-
-        return (
-          <div className="p-6">
-            <h2 className="text-2xl font-semibold text-white mb-4">Trade History</h2>
-            <div className="flex flex-wrap items-center gap-2 mb-4">
-              <DatePicker
-                placeholder="From YYYY-MM-DD"
-                className="bg-gray-700 text-white"
-                value={fromDate}
-                onChange={setFromDate}
-              />
-              <DatePicker
-                placeholder="To YYYY-MM-DD"
-                className="bg-gray-700 text-white"
-                value={toDate}
-                onChange={setToDate}
-              />
-              <input
-                type="text"
-                placeholder="Enter symbol"
-                value={selectedSymbol}
-                onChange={(e) => setSelectedSymbol(e.target.value)}
-                className="bg-gray-700 text-white placeholder-gray-400 p-1 rounded w-15"
-              />
-              <Button onClick={handleSearch} className="bg-blue-600 text-white hover:bg-blue-500">
-                Search
-              </Button>
-            </div>
-            <Table
-              dataSource={filteredTradeHistoryData}
-              columns={tradeHistoryColumns}
-              pagination={false}
-              bordered
-              components={{ header: { cell: DarkHeaderCell }, body: { cell: DarkBodyCell } }}
-            />
-          </div>
-        );
+        return <TradeHistory userId={formData.user_id} />;
 
       case "editProfile":
         return (
