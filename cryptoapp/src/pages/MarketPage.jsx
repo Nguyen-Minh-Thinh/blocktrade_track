@@ -8,6 +8,7 @@ import { BsFire } from "react-icons/bs";
 import { IoMdTime } from "react-icons/io";
 import { IoEyeOutline } from "react-icons/io5";
 import { PiDiamondsFour } from "react-icons/pi";
+import { FaSearch } from 'react-icons/fa'
 import { LuSprout } from "react-icons/lu";
 import { TfiCup } from "react-icons/tfi";
 import {
@@ -19,7 +20,6 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from 'recharts';
-import MarketChart from '../components/MarketChart';
 import CryptoNewsCard from '../components/CryptoNewsCard';
 import LineChart from '../components/LineChart';
 import { fetchCoins } from '../api/coins';
@@ -116,9 +116,9 @@ const MarketPage = () => {
   const [favorites, setFavorites] = useState({});
   const [chartData, setChartData] = useState({});
   const [togglingFavorites, setTogglingFavorites] = useState({});
+  const [searchTerm, setSearchTerm] = useState('');
   const [user, setUser] = useState(null);
   const navigate = useNavigate(); // Initialize useNavigate
-  const [showInput, setShowInput] = useState(false);
   // Load user from localStorage
   const loadUserFromStorage = () => {
     const userData = localStorage.getItem("userLogin");
@@ -146,7 +146,10 @@ const MarketPage = () => {
       localStorage.removeItem("userLogin");
     }
   };
-
+  const filteredCoins = coins.filter(coin =>
+    coin.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    coin.symbol.toLowerCase().includes(searchTerm.toLowerCase())
+  );
   // Fetch favorites from the backend
   const fetchFavorites = useCallback(async () => {
     if (user) {
@@ -459,36 +462,18 @@ const MarketPage = () => {
       </div>
       
       <div className='mt-[100px]'>
-        <h1 className='text-white text-4xl text-center font-medium my-6 mb-10'>Crypto Market Trade And Metrics</h1>
-        <div className="relative w-full h-10 mb-4">
-        <div className="relative w-full h-10 mb-4 flex justify-end items-center pr-6">
-      <div 
-        className="text-gray-400 cursor-pointer"
-        onClick={() => setShowInput(!showInput)} 
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1116.65 7.65a7.5 7.5 0 010 10.6z"
-          />
-        </svg>
-      </div>
-      {showInput && (
-        <input
-          type="text"
-          placeholder="Search"
-          className="text-black font-bold text-sm p-1 border rounded-lg w-32 ml-2 transition-all duration-300"
-        />
-      )}
-    </div>
+        <h1 className='text-white text-4xl text-center font-medium my-6 mb-8'>Crypto Market Trade And Metrics</h1>
+        <div className="flex items-center justify-end mb-6">   
+            <div className='relative max-w-64 w-full'>
+              <input 
+                type='text' 
+                placeholder='Search Market' 
+                className='w-full p-2 pl-4 rounded-lg bg-gray-800 text-white border border-gray-700 focus:ring-0 focus:border-gray-400'
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <FaSearch className='text-gray-400 text-lg  absolute top-3 right-3' />
+            </div>
         </div>
         <div className='my-3 flex items-center justify-center'>
           <table className='text-white font-medium'>
@@ -522,7 +507,7 @@ const MarketPage = () => {
             </thead>
             <tbody>
               {coins.length > 0 ? (
-                coins.map((coin) => (
+                filteredCoins.map((coin) => (
                   <tr 
                     key={coin.index} 
                     className='text-sm border-y border-gray-700 hover:bg-slate-900 cursor-pointer'

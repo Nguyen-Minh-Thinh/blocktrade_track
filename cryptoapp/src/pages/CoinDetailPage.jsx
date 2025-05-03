@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { TiStarOutline } from "react-icons/ti";
 import { IoShareSocialSharp } from "react-icons/io5";
-import { TabItem, Tabs, Tooltip } from 'flowbite-react';
+import { Tooltip } from 'flowbite-react';
 import { FaGlobe, FaFileAlt, FaReddit, FaGithub, FaStar } from "react-icons/fa";
 import { IoIosArrowDown } from "react-icons/io";
 import { ToggleCheck } from '../components/ToggleCheck';
