@@ -12,7 +12,7 @@ from api.transactions import transactions_bp
 from api.favorites import favorites_bp
 from api.historical_data import historical_data_bp
 from api.coindetail import coindetail_bp
-from api.chatbot import chatbot_bp
+# from api.chatbot import chatbot_bp
 from api.news import news_bp
 from api.coins import coins_bp
 from api.clickhouse_config import init_app  # Import ClickHouse client management

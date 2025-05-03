@@ -17,6 +17,7 @@
     "chartjs-plugin-zoom": "^2.2.0",
     "cryptoapp": "file:",
     "dayjs": "^1.11.13",
+    "dompurify": "^3.2.5",
     "flowbite-react": "^0.10.2",
     "gsap": "^3.12.7",
     "lucide-react": "^0.483.0",
