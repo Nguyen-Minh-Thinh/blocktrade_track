@@ -210,7 +210,7 @@ const HeaderComponent = () => {
       </div>
       <Navbar.Collapse className="">
         <Navbar.Link className="text-white" href="/">Home</Navbar.Link>
-        <Navbar.Link className="text-white" href="market">Market Cap</Navbar.Link>
+        <Navbar.Link className="text-white" href="market">Market</Navbar.Link>
         <Navbar.Link className="text-white" href="news">News</Navbar.Link>
         <Navbar.Link className="text-white" href="about">About Us</Navbar.Link>
       </Navbar.Collapse>

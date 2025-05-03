@@ -30,24 +30,44 @@ const OneDayChart = ({ symbol }) => {
   const [dataPoints, setDataPoints] = useState([]);
   const [minDate, setMinDate] = useState(new Date());
   const [maxDate, setMaxDate] = useState(new Date());
+  const [loading, setLoading] = useState(true);
 
   const fetchData = () => {
     fetch(`http://localhost:5000/realtime_data?coin_symbol=${symbol}`)
       .then(res => res.json())
       .then(data => {
+        if (!Array.isArray(data)) {
+          setLoading(true);
+          setDataPoints([]);
+          return;
+        }
+  
         const parsedData = data.map(item => ({
           x: new Date(item.timestamp || item.updated_date),
           y: Number(item.price || item.close)
         }));
-
+  
+        if (parsedData.length === 0) {
+          setLoading(true);
+          setDataPoints([]);
+          return;
+        }
+  
         if (JSON.stringify(parsedData) !== JSON.stringify(dataPoints)) {
           const timestamps = parsedData.map(p => p.x.getTime());
           setMinDate(new Date(Math.min(...timestamps)));
           setMaxDate(new Date(Math.max(...timestamps)));
           setDataPoints(parsedData);
         }
+  
+        setLoading(false);
+      })
+      .catch(() => {
+        setLoading(true);
+        setDataPoints([]);
       });
   };
+  
 
   useEffect(() => {
     fetchData();
@@ -111,13 +131,14 @@ const OneDayChart = ({ symbol }) => {
 
   return (
     <div className="absolute inset-x-0 bottom-0 top-[60px]">
-      {dataPoints.length > 0 ? (
+      {!loading && dataPoints.length > 0 ? (
         <Line data={chartData} options={chartOptions} />
       ) : (
         <div className="text-white text-center mt-20">Đang tải dữ liệu...</div>
       )}
     </div>
   );
+  
 };
 
 export default OneDayChart;

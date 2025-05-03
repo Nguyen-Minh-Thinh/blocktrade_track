@@ -35,7 +35,7 @@ const HistoricalChart = ({ symbol, filter }) => {
   const fetchData = () => {
     let endpoint = '';
     if (filter === '7d') endpoint = `http://localhost:5000/historical_data/seven_day?coin_symbol=${symbol}`;
-    else if (filter === '1m') endpoint = `http://localhost:5000/historical_data/one_month?coin_symbol=${symbol}`;
+    else if (filter === '1M') endpoint = `http://localhost:5000/historical_data/one_month?coin_symbol=${symbol}`;
     else endpoint = `http://localhost:5000/historical_data/all?coin_symbol=${symbol}`;
 
     fetch(endpoint)
