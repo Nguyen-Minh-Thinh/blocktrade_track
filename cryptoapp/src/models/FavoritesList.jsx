@@ -17,6 +17,15 @@ const FavoritesList = ({ coin }) => {
     setLoading(true);
     setError(null);
     try {
+      // Check if user is logged in first
+      const userLogin = localStorage.getItem('userLogin');
+      if (!userLogin) {
+        // User is not logged in, so we just set an empty favorites list
+        setFavorites([]);
+        setLoading(false);
+        return;
+      }
+      
       const response = await getFavorites();
       if (!response || !response.favorites) {
         throw new Error('Invalid response format: missing favorites property');
@@ -29,7 +38,11 @@ const FavoritesList = ({ coin }) => {
         setIsFavorite(isCoinFavorite);
       }
     } catch (err) {
-      setError(err.error || 'Failed to load favorites. Please try again.');
+      console.error('Error fetching favorites:', err);
+      // Don't show error toast for 'User not logged in' or 'User ID not found' errors
+      if (err.message !== 'User not logged in' && err.message !== 'User ID not found in localStorage') {
+        setError(err.error || 'Failed to load favorites. Please try again.');
+      }
       setFavorites([]);
     } finally {
       setLoading(false);
