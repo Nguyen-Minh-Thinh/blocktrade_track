@@ -28,7 +28,7 @@ import { toast } from 'react-toastify';
 // Import API clients cho price và transactions
 import { getCurrentPrice } from '../api/price';
 import { buyCoin, sellCoin, getUserPortfolio, getTransactionHistory } from '../api/transactions';
-import DOMPurify from 'dompurify';
+// import DOMPurify from 'dompurify';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 

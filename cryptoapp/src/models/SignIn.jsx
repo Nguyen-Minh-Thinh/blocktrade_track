@@ -93,9 +93,11 @@ const SignIn = ({ openSI, setOpenSI, swapModels, setUser }) => {
 
         // Store user data in localStorage
         localStorage.setItem("userLogin", JSON.stringify(userData));
-
-        // Dispatch event to notify other components of user update
+      Window.localStorage.setItem("isLoggedIn", true);
+      window.location.reload();
+      // Dispatch event to notify other components of user update
         window.dispatchEvent(new Event("userUpdated"));
+
       } catch (err) {
         toast.error(err.error || 'Login failed', {
           position: "top-right",

@@ -42,13 +42,13 @@ const HistoricalChart = ({ symbol, filter }) => {
       .then(res => res.json())
       .then(data => {
         const historical = Object.values(data)[0];
-        const parsedData = historical.map(item => ({
+        const parsedData = historical?.map(item => ({
           x: new Date(item.updated_date),
           y: Number(item.price)
         }));
 
         if (JSON.stringify(parsedData) !== JSON.stringify(dataPoints)) {
-          const timestamps = parsedData.map(p => p.x.getTime());
+          const timestamps = parsedData?.map(p => p.x.getTime());
           setMinDate(new Date(Math.min(...timestamps)));
           setMaxDate(new Date(Math.max(...timestamps)));
           setDataPoints(parsedData);

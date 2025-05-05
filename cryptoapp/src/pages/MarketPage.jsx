@@ -333,7 +333,7 @@ const MarketPage = () => {
 
   return (
     <div className='px-14 mt-[130px] mb-36 container mx-auto'>
-      <div className='grid grid-cols-4 text-white gap-x-2'>
+      <div className='grid grid-cols-1 sm:grid-cols-2  lg:grid-cols-4 text-white gap-2'>
         <div className='rounded-lg bg-gray-800 p-4'>
           <div className='flex justify-between items-center font-medium'>
             <p>Trending Coins</p>
@@ -462,7 +462,7 @@ const MarketPage = () => {
       </div>
       
       <div className='mt-[100px]'>
-        <h1 className='text-white text-4xl text-center font-medium my-6 mb-8'>Crypto Market Trade And Metrics</h1>
+        <h1 className='text-white text-3xl md:text-4xl text-center font-medium my-6 mb-8'>Crypto Market Trade And Metrics</h1>
         <div className="flex items-center justify-end mb-6">   
             <div className='relative max-w-64 w-full'>
               <input 
@@ -475,127 +475,129 @@ const MarketPage = () => {
               <FaSearch className='text-gray-400 text-lg  absolute top-3 right-3' />
             </div>
         </div>
-        <div className='my-3 flex items-center justify-center'>
-          <table className='text-white font-medium'>
-            <colgroup>
-              <col />
-              <col className='w-12' />
-              <col className='w-52' />
-              <col />
-              <col className='w-20' />
-              <col className='w-20' />
-              <col className='w-20' />
-              <col className='w-48' />
-              <col className='w-48' />
-              <col className='w-48' />
-              <col className='w-52' />
-            </colgroup>
-            <thead>
-              <tr className='border-b text-sm border-gray-700'>
-                <th></th>
-                <th className='text-start p-2'>#</th>
-                <th className='text-start p-2'>Name</th>
-                <th className='text-end p-2'>Price</th>
-                <th className='text-end p-2'>1h%</th>
-                <th className='text-end p-2'>24h%</th>
-                <th className='text-end p-2'>7d%</th>
-                <th className='text-end p-2'>Market Cap</th>
-                <th className='text-end p-2'>Volume (<span className='text-[10px]'>24h</span>)</th>
-                <th className='text-end p-2'>Circulating Supply</th>
-                <th className='text-end p-2'>Last 7 Days</th>
-              </tr>
-            </thead>
-            <tbody>
-              {coins.length > 0 ? (
-                filteredCoins.map((coin) => (
-                  <tr 
-                    key={coin.index} 
-                    className='text-sm border-y border-gray-700 hover:bg-slate-900 cursor-pointer'
-                    onClick={() => handleRowClick(coin.coin_id, coin.symbol)} // Navigate on row click
-                  >
-                    <td>
-                      <div 
-                        onClick={(e) => toggleFavorite(coin.coin_id, e)} 
-                        className='text-start p-2'
-                      >
-                        {togglingFavorites[coin.coin_id] ? (
-                          <FaSpinner className='text-[18px] text-gray-500 animate-spin' />
-                        ) : favorites[coin.coin_id] ? (
-                          <FaStar className='text-[18px] text-yellow-300' />
-                        ) : (
-                          <TiStarOutline className='text-[18px] text-gray-500' />
-                        )}
-                      </div>
-                    </td>
-                    <td className='text-start p-2'>{coin.index}</td>
-                    <td>
-                      <div className='flex justify-between items-center p-2'>
-                        <div className='flex gap-2 items-center'>
-                          <img src={coin.image_url} alt={coin.name} className='w-5 h-5' />
-                          <p className='max-h-[60px] line-clamp-3'>{coin.name} {coin.symbol.replace('USDT', '')}</p>
-                        </div>
-                        <div>
-                          <p className='px-2 text-[10px] border-2 border-blue-500 rounded-full'>Buy</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className='text-end p-2'>{coin.price}</td>
-                    <td className={`text-end p-2 ${coin.price_change_1h.includes('-') ? 'text-red-600' : 'text-green-600'}`}>
-                      {coin.price_change_1h}
-                    </td>
-                    <td className={`text-end p-2 ${coin.price_change_24h.includes('-') ? 'text-red-600' : 'text-green-600'}`}>
-                      {coin.price_change_24h}
-                    </td>
-                    <td className={`text-end p-2 ${coin.price_change_7d.includes('-') ? 'text-red-600' : 'text-green-600'}`}>
-                      {coin.price_change_7d}
-                    </td>
-                    <td className='text-end p-2'>{coin.market_cap}</td>
-                    <td className='text-end p-2'>
-                      <div>
-                        <p>{coin.volume_24h}</p>
-                        <p className='text-[10px]'>
-                          {coin.price !== "N/A" && coin.volume_24h !== "N/A"
-                            ? (parseFloat(coin.volume_24h.replace('$', '').replace(/,/g, '')) / parseFloat(coin.price.replace('$', '').replace(/,/g, ''))).toFixed(2) + ` ${coin.symbol.replace('USDT', '')}`
-                            : 'N/A'}
-                        </p>
-                      </div>
-                    </td>
-                    <td className='text-end p-2'>{coin.circulating_supply} {coin.symbol.replace('USDT', '')}</td>
-                    <td className='p-2 flex justify-end items-end'>
-                      <div style={{ width: '70%', height: '65px' }}>
-                        {chartData[coin.index] && chartData[coin.index].length > 0 ? (
-                          <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={chartData[coin.index]} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-                              <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                              <XAxis hide dataKey="date" />
-                              <YAxis hide dataKey="price" />
-                              <Tooltip
-                                contentStyle={{ backgroundColor: '#333', border: 'none', borderRadius: '5px', color: '#fff' }}
-                                labelStyle={{ color: '#fff' }}
-                              />
-                              <Area
-                                type="monotone"
-                                dataKey="price"
-                                stroke={coin.price_change_7d.includes('-') ? '#ff0000' : '#00ff00'}
-                                fill={coin.price_change_7d.includes('-') ? '#ff0000' : '#00ff00'}
-                                fillOpacity={0.3}
-                              />
-                            </AreaChart>
-                          </ResponsiveContainer>
-                        ) : (
-                          <p>Loading chart...</p>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="11" className='text-center p-4'>Loading coins...</td>
+        <div className='my-3 overflow-x-auto max-h-[600px] overflow-y-auto custom-scroll '>
+          <div className='min-w-full inline-block 2xl:flex items-center justify-center align-middle'>
+            <table className='min-w-max text-white font-medium'>
+              <colgroup>
+                <col />
+                <col className='w-12' />
+                <col className='w-52' />
+                <col />
+                <col className='w-20' />
+                <col className='w-20' />
+                <col className='w-20' />
+                <col className='w-48' />
+                <col className='w-48' />
+                <col className='w-48' />
+                <col className='w-52' />
+              </colgroup>
+              <thead>
+                <tr className='border-b text-sm border-gray-700'>
+                  <th></th>
+                  <th className='text-nowrap text-start p-2'>#</th>
+                  <th className='text-nowrap text-start p-2'>Name</th>
+                  <th className='text-nowrap text-end p-2'>Price</th>
+                  <th className='text-nowrap text-end p-2'>1h%</th>
+                  <th className='text-nowrap text-end p-2'>24h%</th>
+                  <th className='text-nowrap text-end p-2'>7d%</th>
+                  <th className='text-nowrap text-end p-2'>Market Cap</th>
+                  <th className='text-nowrap text-end p-2'>Volume (<span className=' text-[10px]'>24h</span>)</th>
+                  <th className='text-nowrap text-end p-2'>Circulating Supply</th>
+                  <th className='text-nowrap text-end p-2'>Last 7 Days</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {coins.length > 0 ? (
+                  filteredCoins.map((coin) => (
+                    <tr 
+                      key={coin.index} 
+                      className='text-sm border-y border-gray-700 hover:bg-slate-900 cursor-pointer'
+                      onClick={() => handleRowClick(coin.coin_id, coin.symbol)} // Navigate on row click
+                    >
+                      <td>
+                        <div 
+                          onClick={(e) => toggleFavorite(coin.coin_id, e)} 
+                          className='text-start p-2'
+                        >
+                          {togglingFavorites[coin.coin_id] ? (
+                            <FaSpinner className='text-[18px] text-gray-500 animate-spin' />
+                          ) : favorites[coin.coin_id] ? (
+                            <FaStar className='text-[18px] text-yellow-300' />
+                          ) : (
+                            <TiStarOutline className='text-[18px] text-gray-500' />
+                          )}
+                        </div>
+                      </td>
+                      <td className='text-start p-2'>{coin.index}</td>
+                      <td>
+                        <div className='flex justify-between items-center p-2'>
+                          <div className='flex gap-2 items-center'>
+                            <img src={coin.image_url} alt={coin.name} className='w-5 h-5' />
+                            <p className='max-h-[60px] line-clamp-3'>{coin.name} {coin.symbol.replace('USDT', '')}</p>
+                          </div>
+                          <div>
+                            <p className='px-2 text-[10px] border-2 border-blue-500 rounded-full'>Buy</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className='text-end p-2'>{coin.price}</td>
+                      <td className={`text-end p-2 ${coin.price_change_1h.includes('-') ? 'text-red-600' : 'text-green-600'}`}>
+                        {coin.price_change_1h}
+                      </td>
+                      <td className={`text-end p-2 ${coin.price_change_24h.includes('-') ? 'text-red-600' : 'text-green-600'}`}>
+                        {coin.price_change_24h}
+                      </td>
+                      <td className={`text-end p-2 ${coin.price_change_7d.includes('-') ? 'text-red-600' : 'text-green-600'}`}>
+                        {coin.price_change_7d}
+                      </td>
+                      <td className='text-end p-2'>{coin.market_cap}</td>
+                      <td className='text-end p-2'>
+                        <div>
+                          <p>{coin.volume_24h}</p>
+                          <p className='text-[10px]'>
+                            {coin.price !== "N/A" && coin.volume_24h !== "N/A"
+                              ? (parseFloat(coin.volume_24h.replace('$', '').replace(/,/g, '')) / parseFloat(coin.price.replace('$', '').replace(/,/g, ''))).toFixed(2) + ` ${coin.symbol.replace('USDT', '')}`
+                              : 'N/A'}
+                          </p>
+                        </div>
+                      </td>
+                      <td className='text-end p-2'>{coin.circulating_supply} {coin.symbol.replace('USDT', '')}</td>
+                      <td className='p-2 flex justify-end items-end'>
+                        <div style={{ width: '70%', height: '65px' }}>
+                          {chartData[coin.index] && chartData[coin.index].length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                              <AreaChart data={chartData[coin.index]} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                                <XAxis hide dataKey="date" />
+                                <YAxis hide dataKey="price" />
+                                <Tooltip
+                                  contentStyle={{ backgroundColor: '#333', border: 'none', borderRadius: '5px', color: '#fff' }}
+                                  labelStyle={{ color: '#fff' }}
+                                />
+                                <Area
+                                  type="monotone"
+                                  dataKey="price"
+                                  stroke={coin.price_change_7d.includes('-') ? '#ff0000' : '#00ff00'}
+                                  fill={coin.price_change_7d.includes('-') ? '#ff0000' : '#00ff00'}
+                                  fillOpacity={0.3}
+                                />
+                              </AreaChart>
+                            </ResponsiveContainer>
+                          ) : (
+                            <p>Loading chart...</p>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="11" className='text-center p-4'>Loading coins...</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
