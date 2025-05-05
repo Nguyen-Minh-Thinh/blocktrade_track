@@ -48,14 +48,23 @@ def is_favorite(user_id, coin_id):
         logger.error(f"Error checking if coin {coin_id} is favorite for user {user_id}: {str(e)}")
         raise
 
-# Add a coin to the user's favorites (Requires access token)
+# Add a coin to the user's favorites (JWT or user_id in body)
 @favorites_bp.route('/add', methods=['POST'])
-@jwt_required()
 def add_to_favorites():
     try:
-        # Get the authenticated user's ID from JWT
-        user_id = get_jwt_identity()
-        logger.info(f"Adding favorite for user_id: {user_id}")
+        # Try to get user_id from JWT first
+        try:
+            user_id = get_jwt_identity()
+            logger.info(f"Adding favorite for user_id from JWT: {user_id}")
+        except Exception:
+            # If JWT fails, get user_id from request body
+            data = request.get_json()
+            if not data:
+                return jsonify({'error': 'Invalid or missing JSON body'}), 400
+            user_id = data.get('user_id')
+            if not user_id:
+                return jsonify({'error': 'Missing required field: user_id'}), 400
+            logger.info(f"Adding favorite for user_id from body: {user_id}")
 
         # Validate user_id
         if not validate_user(user_id):
@@ -101,14 +110,23 @@ def add_to_favorites():
         logger.error(f"Error in add_to_favorites: {str(e)}")
         return jsonify({'error': 'An unexpected error occurred while adding to favorites'}), 500
 
-# Remove a coin from the user's favorites (Requires access token)
+# Remove a coin from the user's favorites (JWT or user_id in body)
 @favorites_bp.route('/remove', methods=['POST'])
-@jwt_required()
 def remove_from_favorites():
     try:
-        # Get the authenticated user's ID from JWT
-        user_id = get_jwt_identity()
-        logger.info(f"Removing favorite for user_id: {user_id}")
+        # Try to get user_id from JWT first
+        try:
+            user_id = get_jwt_identity()
+            logger.info(f"Removing favorite for user_id from JWT: {user_id}")
+        except Exception:
+            # If JWT fails, get user_id from request body
+            data = request.get_json()
+            if not data:
+                return jsonify({'error': 'Invalid or missing JSON body'}), 400
+            user_id = data.get('user_id')
+            if not user_id:
+                return jsonify({'error': 'Missing required field: user_id'}), 400
+            logger.info(f"Removing favorite for user_id from body: {user_id}")
 
         # Validate user_id
         if not validate_user(user_id):
@@ -142,14 +160,17 @@ def remove_from_favorites():
         logger.error(f"Error in remove_from_favorites: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
-# Get the user's favorite coins (Requires access token)
+# Get the user's favorite coins (No JWT required anymore)
 @favorites_bp.route('/', methods=['GET'])
-@jwt_required()
 def get_favorites():
     try:
-        # Get the authenticated user's ID from JWT
-        user_id = get_jwt_identity()
+        # Get user_id from query parameter instead of JWT
+        user_id = request.args.get('user_id')
         logger.info(f"Fetching favorites for user_id: {user_id}")
+        
+        # Check if user_id was provided
+        if not user_id:
+            return jsonify({'error': 'Missing required parameter: user_id'}), 400
 
         # Validate user_id
         if not validate_user(user_id):

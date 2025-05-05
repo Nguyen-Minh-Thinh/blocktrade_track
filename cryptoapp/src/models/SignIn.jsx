@@ -75,21 +75,15 @@ const SignIn = ({ openSI, setOpenSI, swapModels, setUser }) => {
           formData.remember
         );
         setOpenSI(false);
-        toast.success("Login successful", {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          theme: "dark",
-        });
         setFormData({ username: '', password: '', remember: false });
         setError({ username: '', password: '' });
 
         // Fetch user data after successful login
         const userData = await checkAuth();
-        setUser(userData);
+
+        // Call the setUser callback from HeaderComponent with shouldShowToast=true
+        // This indicates we want the HeaderComponent to show the toast notification
+        setUser(userData, true);
 
         // Store user data in localStorage
         localStorage.setItem("userLogin", JSON.stringify(userData));
@@ -97,7 +91,7 @@ const SignIn = ({ openSI, setOpenSI, swapModels, setUser }) => {
       window.location.reload();
       // Dispatch event to notify other components of user update
         window.dispatchEvent(new Event("userUpdated"));
-
+        window.dispatchEvent(new Event("userLoggedIn"));
       } catch (err) {
         toast.error(err.error || 'Login failed', {
           position: "top-right",

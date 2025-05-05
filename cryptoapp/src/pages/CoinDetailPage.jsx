@@ -1,35 +1,27 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Link, useLocation, useParams, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { TiStarOutline } from "react-icons/ti";
 import { IoShareSocialSharp } from "react-icons/io5";
-import { FaRegCopy } from "react-icons/fa";
 import dayjs from "dayjs";
 
-// import { FaFileAlt, FaGithub } from 'react-icons/fa';  
-
-import { MdOutlineKeyboardArrowUp } from "react-icons/md";
 import { FaStar, FaFileAlt, FaGithub, FaReddit, FaGlobe, FaCaretUp, FaCaretDown } from 'react-icons/fa';
 import { IoMdWallet } from 'react-icons/io';
-import { TabItem, Tabs, Tooltip } from 'flowbite-react';
-// import { Tooltip } from 'flowbite-react';
-// import { FaGlobe, FaFileAlt, FaReddit, FaGithub, FaStar } from "react-icons/fa";
+import { Tooltip } from 'flowbite-react';
 import { IoIosArrowDown } from "react-icons/io";
 import { ToggleCheck } from '../components/ToggleCheck';
 import { DropdownCustom } from '../components/DropdownCustom';
-// import AreaChartFillByValue from '../components/AreaChartFillByValue';
 import ButtonComponent from '../components/ButtonComponent';
 import CryptoChart from '../components/CryptoChart';
+import InvestmentChart from '../components/InvestmentChart';
+import InvestmentStats from '../components/InvestmentStats';
 import { getCoinDetail } from '../api/coindetail';
 import { getFavorites, addFavorite, removeFavorite } from '../api/favorites';
 import axios from 'axios';
 import SignIn from '../models/SignIn';
 import SignUp from '../models/SignUp';
 import { toast } from 'react-toastify';
-// Import API clients cho price và transactions
 import { getCurrentPrice } from '../api/price';
-import { buyCoin, sellCoin, getUserPortfolio, getTransactionHistory } from '../api/transactions';
-// import DOMPurify from 'dompurify';
-import { ToastContainer } from 'react-toastify';
+import { buyCoin, sellCoin } from '../api/transactions';
 import 'react-toastify/dist/ReactToastify.css';
 
 const CoinDetailPage = () => {
@@ -54,7 +46,6 @@ const CoinDetailPage = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [newsData, setNewsData] = useState([]);
   const [activeField, setActiveField] = useState(null); // Để theo dõi trường đang được chỉnh sửa
-  const [transactionLoading, setTransactionLoading] = useState(false); // Trạng thái loading khi thực hiện giao dịch
   
   // State cho portfolio và lịch sử giao dịch
   const [ownedCoins, setOwnedCoins] = useState(null);
@@ -67,9 +58,6 @@ const CoinDetailPage = () => {
   const [openSignIn, setOpenSignIn] = useState(false);
   const [openSignUp, setOpenSignUp] = useState(false);
   const [user, setUser] = useState(null);
-
-  const inputPriceRef = useRef(null);
-  const inputQuantityRef = useRef(null);
 
   // Thêm state để cache dữ liệu và tránh gọi API quá nhiều lần
   const [lastFetchTime, setLastFetchTime] = useState({
@@ -85,7 +73,7 @@ const CoinDetailPage = () => {
   };
 
   // Function to handle successful login
-  const handleSuccessfulLogin = useCallback(async (userData) => {
+  const handleSuccessfulLogin = useCallback(async (userData, shouldShowToast = true) => {
     setUser(userData);
     setIsLoggedIn(true);
     setOpenSignIn(false);
@@ -99,16 +87,14 @@ const CoinDetailPage = () => {
     } catch (error) {
       console.error('Error fetching favorites after login:', error);
     }
-    
-    toast.success("Login successful!", {
-      position: "top-right",
-      autoClose: 3000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      theme: "dark",
-    });
+
+    if (shouldShowToast) {
+      toast.success('Login successful', {
+        position: "top-right",
+        autoClose: 3000,
+        theme: "dark"
+      });
+    }
   }, [coin_id]);
 
   // Tách hàm loadData ra khỏi useEffect và memoize nó để tránh tạo hàm mới mỗi khi render
@@ -139,34 +125,24 @@ const CoinDetailPage = () => {
         axios.get(`http://localhost:5000/transactions?user_id=${user.user_id}`)
       ]);
       
-      // Debug thông tin giao dịch từ API
-      console.log('=== DEBUG TRANSACTION DATA STRUCTURE ===');
-      console.log('Raw API response headers:', transactionsRes.headers);
-      console.log('Raw API response type:', typeof transactionsRes.data);
+      // Gỡ lỗi dữ liệu từ API
+      console.log('=== KIỂM TRA DỮ LIỆU GIAO DỊCH TỪ API ===');
+      console.log('Headers API:', transactionsRes.headers);
+      console.log('Status API:', transactionsRes.status);
+      console.log('Loại dữ liệu:', typeof transactionsRes.data);
+      console.log('Cấu trúc JSON:', Object.keys(transactionsRes.data));
       
-      // Inspect the full API response structure
-      console.log('API response data keys:', Object.keys(transactionsRes.data));
-      
-      if (transactionsRes.data.transactions && transactionsRes.data.transactions.length > 0) {
-        const sample = transactionsRes.data.transactions[0];
-        console.log('First transaction object keys:', Object.keys(sample));
-        console.log('First transaction date field value:', sample.date);
-        console.log('First transaction date field type:', typeof sample.date);
-        
-        // Check if it's an ISO date string
-        if (typeof sample.date === 'string') {
-          console.log('Is ISO date string?', /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(sample.date));
-          console.log('Is MySQL date string?', /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(sample.date));
-          
-          // Try different date parsing methods
-          console.log('Date.parse() result:', Date.parse(sample.date));
-          console.log('new Date() result:', new Date(sample.date));
-          
-          // Check if the field contains epoch timestamp (number as string)
-          if (!isNaN(Number(sample.date))) {
-            console.log('Numeric timestamp parsing:', new Date(Number(sample.date)));
-          }
+      // Kiểm tra mảng giao dịch
+      if (transactionsRes.data && transactionsRes.data.transactions) {
+        console.log('Số lượng giao dịch:', transactionsRes.data.transactions.length);
+        if (transactionsRes.data.transactions.length > 0) {
+          const sample = transactionsRes.data.transactions[0];
+          console.log('Thuộc tính mẫu giao dịch đầu tiên:', Object.keys(sample));
+          console.log('Giá trị date đầu tiên:', sample.date, typeof sample.date);
+          console.log('Giá trị trans_date đầu tiên:', sample.trans_date, typeof sample.trans_date);
         }
+      } else {
+        console.log('Không tìm thấy mảng transactions trong dữ liệu API');
       }
       
       // Xử lý dữ liệu portfolio
@@ -189,36 +165,70 @@ const CoinDetailPage = () => {
       const processedTransactions = transactions.map(transaction => {
         const processed = { ...transaction };
         
-        // Handle date field - try to convert numeric strings to Date objects
-        if (transaction.date) {
-          // If it's a numeric string, it might be a timestamp
-          if (typeof transaction.date === 'string' && /^\d+$/.test(transaction.date)) {
-            const timestamp = parseInt(transaction.date, 10);
-            // Check if milliseconds or seconds (before or after 2000-01-01)
-            if (timestamp > 946684800000) { // milliseconds
-              processed.date = new Date(timestamp);
-              console.log(`Converted millisecond timestamp ${transaction.date} to date:`, processed.date);
-            } else if (timestamp > 946684800) { // seconds
-              processed.date = new Date(timestamp * 1000);
-              console.log(`Converted second timestamp ${transaction.date} to date:`, processed.date);
+        // Kiểm tra trường date hoặc các trường thay thế
+        if (!transaction.date) {
+          console.log('Không tìm thấy trường date trong giao dịch, tìm trường thay thế...');
+          
+          // Kiểm tra các trường thay thế có thể có
+          if (transaction.created_at) {
+            console.log('Sử dụng trường created_at thay thế:', transaction.created_at);
+            processed.date = formatDate(transaction.created_at);
+          } else if (transaction.timestamp) {
+            console.log('Sử dụng trường timestamp thay thế:', transaction.timestamp);
+            processed.date = formatDate(transaction.timestamp);
+          } else if (transaction.transaction_date) {
+            console.log('Sử dụng trường transaction_date thay thế:', transaction.transaction_date);
+            processed.date = formatDate(transaction.transaction_date);
+          } else {
+            // Nếu không có trường nào, hiển thị thời gian của giao dịch gần nhất trong ngày
+            console.log('Không tìm thấy trường thay thế, sử dụng timestamp hiện tại');
+            
+            // Kiểm tra xem transaction_id có phải là timestamp không (thường ID tự tăng)
+            if (transaction.transaction_id && !isNaN(Number(transaction.transaction_id))) {
+              const possibleDate = new Date(Number(transaction.transaction_id));
+              if (!isNaN(possibleDate.getTime()) && possibleDate.getFullYear() > 2000) {
+                processed.date = formatDate(possibleDate);
+                console.log('Sử dụng transaction_id như timestamp:', processed.date);
+              } else {
+                processed.date = formatDate(new Date());
+                console.log('Sử dụng thời gian hiện tại');
+              }
+            } else {
+              processed.date = formatDate(new Date());
+              console.log('Sử dụng thời gian hiện tại');
             }
           }
-          // If it's MySQL format (YYYY-MM-DD HH:MM:SS)
-          else if (typeof transaction.date === 'string' && 
-                  transaction.date.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
-            const [datePart, timePart] = transaction.date.split(' ');
-            const [year, month, day] = datePart.split('-');
-            const [hour, minute, second] = timePart.split(':');
-            
-            processed.date = new Date(
-              parseInt(year, 10),
-              parseInt(month, 10) - 1, // JS months are 0-indexed
-              parseInt(day, 10),
-              parseInt(hour, 10),
-              parseInt(minute, 10),
-              parseInt(second, 10)
-            );
-            console.log(`Converted MySQL date ${transaction.date} to JS date:`, processed.date);
+        } else {
+          // Kiểm tra và định dạng trường ngày tháng nếu đã có
+          console.log(`Xử lý date ban đầu: ${transaction.date} (${typeof transaction.date})`);
+          
+          // Nếu trường date là chuỗi MySQL định dạng đúng, giữ nguyên
+          if (typeof transaction.date === 'string' && 
+              transaction.date.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
+            // Đã đúng định dạng, giữ nguyên
+            console.log(`- Giữ nguyên MySQL format: ${transaction.date}`);
+          }
+          // Định dạng trường date nếu là Date object
+          else if (transaction.date instanceof Date) {
+            const formattedDate = formatDate(transaction.date);
+            processed.date = formattedDate;
+            console.log(`- Date object -> formatted: ${formattedDate}`);
+          }
+          // Cố gắng chuyển đổi sang Date rồi định dạng
+          else {
+            try {
+              const dateObj = new Date(transaction.date);
+              if (!isNaN(dateObj.getTime())) {
+                const formattedDate = formatDate(dateObj);
+                processed.date = formattedDate;
+                console.log(`- Chuyển đổi thành công: ${formattedDate}`);
+              } else {
+                console.log(`- Không thể chuyển đổi thành Date hợp lệ`);
+                // Giữ nguyên giá trị gốc nếu không chuyển đổi được
+              }
+            } catch (e) {
+              console.error(`- Lỗi xử lý ngày: ${e.message}`);
+            }
           }
         }
         
@@ -237,6 +247,10 @@ const CoinDetailPage = () => {
         });
       
       console.log('Processed transaction data:', coinTransactions);
+      console.log('Transaction dates detail:');
+      coinTransactions.forEach((t, idx) => {
+        console.log(`Transaction ${idx} - date: "${t.date}" (${typeof t.date}) - exists: ${Boolean(t.date)}`);
+      });
       
       setTransactionHistory(coinTransactions);
       
@@ -558,25 +572,6 @@ const CoinDetailPage = () => {
     }
   };
 
-  // const customStyle = {
-  //   tablist: {
-  //     variant: {
-  //       pills: "flex-wrap space-x-2 text-sm font-medium text-gray-600 dark:text-gray-400",
-  //     },
-  //     tabitem: {
-  //       base: "flex flex-row-reverse gap-1 bg-gray-900 items-center justify-center rounded-t-lg py-2 px-4 text-sm font-medium first:ml-0 focus:outline-none disabled:cursor-not-allowed disabled:text-gray-400 disabled:dark:text-gray-500",
-  //       variant: {
-  //         pills: {
-  //           active: {
-  //             on: "rounded-lg bg-gray-800 text-white",
-  //             off: "rounded-lg hover:bg-gray-800 hover:text-white dark:hover:bg-gray-800 dark:hover:text-white",
-  //           },
-  //         },
-  //       },
-  //     },
-  //   },
-  // };
-
   const toggleColor = (a) => {
     setCheck(a);
     // Update the title based on the selection
@@ -711,33 +706,39 @@ const CoinDetailPage = () => {
           // Dismiss the processing toast
           toast.dismiss(processingToast);
           
-          // Show success message
-          toast.success(`Successfully bought ${quantity} ${displaySymbol}`, {
-            position: "top-right",
-            autoClose: 3000,
-            theme: "dark",
-            toastId: "buy-success"
-          });
+          // Update user points in localStorage FIRST before showing any toasts
+          if (result && result.remaining_points !== undefined) {
+            console.log("BUY: Updating points in localStorage:", result.remaining_points);
+            updatePointsAndRefreshUI(result.remaining_points);
+            
+            // Force another userPointsUpdated event after a short delay
+            setTimeout(() => {
+              console.log("BUY: Dispatching secondary point update event");
+              window.dispatchEvent(new CustomEvent('userPointsUpdated'));
+              window.dispatchEvent(new Event('userLoggedIn'));
+            }, 200);
+          }
           
           // Calculate the order value that was spent
           const orderValueSpent = parseFloat(quantity) * priceUsd;
           
-          // Show remaining points with calculation details
-          if (result.remaining_points !== undefined) {
-            toast.info(`Points: -${orderValueSpent.toFixed(2)} (Order Value)`, {
+          // Show a single consolidated toast instead of multiple toasts
+          toast.success(
+            <div>
+              <p>Successfully bought {quantity} {displaySymbol}</p>
+              {result.remaining_points !== undefined && (
+                <p className="text-sm text-gray-300 mt-1">
+                  Points: -{orderValueSpent.toFixed(2)} • Remaining: {result.remaining_points.toFixed(2)}
+                </p>
+              )}
+            </div>, 
+            {
               position: "top-right",
-              autoClose: 3000,
+              autoClose: 5000,
               theme: "dark",
-              toastId: "points-calculation"
-            });
-            
-            toast.info(`Remaining points: ${result.remaining_points.toFixed(2)}`, {
-              position: "top-right",
-              autoClose: 3000,
-              theme: "dark",
-              toastId: "remaining-points"
-            });
-          }
+              toastId: "buy-success"
+            }
+          );
         } else {
           // Handle Sell transaction
           console.log("Selling coin with parameters:", {
@@ -773,35 +774,11 @@ const CoinDetailPage = () => {
             console.warn("Transaction completed but no remaining_points provided");
           }
           
-          // Show success message
-          toast.success(`Successfully sold ${quantity} ${displaySymbol}`, {
-            position: "top-right",
-            autoClose: 3000,
-            theme: "dark",
-            toastId: "sell-success"
-          });
-          
           // Calculate the order value that was earned
           const orderValueEarned = parseFloat(quantity) * priceUsd;
           
-          // Show points earned and remaining points
-          if (result.remaining_points !== undefined) {
-            toast.info(`Points: +${orderValueEarned.toFixed(2)} (Order Value)`, {
-              position: "top-right",
-              autoClose: 3000,
-              theme: "dark",
-              toastId: "points-calculation"
-            });
-            
-            toast.info(`Current points: ${result.remaining_points.toFixed(2)}`, {
-              position: "top-right",
-              autoClose: 3000,
-              theme: "dark",
-              toastId: "remaining-points"
-            });
-          }
-          
-          // Calculate and show profit/loss if purchase_price is available
+          // Calculate profit/loss if purchase_price is available
+          let profitLossElement = null;
           if (result.purchase_price !== undefined) {
             try {
               const purchasePrice = parseFloat(result.purchase_price);
@@ -824,41 +801,60 @@ const CoinDetailPage = () => {
               });
               
               if (profit > 0) {
-                toast.success(`Profit: +${profitFormatted} points (+${profitPercent}%)`, {
-                  position: "top-right",
-                  autoClose: 3000,
-                  theme: "dark",
-                  toastId: "profit"
-                });
+                profitLossElement = (
+                  <p className="text-sm text-green-400 mt-1">
+                    Profit: +{profitFormatted} points (+{profitPercent}%)
+                  </p>
+                );
               } else if (profit < 0) {
-                toast.error(`Loss: ${profitFormatted} points (${profitPercent}%)`, {
-                  position: "top-right",
-                  autoClose: 3000,
-                  theme: "dark",
-                  toastId: "loss"
-                });
+                profitLossElement = (
+                  <p className="text-sm text-red-400 mt-1">
+                    Loss: {profitFormatted} points ({profitPercent}%)
+                  </p>
+                );
               } else {
-                toast.info(`Break-even (0%)`, {
-                  position: "top-right",
-                  autoClose: 3000,
-                  theme: "dark",
-                  toastId: "break-even"
-                });
+                profitLossElement = (
+                  <p className="text-sm text-gray-300 mt-1">
+                    Break-even (0%)
+                  </p>
+                );
               }
             } catch (profitError) {
               console.error("Error calculating profit:", profitError);
               // Silently fail profit calculation - don't show any profit/loss message
             }
           }
+          
+          // Show a single consolidated toast instead of multiple toasts
+          toast.success(
+            <div>
+              <p>Successfully sold {quantity} {displaySymbol}</p>
+              {result.remaining_points !== undefined && (
+                <p className="text-sm text-gray-300 mt-1">
+                  Points: +{orderValueEarned.toFixed(2)} • Current: {result.remaining_points.toFixed(2)}
+                </p>
+              )}
+              {profitLossElement}
+            </div>, 
+            {
+              position: "top-right",
+              autoClose: 5000,
+              theme: "dark",
+              toastId: "sell-success"
+            }
+          );
         }
         
         // Dispatch transaction completed event and force refresh data
         window.dispatchEvent(new CustomEvent('transactionCompleted'));
         
-        // Reset form after successful transaction
+        // Reset form after successful transaction - make sure these are set to '0' or empty
         setQuantity('');
         setOrderValue('');
-        
+        setActiveField(null);
+
+        // Reset price to current market price
+        setPrice(currentPrice);
       } catch (transactionError) {
         console.error("Transaction API error:", transactionError);
         
@@ -898,96 +894,45 @@ const CoinDetailPage = () => {
     }
   };
 
-  // Updated formatDate function comments in English
+  // Hàm định dạng ngày tháng đơn giản
   const formatDate = (dateString) => {
-    console.log('Attempting to format date:', dateString, 'Type:', typeof dateString);
-    
-    // Handle null/undefined/empty cases
-    if (!dateString) {
-      console.log('Date is null or empty');
-      return 'N/A';
-    }
-    
-    // Step 1: Keep original for debugging
-    const rawValue = String(dateString);
+    if (!dateString) return 'N/A';
     
     try {
-      // Step 2: Check if it's already a Date object
+      // Nếu là chuỗi đúng định dạng MySQL, trả về trực tiếp
+      if (typeof dateString === 'string' && dateString.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
+        return dateString;
+      }
+      
+      // Nếu là đối tượng Date, định dạng
       if (dateString instanceof Date) {
-        if (!isNaN(dateString.getTime())) {
-          return dateString.toLocaleString('en-US'); // Use English locale instead of Vietnamese
-        } else {
-          console.log('Invalid Date object');
-          return rawValue; // Return original if invalid Date
-        }
+        const year = dateString.getFullYear();
+        const month = String(dateString.getMonth() + 1).padStart(2, '0');
+        const day = String(dateString.getDate()).padStart(2, '0');
+        const hours = String(dateString.getHours()).padStart(2, '0');
+        const minutes = String(dateString.getMinutes()).padStart(2, '0');
+        const seconds = String(dateString.getSeconds()).padStart(2, '0');
+        
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
       }
       
-      // Step 3: Try direct date parsing for MySQL date format (YYYY-MM-DD HH:MM:SS)
-      if (typeof dateString === 'string') {
-        // MySQL format
-        if (dateString.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
-          console.log('Detected MySQL date format');
-          const [datePart, timePart] = dateString.split(' ');
-          const [year, month, day] = datePart.split('-');
-          const [hour, minute, second] = timePart.split(':');
-          
-          const parsedDate = new Date(
-            parseInt(year, 10),
-            parseInt(month, 10) - 1, // Months are 0-indexed in JS
-            parseInt(day, 10),
-            parseInt(hour, 10),
-            parseInt(minute, 10), 
-            parseInt(second, 10)
-          );
-          
-          if (!isNaN(parsedDate.getTime())) {
-            return parsedDate.toLocaleString('en-US'); // Use English locale
-          } else {
-            console.log('Failed to parse MySQL date format');
-          }
-        }
+      // Trường hợp khác, thử chuyển đổi thành Date
+      const date = new Date(dateString);
+      if (!isNaN(date.getTime())) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
         
-        // ISO format with T
-        if (dateString.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/)) {
-          console.log('Detected ISO date format with T');
-          const parsedDate = new Date(dateString);
-          if (!isNaN(parsedDate.getTime())) {
-            return parsedDate.toLocaleString('en-US'); // Use English locale
-          }
-        }
-        
-        // Unix timestamp (as string)
-        if (/^\d+$/.test(dateString)) {
-          console.log('Detected numeric timestamp');
-          const timestamp = parseInt(dateString, 10);
-          // Check if it's a reasonable timestamp (after 2000-01-01)
-          if (timestamp > 946684800000) { // milliseconds
-            const parsedDate = new Date(timestamp);
-            if (!isNaN(parsedDate.getTime())) {
-              return parsedDate.toLocaleString('en-US'); // Use English locale
-            }
-          } else if (timestamp > 946684800) { // seconds
-            const parsedDate = new Date(timestamp * 1000);
-            if (!isNaN(parsedDate.getTime())) {
-              return parsedDate.toLocaleString('en-US'); // Use English locale
-            }
-          }
-        }
-        
-        // For any string format, try default JS parsing
-        const parsedDate = new Date(dateString);
-        if (!isNaN(parsedDate.getTime())) {
-          return parsedDate.toLocaleString('en-US'); // Use English locale
-        }
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
       }
       
-      // Fallback to the raw value if all parsing attempts fail
-      console.log('Failed to parse date - returning raw value');
-      return rawValue;
-      
+      // Nếu không thể chuyển đổi, trả về chuỗi gốc
+      return String(dateString);
     } catch (error) {
-      console.error('Error in formatDate:', error);
-      return rawValue; // Return the original value on error
+      return String(dateString);
     }
   };
 
@@ -1018,7 +963,7 @@ const CoinDetailPage = () => {
         openSI={openSignIn}
         setOpenSI={setOpenSignIn}
         swapModels={swapModels}
-        setUser={handleSuccessfulLogin}
+        setUser={(userData) => handleSuccessfulLogin(userData, false)}
       />
       <SignUp
         openSU={openSignUp}
@@ -1311,10 +1256,7 @@ const CoinDetailPage = () => {
                                     {transaction.type === 'buy' ? 'Buy' : 'Sell'} {transaction.amount ? transaction.amount.toFixed(6) : '0.000000'} {displaySymbol}
                                   </div>
                                   <div className="text-xs text-gray-400">
-                                    {formatDate(transaction.date)}
-                                    <span className="text-xs text-gray-500 ml-2">
-                                      (Raw: {typeof transaction.date === 'string' ? transaction.date.substring(0, 10) + '...' : transaction.date})
-                                    </span>
+                                    {transaction.trans_date || transaction.date || 'No date available'}
                                   </div>
                                 </div>
                                 <div className="text-right">
@@ -1414,8 +1356,9 @@ const CoinDetailPage = () => {
                         
                         <div className="mt-6 bg-[#272b38] rounded-lg p-4">
                           <h3 className="text-gray-300 font-medium mb-3">Investment Value Over Time</h3>
-                          <div className="h-48 flex items-center justify-center text-gray-400">
-                            <p>Investment value chart will be displayed here</p>
+                          <InvestmentStats transactionHistory={transactionHistory} currentPrice={priceUsd} />
+                          <div className="h-48">
+                            <InvestmentChart transactionHistory={transactionHistory} currentPrice={priceUsd} />
                           </div>
                         </div>
                       </div>
@@ -1478,9 +1421,8 @@ const CoinDetailPage = () => {
                                   </span>
                                 </td>
                                 <td className="px-4 py-4 whitespace-nowrap text-sm">
-                                  {dayjs(transaction.date).format("YYYY-MM-DD HH:mm:ss")}
+                                  {dayjs(transaction.trans_date).format("YYYY-MM-DD HH:mm:ss")}
                                   <div className="text-xs text-gray-500 mt-1">
-                                    {/* Raw: {transaction.date || 'null'} */}
                                   </div>
                                 </td>
                                 <td className="px-4 py-4 whitespace-nowrap text-right font-medium">
@@ -1567,18 +1509,7 @@ const CoinDetailPage = () => {
               <button className='w-full opacity-60 transition delay-150 duration-300 py-2 text-xs font-medium rounded-full bg-gray-900' onClick={() => { toggleColor(false); }}>Sell</button>
             </div>
             <div className="text-white w-full mt-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <span>Enable Margin Trading</span>
-                <ToggleCheck />
-              </div>
-              <DropdownCustom
-                title={"Limit"}
-                data={[
-                  { id: 1, name: "Limit" },
-                  { id: 2, name: "Market" },
-                  { id: 3, name: "Stop Loss" },
-                ]}
-              />
+            <br />
               <div className="border border-gray-500">
                 <div className='bg-gray-800 py-[2px] px-2 rounded flex justify-between items-center'>
                   <span className='text-sm text-gray-400 font-medium'>Price</span>
@@ -1621,24 +1552,6 @@ const CoinDetailPage = () => {
                       onFocus={() => setActiveField('orderValue')}
                     />
                     <span className="text-sm text-gray-400 font-medium float-right">USD</span>
-                  </div>
-                </div>
-              </div>
-              <div className='flex justify-between'>
-                <div className="flex items-center gap-2 justify-between">
-                  <span className='text-sm text-gray-400'>Post-Only</span>
-                  <ToggleCheck />
-                </div>
-                <div>
-                  <div className="bg-gray-800 w-20 rounded flex justify-between items-center">
-                    <DropdownCustom
-                      title={"GTC"}
-                      data={[
-                        { id: 1, name: "GTC" },
-                        { id: 2, name: "FOK" },
-                        { id: 3, name: "IOC" },
-                      ]}
-                    />
                   </div>
                 </div>
               </div>
