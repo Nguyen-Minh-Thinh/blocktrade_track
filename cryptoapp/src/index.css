@@ -18,6 +18,13 @@
   .custom-scroll::-webkit-scrollbar-thumb:hover {
     background: #4b5563;
   }
+  .hidden-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hidden-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
 }
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 .App{

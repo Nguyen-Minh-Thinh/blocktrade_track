@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate for navigation
+import { useLocation, useNavigate } from 'react-router-dom'; // Import useNavigate for navigation
 import { TiStarOutline } from "react-icons/ti";
 import { FaStar } from "react-icons/fa";
 import { FaSpinner } from "react-icons/fa";
@@ -19,14 +19,19 @@ import { fetchCoins } from '../api/coins';
 import { getFavorites, addFavorite, removeFavorite } from '../api/favorites';
 import { checkAuth } from '../api/auth';
 import { toast } from 'react-toastify';
+import SignIn from '../models/SignIn';
 
 const HomePage = () => {
   const [started, setStarted] = useState(false);
+  const [openSignIn, setOpenSignIn] = useState(false);
+    const [openSignUp, setOpenSignUp] = useState(false);
   const [coins, setCoins] = useState([]);
   const [favorites, setFavorites] = useState({});
   const [chartData, setChartData] = useState({});
   const [user, setUser] = useState(null);
   const [togglingFavorites, setTogglingFavorites] = useState({});
+  const location = useLocation();
+  const isOnCoinDetailPage = location.pathname.includes('/coin/');
   const navigate = useNavigate(); // Initialize useNavigate
 const [newsData, setNewsData] = useState([]); // State for news data  
   // Load user from localStorage
@@ -38,6 +43,42 @@ const [newsData, setNewsData] = useState([]); // State for news data
       setUser(null);
     }
   };
+
+  const swapModels = () => {
+    setOpenSignIn(started);
+    setStarted(openSignIn);
+  };
+  const handleSuccessfulLogin = (userData, shouldShowToast = true) => {
+      setUser(userData);
+      setOpenSignIn(false);
+      setStarted(false);
+      
+      // Show success toast if shouldShowToast is true
+      if (shouldShowToast) {
+        toast.success("Login successful!", {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "dark",
+        });
+      }
+      
+      // Trigger UI updates without page reload
+      window.dispatchEvent(new Event("userLoggedIn"));
+      
+      // Check if we need to reload the page (only if on CoinDetailPage)
+      if (isOnCoinDetailPage) {
+        console.log('Login successful on CoinDetailPage, reloading after delay...');
+        // Delay the reload to allow toast to be visible
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500); // 1.5 second delay
+      }
+    };
+  
 
   // Verify authentication if no user data in localStorage
   const verifyAuth = async () => {
@@ -254,7 +295,18 @@ const [newsData, setNewsData] = useState([]); // State for news data
 
   return (
     <div className='mx-14 mb-36 '>
-      <SignUp openSU={started} setOpenSU={setStarted}></SignUp>
+      <SignIn
+              openSI={openSignIn}
+              setOpenSI={setOpenSignIn}
+              swapModels={swapModels}
+              setUser={(userData) => handleSuccessfulLogin(userData, true)}
+            />
+            <SignUp
+              openSU={started} 
+              setOpenSU={setStarted}
+              swapModels={swapModels}
+            />
+      <SignUp ></SignUp>
       <div className='flex flex-col items-center'>
         <div className='relative max-w-[1700px] w-full'>
           <div className='absolute w-full -z-10 left-'>
