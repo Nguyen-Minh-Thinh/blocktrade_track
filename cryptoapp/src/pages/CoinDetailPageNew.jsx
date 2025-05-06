@@ -676,7 +676,7 @@ const CoinDetailPage = () => {
                             <tr>
                               <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Coin</th>
                               <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Quantity</th>
-                              <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Average Purchase Price</th>
+                              <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Purchase Price</th>
                               <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Current Price</th>
                               <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Current Value</th>
                               <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Profit/Loss</th>
@@ -728,13 +728,13 @@ const CoinDetailPage = () => {
                           </tbody>
                         </table>
                         
-                        <div className="mt-6 bg-gray-800 rounded-lg p-4">
+                        {/* <div className="mt-6 bg-gray-800 rounded-lg p-4">
                           <h3 className="text-gray-300 font-medium mb-3">Investment Value Over Time</h3>
                           <InvestmentStats transactionHistory={transactionHistory} currentPrice={(currentPrice || coinDetail.price_usd || 0)} />
                           <div className="h-48">
                             <InvestmentChart transactionHistory={transactionHistory} currentPrice={(currentPrice || coinDetail.price_usd || 0)} />
                           </div>
-                        </div>
+                        </div> */}
                       </div>
                     ) : (
                       <div className="text-center py-20 text-gray-400">

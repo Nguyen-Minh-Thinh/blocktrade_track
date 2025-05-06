@@ -236,7 +236,7 @@ const SignUp = ({ openSU, setOpenSU, swapModels }) => {
                     onClick={togglePasswordVisibility}
                     disabled={loading}
                   >
-                    {showPassword ? <HiEyeOff size={20} /> : <HiEye size={20} />}
+                    {!showPassword ? <HiEyeOff size={20} /> : <HiEye size={20} />}
                   </button>
                 </div>
                 {error.password !== "" && (
@@ -264,7 +264,7 @@ const SignUp = ({ openSU, setOpenSU, swapModels }) => {
                     onClick={toggleConfirmPasswordVisibility}
                     disabled={loading}
                   >
-                    {showConfirmPassword ? <HiEyeOff size={20} /> : <HiEye size={20} />}
+                    {!showConfirmPassword ? <HiEyeOff size={20} /> : <HiEye size={20} />}
                   </button>
                 </div>
                 {error.confirmPassword !== "" && (

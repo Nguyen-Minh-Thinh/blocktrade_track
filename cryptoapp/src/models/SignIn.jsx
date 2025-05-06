@@ -160,7 +160,7 @@ const SignIn = ({ openSI, setOpenSI, swapModels, setUser }) => {
                     onClick={togglePasswordVisibility}
                     disabled={loading}
                   >
-                    {showPassword ? <HiEyeOff size={20} /> : <HiEye size={20} />}
+                    {!showPassword ? <HiEyeOff size={20} /> : <HiEye size={20} />}
                   </button>
                 </div>
                 {error.password !== "" && (
