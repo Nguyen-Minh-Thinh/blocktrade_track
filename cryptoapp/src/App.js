@@ -3,7 +3,7 @@ import HomePage from "./pages/HomePage";
 import DefaulPage from "./pages/DefaulPage";
 import NewDetailPage from "./pages/NewDetailPage";
 import NewsPage from "./pages/NewsPage";
-import CoinDetailPage from "./pages/CoinDetailPage";
+import CoinDetailPage from "./pages/CoinDetailPageNew";
 import MarketPage from "./pages/MarketPage";
 import UserInfoPage from "./pages/UserInfoPage";
 import VitualexchangePage from "./pages/VitualexchangePage";

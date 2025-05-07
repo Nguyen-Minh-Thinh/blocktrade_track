@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { FaUserCircle, FaUser, FaChevronCircleDown } from "react-icons/fa";
 import { TbLogout } from "react-icons/tb";
 import { MdWbSunny } from "react-icons/md";
+import { useLocation } from 'react-router-dom';
 import SignIn from '../models/SignIn';
 import SignUp from '../models/SignUp';
 import ButtonComponent from './ButtonComponent';
@@ -15,6 +16,11 @@ const HeaderComponent = () => {
   const [openSignIn, setOpenSignIn] = useState(false);
   const [openSignUp, setOpenSignUp] = useState(false);
   const [user, setUser] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+  
+  // Get current location to check if we're on CoinDetailPage
+  const location = useLocation();
+  const isOnCoinDetailPage = location.pathname.includes('/coin/');
 
   const swapModels = () => {
     setOpenSignIn(openSignUp);
@@ -63,6 +69,69 @@ const HeaderComponent = () => {
     }
   };
 
+  // New function to refresh user data from the API
+  const refreshUserData = async () => {
+    // Prevent multiple concurrent refresh requests
+    if (refreshing) return;
+    
+    try {
+      setRefreshing(true);
+      console.log('Refreshing user data from API...');
+      
+      // Call the API to get fresh user data
+      const userData = await checkAuth();
+      
+      if (userData) {
+        console.log('User data refreshed:', userData);
+        
+        // Update state
+        setUser(userData);
+        
+        // Update localStorage
+        localStorage.setItem("userLogin", JSON.stringify(userData));
+        
+        // Dispatch event to notify other components
+        window.dispatchEvent(new Event("userUpdated"));
+      }
+    } catch (error) {
+      console.error('Error refreshing user data:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  // Handle successful login with special handling for CoinDetailPage
+  const handleSuccessfulLogin = (userData, shouldShowToast = true) => {
+    setUser(userData);
+    setOpenSignIn(false);
+    setOpenSignUp(false);
+    
+    // Show success toast if shouldShowToast is true
+    if (shouldShowToast) {
+      toast.success("Login successful!", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "dark",
+      });
+    }
+    
+    // Trigger UI updates without page reload
+    window.dispatchEvent(new Event("userLoggedIn"));
+    
+    // Check if we need to reload the page (only if on CoinDetailPage)
+    if (isOnCoinDetailPage) {
+      console.log('Login successful on CoinDetailPage, reloading after delay...');
+      // Delay the reload to allow toast to be visible
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500); // 1.5 second delay
+    }
+  };
+
   useEffect(() => {
     // Load user from localStorage on mount
     loadUserFromStorage();
@@ -77,11 +146,29 @@ const HeaderComponent = () => {
       loadUserFromStorage();
     };
 
-    window.addEventListener("userUpdated", handleUserUpdated);
+    // New event listener for transaction completed
+    const handleTransactionCompleted = () => {
+      console.log('Transaction completed event detected in HeaderComponent');
+      refreshUserData();
+    };
 
-    // Cleanup listener on unmount
+    // New event listener for points updated
+    const handlePointsUpdated = () => {
+      console.log('User points updated event detected in HeaderComponent');
+      refreshUserData();
+    };
+
+    window.addEventListener("userUpdated", handleUserUpdated);
+    window.addEventListener("transactionCompleted", handleTransactionCompleted);
+    window.addEventListener("userPointsUpdated", handlePointsUpdated);
+    window.addEventListener("userLoggedIn", loadUserFromStorage);
+
+    // Cleanup listeners on unmount
     return () => {
       window.removeEventListener("userUpdated", handleUserUpdated);
+      window.removeEventListener("transactionCompleted", handleTransactionCompleted);
+      window.removeEventListener("userPointsUpdated", handlePointsUpdated);
+      window.removeEventListener("userLoggedIn", loadUserFromStorage);
     };
   }, []);
 
@@ -126,7 +213,7 @@ const HeaderComponent = () => {
         openSI={openSignIn}
         setOpenSI={setOpenSignIn}
         swapModels={swapModels}
-        setUser={setUser}
+        setUser={(userData) => handleSuccessfulLogin(userData, true)}
       />
       <SignUp
         openSU={openSignUp}
@@ -179,12 +266,7 @@ const HeaderComponent = () => {
                   {user.name}
                 </p>
               </Dropdown.Item>
-              <Dropdown.Item
-                className="hover:text-gray-400 transition flex text-start items-center gap-x-3 py-[6px] px-3"
-              >
-                <MdWbSunny className="text-base w-4 p-0 m-0" />
-                <p>Light</p>
-              </Dropdown.Item>
+              
               <Dropdown.Item
                 onClick={handleLogout}
                 className="hover:text-gray-400 transition flex text-start items-center gap-x-3 py-[6px] px-3"

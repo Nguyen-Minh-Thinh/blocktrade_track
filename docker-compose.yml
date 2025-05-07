@@ -1,4 +1,11 @@
 services:
+  react-app:
+    build:
+      context: ./cryptoapp
+      dockerfile: Dockerfile
+    ports:
+      - 3000:3000
+
   airflow-container:
     image: apache/airflow:slim-2.10.3rc2-python3.10
     depends_on: 

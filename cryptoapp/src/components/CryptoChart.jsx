@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -35,7 +35,7 @@ const CryptoChart = ({ symbol }) => {
   return (
     <div className="h-[450px] mt-8 relative">
       <div className="ml-4 px-2 py-1 w-fit z-10 relative">
-        {['1d', '7d', '1m', 'All'].map(item => (
+        {['1d', '7d', '1M', 'All'].map(item => (
           <button
             key={item}
             onClick={() => setFilter(item)}

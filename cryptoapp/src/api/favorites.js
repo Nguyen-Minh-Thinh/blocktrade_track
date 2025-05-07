@@ -3,14 +3,29 @@ import axios from 'axios';
 // Base URL is handled by the proxy in package.json, so we can use relative URLs
 const API_URL = 'http://localhost:5000/favorites/';
 
-// Fetch the list of favorite coins for the authenticated user
+// Fetch the list of favorite coins for the user by passing user_id from localStorage
 export const getFavorites = async () => {
   try {
+    // Get user_id from localStorage
+    const userLogin = localStorage.getItem('userLogin');
+    if (!userLogin) {
+      throw new Error('User not logged in');
+    }
+    
+    const userData = JSON.parse(userLogin);
+    const user_id = userData.user_id;
+    
+    if (!user_id) {
+      throw new Error('User ID not found in localStorage');
+    }
+    
+    // Add user_id as a query parameter
     const response = await axios.get(`${API_URL}`, {
+      params: { user_id },
       headers: {
         'Content-Type': 'application/json',
       },
-      withCredentials: true, // Include JWT cookies
+      withCredentials: true, // Keep for CORS support
     });
 
     return response.data;
@@ -23,14 +38,30 @@ export const getFavorites = async () => {
 // Add a coin to the user's favorites
 export const addFavorite = async (coinId) => {
   try {
+    // Get user_id from localStorage
+    const userLogin = localStorage.getItem('userLogin');
+    if (!userLogin) {
+      throw new Error('User not logged in');
+    }
+    
+    const userData = JSON.parse(userLogin);
+    const user_id = userData.user_id;
+    
+    if (!user_id) {
+      throw new Error('User ID not found in localStorage');
+    }
+    
     const response = await axios.post(
       `${API_URL}add`,
-      { coin_id: coinId },
+      { 
+        coin_id: coinId,
+        user_id: user_id 
+      },
       {
         headers: {
           'Content-Type': 'application/json',
         },
-        withCredentials: true, // Include JWT cookies
+        withCredentials: true, // Keep for CORS support
       }
     );
 
@@ -44,14 +75,30 @@ export const addFavorite = async (coinId) => {
 // Remove a coin from the user's favorites
 export const removeFavorite = async (coinId) => {
   try {
+    // Get user_id from localStorage
+    const userLogin = localStorage.getItem('userLogin');
+    if (!userLogin) {
+      throw new Error('User not logged in');
+    }
+    
+    const userData = JSON.parse(userLogin);
+    const user_id = userData.user_id;
+    
+    if (!user_id) {
+      throw new Error('User ID not found in localStorage');
+    }
+    
     const response = await axios.post(
       `${API_URL}remove`,
-      { coin_id: coinId },
+      { 
+        coin_id: coinId,
+        user_id: user_id
+      },
       {
         headers: {
           'Content-Type': 'application/json',
         },
-        withCredentials: true, // Include JWT cookies
+        withCredentials: true, // Keep for CORS support
       }
     );
 

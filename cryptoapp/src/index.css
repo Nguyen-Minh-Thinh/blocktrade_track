@@ -4,6 +4,7 @@
 @layer utilities {
   .custom-scroll::-webkit-scrollbar {
     width: 8px;
+    height: 8px;
   }
 
   .custom-scroll::-webkit-scrollbar-track {
@@ -17,6 +18,13 @@
   .custom-scroll::-webkit-scrollbar-thumb:hover {
     background: #4b5563;
   }
+  .hidden-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hidden-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
 }
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 .App{
@@ -26,5 +34,298 @@
 }
 html{
   background: #030712;
-;
+}
+
+/* Modern table styles for Portfolio and Trade History - Dark Theme */
+.portfolio-table.dark .ant-table,
+.transactions-table.dark .ant-table {
+  background-color: #1f2937;
+  border-radius: 8px;
+  overflow: hidden;
+  color: #e5e7eb;
+}
+
+.portfolio-table.dark .ant-table-thead > tr > th,
+.transactions-table.dark .ant-table-thead > tr > th {
+  background-color: #111827 !important;
+  color: #e5e7eb !important;
+  font-weight: 600 !important;
+  border-bottom: 1px solid #374151 !important;
+  padding: 12px 16px !important;
+}
+
+.portfolio-table.dark .ant-table-tbody > tr > td,
+.transactions-table.dark .ant-table-tbody > tr > td {
+  padding: 14px 16px !important;
+  border-bottom: 1px solid #374151 !important;
+  background-color: #1f2937 !important;
+  color: #e5e7eb !important;
+}
+
+.portfolio-table.dark .ant-table-tbody > tr:hover > td,
+.transactions-table.dark .ant-table-tbody > tr:hover > td {
+  background-color: #2d3748 !important;
+}
+
+.portfolio-table.dark .ant-empty-description,
+.transactions-table.dark .ant-empty-description {
+  color: #9ca3af !important;
+}
+
+.portfolio-table.dark .ant-table-pagination,
+.transactions-table.dark .ant-table-pagination {
+  margin: 16px 0 !important;
+}
+
+.portfolio-table.dark .ant-pagination-item a,
+.transactions-table.dark .ant-pagination-item a {
+  color: #9ca3af !important;
+}
+
+.portfolio-table.dark .ant-pagination-item-active,
+.transactions-table.dark .ant-pagination-item-active {
+  background-color: #374151 !important;
+  border-color: #4b5563 !important;
+}
+
+.portfolio-table.dark .ant-pagination-item-active a,
+.transactions-table.dark .ant-pagination-item-active a {
+  color: #e5e7eb !important;
+}
+
+.portfolio-table.dark .ant-pagination-prev .ant-pagination-item-link,
+.portfolio-table.dark .ant-pagination-next .ant-pagination-item-link,
+.transactions-table.dark .ant-pagination-prev .ant-pagination-item-link,
+.transactions-table.dark .ant-pagination-next .ant-pagination-item-link {
+  background-color: #1f2937 !important;
+  border-color: #4b5563 !important;
+  color: #9ca3af !important;
+}
+
+/* Dark form styles */
+.dark-form .ant-form-item-label > label {
+  color: #e5e7eb !important;
+}
+
+.dark-form .ant-input,
+.dark-form .ant-input-password {
+  background-color: #374151 !important;
+  border-color: #4b5563 !important;
+  color: #e5e7eb !important;
+}
+
+.dark-form .ant-input-password .ant-input {
+  background-color: transparent !important;
+}
+
+.dark-form .ant-input-affix-wrapper {
+  background-color: #374151 !important;
+  border-color: #4b5563 !important;
+}
+
+.dark-form .ant-input-affix-wrapper:hover,
+.dark-form .ant-input:hover {
+  border-color: #60a5fa !important;
+}
+
+.dark-form .ant-input-affix-wrapper:focus,
+.dark-form .ant-input-affix-wrapper-focused,
+.dark-form .ant-input:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+}
+
+.dark-form .ant-input::placeholder {
+  color: #6b7280 !important;
+}
+
+/* Dark tabs */
+.dark-tabs .ant-tabs-tab {
+  color: #9ca3af !important;
+}
+
+.dark-tabs .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: #60a5fa !important;
+}
+
+.dark-tabs .ant-tabs-ink-bar {
+  background: #3b82f6 !important;
+}
+
+.dark-tabs .ant-tabs-nav::before {
+  border-bottom-color: #374151 !important;
+}
+
+/* Dark select */
+.dark-select .ant-select-selector {
+  background-color: #374151 !important;
+  border-color: #4b5563 !important;
+  color: #e5e7eb !important;
+}
+
+.dark-select .ant-select-selection-placeholder {
+  color: #6b7280 !important;
+}
+
+.dark-select .ant-select-arrow {
+  color: #9ca3af !important;
+}
+
+.ant-select-dropdown {
+  background-color: #1f2937 !important;
+  border: 1px solid #374151 !important;
+}
+
+.ant-select-item {
+  color: #e5e7eb !important;
+}
+
+.ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+  background-color: #2d3748 !important;
+}
+
+.ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+  background-color: #3b82f6 !important;
+  color: white !important;
+}
+
+/* Dark DatePicker */
+.ant-picker {
+  background-color: #374151 !important;
+  border-color: #4b5563 !important;
+}
+
+.ant-picker-input > input {
+  color: #e5e7eb !important;
+}
+
+.ant-picker-suffix,
+.ant-picker-clear {
+  color: #9ca3af !important;
+}
+
+.ant-picker-dropdown {
+  background-color: #1f2937 !important;
+}
+
+.ant-picker-panel-container {
+  background-color: #1f2937 !important;
+  border: 1px solid #374151 !important;
+}
+
+.ant-picker-header {
+  color: #e5e7eb !important;
+  border-bottom: 1px solid #374151 !important;
+}
+
+.ant-picker-header button {
+  color: #9ca3af !important;
+}
+
+.ant-picker-content th {
+  color: #9ca3af !important;
+}
+
+.ant-picker-cell {
+  color: #e5e7eb !important;
+}
+
+.ant-picker-cell-in-view {
+  color: #e5e7eb !important;
+}
+
+.ant-picker-cell:hover .ant-picker-cell-inner {
+  background-color: #2d3748 !important;
+}
+
+.ant-picker-cell-selected .ant-picker-cell-inner {
+  background-color: #3b82f6 !important;
+}
+
+/* Modern table styles for Portfolio and Trade History */
+.portfolio-table .ant-table,
+.transactions-table .ant-table {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.portfolio-table .ant-table-thead > tr > th,
+.transactions-table .ant-table-thead > tr > th {
+  background-color: #f9fafb !important;
+  color: #111827 !important;
+  font-weight: 600 !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  padding: 12px 16px !important;
+}
+
+.portfolio-table .ant-table-tbody > tr > td,
+.transactions-table .ant-table-tbody > tr > td {
+  padding: 14px 16px !important;
+  border-bottom: 1px solid #f3f4f6 !important;
+}
+
+.portfolio-table .ant-table-tbody > tr:hover > td,
+.transactions-table .ant-table-tbody > tr:hover > td {
+  background-color: #f3f4f6 !important;
+}
+
+.portfolio-table .ant-table-pagination,
+.transactions-table .ant-table-pagination {
+  margin: 16px 0 !important;
+}
+
+/* Profile menu & editor styles */
+.ant-tabs-nav::before {
+  border-bottom-color: #f3f4f6 !important;
+}
+
+.ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: #3b82f6 !important;
+  font-weight: 500;
+}
+
+.ant-tabs-ink-bar {
+  background: #3b82f6 !important;
+  height: 3px !important;
+}
+
+.ant-form-item-label > label {
+  font-weight: 500 !important;
+  color: #4b5563 !important;
+}
+
+.ant-btn-primary {
+  background-color: #3b82f6 !important;
+  border-color: #3b82f6 !important;
+}
+
+.ant-btn-primary:hover {
+  background-color: #2563eb !important;
+  border-color: #2563eb !important;
+}
+
+.ant-select:not(.ant-select-disabled):hover .ant-select-selector {
+  border-color: #3b82f6 !important;
+}
+
+.ant-select-focused:not(.ant-select-disabled) .ant-select-selector {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+}
+
+.ant-picker:hover, 
+.ant-picker-focused {
+  border-color: #3b82f6 !important;
+}
+
+.ant-picker-focused {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+}
+
+.ant-pagination-item-active {
+  border-color: #3b82f6 !important;
+}
+
+.ant-pagination-item-active a {
+  color: #3b82f6 !important;
 }
