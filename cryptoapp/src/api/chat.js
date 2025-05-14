@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Base URL of the API
-const API_URL = 'http://localhost:5000/chatbot';
+const API_URL = `${process.env.REACT_APP_API_URL}/chatbot`;
 
 // Configure axios instance with timeout and retry
 const axiosInstance = axios.create({

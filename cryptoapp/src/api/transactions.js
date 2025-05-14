@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// Base URL of the transactions API
-const API_URL = 'http://localhost:5000/portfolio';
+// Base URL of the API
+const API_URL = `${process.env.REACT_APP_API_URL}/portfolio`;
 
 /**
  * Thực hiện giao dịch mua coin

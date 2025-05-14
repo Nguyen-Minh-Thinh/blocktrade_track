@@ -29,11 +29,19 @@ const HeaderComponent = () => {
 
   // Load user from localStorage
   const loadUserFromStorage = () => {
-    const userData = localStorage.getItem("userLogin");
-    if (userData) {
-      setUser(JSON.parse(userData));
-    } else {
+    try {
+      const userData = localStorage.getItem("userLogin");
+      if (userData) {
+        const parsedData = JSON.parse(userData);
+        console.log("Loading user from localStorage:", parsedData);
+        setUser(parsedData);
+      } else {
+        setUser(null);
+      }
+    } catch (error) {
+      console.error("Error parsing user data from localStorage:", error);
       setUser(null);
+      localStorage.removeItem("userLogin");
     }
   };
 
@@ -42,9 +50,11 @@ const HeaderComponent = () => {
     try {
       const userData = await checkAuth();
       if (userData) {
+        console.log("Auth verified, setting user:", userData);
         setUser(userData);
         localStorage.setItem("userLogin", JSON.stringify(userData));
       } else {
+        console.log("Auth verification returned no user data");
         setUser(null);
         localStorage.removeItem("userLogin");
       }
@@ -60,12 +70,14 @@ const HeaderComponent = () => {
     try {
       // Attempt to refresh the token
       await refreshToken();
+      return true;
     } catch (error) {
       // If token refresh fails, logout the user
       console.error('Error refreshing token:', error);
       setUser(null);
       localStorage.removeItem("userLogin");
-      window.location.reload(); // Optionally reload the page
+      localStorage.removeItem("isLoggedIn");
+      return false;
     }
   };
 
@@ -102,7 +114,17 @@ const HeaderComponent = () => {
 
   // Handle successful login with special handling for CoinDetailPage
   const handleSuccessfulLogin = (userData, shouldShowToast = true) => {
+    if (!userData) {
+      console.error("handleSuccessfulLogin called with no userData");
+      return;
+    }
+    
+    console.log("handleSuccessfulLogin called with userData:", userData);
+    
+    // Set state before modals
     setUser(userData);
+    
+    // Close modals
     setOpenSignIn(false);
     setOpenSignUp(false);
     
@@ -116,11 +138,9 @@ const HeaderComponent = () => {
         pauseOnHover: true,
         draggable: true,
         theme: "dark",
+        toastId: "login-success" // Để tránh toast trùng lặp
       });
     }
-    
-    // Trigger UI updates without page reload
-    window.dispatchEvent(new Event("userLoggedIn"));
     
     // Check if we need to reload the page (only if on CoinDetailPage)
     if (isOnCoinDetailPage) {
@@ -141,8 +161,15 @@ const HeaderComponent = () => {
       verifyAuth();
     }
 
-    // Listen for user updates from UserInfo
+    // Listen for user updates from UserInfo and other components
     const handleUserUpdated = () => {
+      console.log("userUpdated event received");
+      loadUserFromStorage();
+    };
+
+    // Handle login events
+    const handleUserLoggedIn = () => {
+      console.log("userLoggedIn event received");
       loadUserFromStorage();
     };
 
@@ -158,29 +185,41 @@ const HeaderComponent = () => {
       refreshUserData();
     };
 
+    // Add all event listeners
     window.addEventListener("userUpdated", handleUserUpdated);
     window.addEventListener("transactionCompleted", handleTransactionCompleted);
     window.addEventListener("userPointsUpdated", handlePointsUpdated);
-    window.addEventListener("userLoggedIn", loadUserFromStorage);
+    window.addEventListener("userLoggedIn", handleUserLoggedIn);
 
     // Cleanup listeners on unmount
     return () => {
       window.removeEventListener("userUpdated", handleUserUpdated);
       window.removeEventListener("transactionCompleted", handleTransactionCompleted);
       window.removeEventListener("userPointsUpdated", handlePointsUpdated);
-      window.removeEventListener("userLoggedIn", loadUserFromStorage);
+      window.removeEventListener("userLoggedIn", handleUserLoggedIn);
     };
   }, []);
 
   const handleLogout = async () => {
     try {
       // Before logging out, refresh the token if expired
-      await checkAndRefreshToken();
+      const refreshed = await checkAndRefreshToken();
+      
+      if (!refreshed) {
+        // If refresh failed, just clear local data
+        setUser(null);
+        localStorage.removeItem("userLogin");
+        localStorage.removeItem("isLoggedIn");
+        window.location.reload();
+        return;
+      }
 
       // Proceed with logout
       await logout();
       setUser(null);
       localStorage.removeItem("userLogin");
+      localStorage.removeItem("isLoggedIn");
+      
       toast.success("Logout successful", {
         position: "top-right",
         autoClose: 3000,
@@ -189,7 +228,10 @@ const HeaderComponent = () => {
         pauseOnHover: true,
         draggable: true,
         theme: "dark",
+        toastId: "logout-success" // Để tránh toast trùng lặp
       });
+      
+      // Reload trang để reset state
       window.location.reload();
     } catch (err) {
       toast.error(err.error || 'Logout failed', {
@@ -200,6 +242,7 @@ const HeaderComponent = () => {
         pauseOnHover: true,
         draggable: true,
         theme: "dark",
+        toastId: "logout-error" // Để tránh toast trùng lặp
       });
     }
   };

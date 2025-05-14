@@ -217,7 +217,6 @@ def login():
         data = request.get_json()
         username = data.get('username')
         password = data.get('password')
-        remember = data.get('remember', False)  # Default to False if not provided
 
         # Validate required fields
         if not all([username, password]):
@@ -254,19 +253,35 @@ def login():
         if not verify_password(password, password_hash):
             return jsonify({'error': 'Invalid username or password'}), 401
 
-        # Generate JWT tokens
+        # Generate JWT tokens - sử dụng thời hạn cố định 
         access_token = create_access_token(identity=user_id, expires_delta=timedelta(minutes=15))
-        # Adjust refresh token expiration based on "remember"
-        refresh_expiry = timedelta(days=30) if remember else timedelta(days=7)
-        refresh_token = create_refresh_token(identity=user_id, expires_delta=refresh_expiry)
+        # Sử dụng thời hạn refresh token cố định 7 ngày thay vì dùng remember
+        refresh_token = create_refresh_token(identity=user_id, expires_delta=timedelta(days=7))
+
+        # Truy vấn dữ liệu người dùng để trả về client
+        user_query = f"""
+        SELECT user_id, name, email, image_url, username, created_at, points
+        FROM {DATABASE}.users
+        WHERE user_id = %(user_id)s
+        """
+        user_result = execute_clickhouse_query(user_query, params={"user_id": user_id})
+        
+        if not user_result.get('data', []):
+            return jsonify({'error': 'User data retrieval failed'}), 500
+            
+        user_data = user_result['data'][0]
+        
+        # Thêm token vào response
+        user_data['token'] = access_token
 
         # Set tokens in cookies
-        resp = jsonify({"message": "Login successful", "user_id": user_id})
+        resp = jsonify(user_data)
         set_access_cookies(resp, access_token)
         set_refresh_cookies(resp, refresh_token)
         return resp, 200
 
     except Exception as e:
+        print(f"Login error: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 # Refresh token endpoint (Requires refresh token)

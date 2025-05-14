@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// Base URL of the news API
-const API_URL = 'http://localhost:5000/news';
+// Base URL of the API
+const API_URL = `${process.env.REACT_APP_API_URL}/news`;
 
 // Function to get all news
 export const getAllNews = async () => {

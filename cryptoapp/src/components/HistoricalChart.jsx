@@ -33,10 +33,10 @@ const HistoricalChart = ({ symbol, filter }) => {
   const [maxDate, setMaxDate] = useState(new Date());
 
   const fetchData = () => {
-    let endpoint = '';
-    if (filter === '7d') endpoint = `http://localhost:5000/historical_data/seven_day?coin_symbol=${symbol}`;
-    else if (filter === '1M') endpoint = `http://localhost:5000/historical_data/one_month?coin_symbol=${symbol}`;
-    else endpoint = `http://localhost:5000/historical_data/all?coin_symbol=${symbol}`;
+    let endpoint;
+    if (filter === '7d') endpoint = `${process.env.REACT_APP_API_URL}/historical_data/seven_day?coin_symbol=${symbol}`;
+    else if (filter === '1M') endpoint = `${process.env.REACT_APP_API_URL}/historical_data/one_month?coin_symbol=${symbol}`;
+    else endpoint = `${process.env.REACT_APP_API_URL}/historical_data/all?coin_symbol=${symbol}`;
 
     fetch(endpoint)
       .then(res => res.json())
