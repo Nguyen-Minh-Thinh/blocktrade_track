@@ -127,7 +127,7 @@ const [newsData, setNewsData] = useState([]); // State for news data
   useEffect(() => {
     async function fetchNews() {
       try {
-        const response = await fetch("http://localhost:5000/news/all");
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/news/all`);
         const data = await response.json();
         if (response.ok) {
           setNewsData(data.news);

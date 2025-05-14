@@ -20,7 +20,7 @@ const EnhancedTradeHistory = ({ userId }) => {
     
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:5000/transactions?user_id=${userId}`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/transactions?user_id=${userId}`);
       const result = await response.json();
       const transactions = result.transactions || [];
 

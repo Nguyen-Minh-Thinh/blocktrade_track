@@ -128,19 +128,19 @@ const CoinDetailPage = () => {
       const axiosOptions = { timeout: 30000 }; // 30 seconds timeout
       
       try {
-        // Fetch portfolio and transaction data in parallel with longer timeout
-        const [portfolioRes, transactionsRes] = await Promise.all([
-          axios.get(`http://localhost:5000/portfolio?user_id=${user.user_id}`, axiosOptions),
-          axios.get(`http://localhost:5000/transactions?user_id=${user.user_id}`, axiosOptions)
+        // Load portfolio and transaction data in parallel
+        const [portfolioResponse, transactionsResponse] = await Promise.all([
+          axios.get(`${process.env.REACT_APP_API_URL}/portfolio?user_id=${user.user_id}`, axiosOptions),
+          axios.get(`${process.env.REACT_APP_API_URL}/transactions?user_id=${user.user_id}`, axiosOptions)
         ]);
         
         // Process portfolio data - handle empty data gracefully
-        const portfolio = portfolioRes.data.portfolio || [];
+        const portfolio = portfolioResponse.data.portfolio || [];
         const currentCoin = portfolio.find(item => item.coin_id === coin_id);
         setOwnedCoins(currentCoin || null);
         
         // Process transaction history - handle empty data gracefully
-        const transactions = transactionsRes.data.transactions || [];
+        const transactions = transactionsResponse.data.transactions || [];
         
         // Preprocess transactions to convert date fields if needed
         const processedTransactions = transactions.map(transaction => {
@@ -386,9 +386,9 @@ const CoinDetailPage = () => {
 
   // Fetch news data
   useEffect(() => {
-    const fetchNews = async () => {
+    const fetchNewsData = async () => {
       try {
-        const response = await fetch("http://localhost:5000/news/all");
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/news/all`);
         const data = await response.json();
         if (response.ok) {
           setNewsData(data.news);
@@ -400,7 +400,7 @@ const CoinDetailPage = () => {
       }
     };
 
-    fetchNews();
+    fetchNewsData();
   }, []);
     
   // Handle favorite toggling

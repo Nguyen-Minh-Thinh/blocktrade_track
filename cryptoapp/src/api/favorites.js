@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// Base URL is handled by the proxy in package.json, so we can use relative URLs
-const API_URL = 'http://localhost:5000/favorites/';
+// Base URL of the API
+const API_URL = `${process.env.REACT_APP_API_URL}/favorites/`;
 
 // Fetch the list of favorite coins for the user by passing user_id from localStorage
 export const getFavorites = async () => {

@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Base URL of the API
-const API_URL = 'http://localhost:5000/coins';
+const API_URL = `${process.env.REACT_APP_API_URL}/coins`;
 
 // Function to fetch coin data
 export const fetchCoins = async () => {

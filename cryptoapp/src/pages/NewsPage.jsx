@@ -24,23 +24,27 @@ const NewsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [newsData, setNewsData] = useState([]);
   const [visibleCount, setVisibleCount] = useState(12); // Số lượng tin hiển thị ban đầu
+  const [loading, setLoading] = useState(false);
+
+  const fetchAllNews = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/news/all`);
+      const data = await response.json();
+      if (response.ok) {
+        setNewsData(data.news);
+      } else {
+        console.error("Lỗi API:", data.error);
+      }
+    } catch (error) {
+      console.error("Lỗi kết nối đến API:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function fetchNews() {
-      try {
-        const response = await fetch("http://localhost:5000/news/all");
-        const data = await response.json();
-        if (response.ok) {
-          setNewsData(data.news);
-        } else {
-          console.error("Lỗi API:", data.error);
-        }
-      } catch (error) {
-        console.error("Lỗi kết nối đến API:", error);
-      }
-    }
-
-    fetchNews();
+    fetchAllNews();
   }, []);
 
   const filteredNews = searchTerm

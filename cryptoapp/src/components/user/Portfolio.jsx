@@ -14,7 +14,7 @@ const Portfolio = ({ userId }) => {
     const fetchPortfolio = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`http://localhost:5000/portfolio?user_id=${userId}`);
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/portfolio?user_id=${userId}`);
         const rawData = response.data.portfolio;
         
         // Calculate total portfolio value

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Checkbox, Label, Modal, TextInput } from "flowbite-react";
+import { Label, Modal, TextInput } from "flowbite-react";
 import { Link } from "react-router-dom";
 import ButtonComponent from '../components/ButtonComponent';
 import { login } from '../api/auth';
@@ -11,7 +11,6 @@ const SignIn = ({ openSI, setOpenSI, swapModels, setUser }) => {
   const [formData, setFormData] = useState({
     username: '',
     password: '',
-    remember: false,
   });
   const [error, setError] = useState({
     username: '',
@@ -37,16 +36,15 @@ const SignIn = ({ openSI, setOpenSI, swapModels, setUser }) => {
   };
 
   const handleChange = (e) => {
-    const { id, value, type, checked } = e.target;
-    const newValue = type === 'checkbox' ? checked : value;
+    const { id, value } = e.target;
 
     setError({
       ...error,
-      [id]: newValue.length <= 0 && id !== 'remember' ? "This value cannot be empty" : ""
+      [id]: value.length <= 0 ? "This value cannot be empty" : ""
     });
     setFormData({
       ...formData,
-      [id]: newValue
+      [id]: value
     });
   };
 
@@ -68,31 +66,36 @@ const SignIn = ({ openSI, setOpenSI, swapModels, setUser }) => {
 
     if (newErrors.username === "" && newErrors.password === "") {
       setLoading(true);
+      
       try {
         await login(
           formData.username,
-          formData.password,
-          formData.remember
+          formData.password
         );
-        setOpenSI(false);
-        setFormData({ username: '', password: '', remember: false });
+        
+        setFormData({ username: '', password: '' });
         setError({ username: '', password: '' });
+        setOpenSI(false);
 
-        // Fetch user data after successful login
         const userData = await checkAuth();
-
-        // Call the setUser callback from HeaderComponent with shouldShowToast=true
-        // This indicates we want the HeaderComponent to show the toast notification
-        setUser(userData, true);
-
-        // Store user data in localStorage
+        
+        if (!userData) {
+          throw new Error('Failed to retrieve user data');
+        }
+        
+        console.log("Login successful, user data:", userData);
+        
         localStorage.setItem("userLogin", JSON.stringify(userData));
-      Window.localStorage.setItem("isLoggedIn", true);
-      window.location.reload();
-      // Dispatch event to notify other components of user update
+        localStorage.setItem("isLoggedIn", "true");
+        
+        setUser(userData, true);
+        
         window.dispatchEvent(new Event("userUpdated"));
         window.dispatchEvent(new Event("userLoggedIn"));
+        
       } catch (err) {
+        console.error("Login error:", err);
+        
         toast.error(err.error || 'Login failed', {
           position: "top-right",
           autoClose: 3000,
@@ -101,6 +104,7 @@ const SignIn = ({ openSI, setOpenSI, swapModels, setUser }) => {
           pauseOnHover: true,
           draggable: true,
           theme: "dark",
+          toastId: "login-error"
         });
       } finally {
         setLoading(false);
@@ -110,7 +114,7 @@ const SignIn = ({ openSI, setOpenSI, swapModels, setUser }) => {
 
   const handleClose = () => {
     setOpenSI(false);
-    setFormData({ username: '', password: '', remember: false });
+    setFormData({ username: '', password: '' });
     setError({ username: '', password: '' });
     setLoading(false);
   };
@@ -168,16 +172,7 @@ const SignIn = ({ openSI, setOpenSI, swapModels, setUser }) => {
                   <span className="text-red-500 text-xs text-center mt-2">{error.password}</span>
                 )}
               </div>
-              <div className="flex justify-between my-2">
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    id="remember"
-                    checked={formData.remember}
-                    onChange={handleChange}
-                    disabled={loading}
-                  />
-                  <Label className='text-white' htmlFor="remember">Remember me</Label>
-                </div>
+              <div className="flex justify-end my-2">
                 <Link
                   to="/forgot"
                   onClick={handleClose}
@@ -196,7 +191,7 @@ const SignIn = ({ openSI, setOpenSI, swapModels, setUser }) => {
               </div>
             </form>
             <div className="flex justify-center text-sm text-white dark:text-gray-300">
-              Not registered? 
+              Not registered? 
               <p onClick={swapModels} className="text-gray-500 font-medium hover:text-white hover:underline cursor-pointer pl-1">
                 Create account
               </p>

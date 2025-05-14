@@ -123,8 +123,8 @@ const CoinDetailPage = () => {
       
       // Gọi API song song để cải thiện hiệu suất
       const [portfolioRes, transactionsRes] = await Promise.all([
-        axios.get(`http://localhost:5000/portfolio?user_id=${user.user_id}`),
-        axios.get(`http://localhost:5000/transactions?user_id=${user.user_id}`)
+        axios.get(`${process.env.REACT_APP_API_URL}/portfolio?user_id=${user.user_id}`),
+        axios.get(`${process.env.REACT_APP_API_URL}/transactions?user_id=${user.user_id}`)
       ]);
       
       // Gỡ lỗi dữ liệu từ API
@@ -534,7 +534,7 @@ const CoinDetailPage = () => {
   useEffect(() => {
       async function fetchNews() {
         try {
-          const response = await fetch("http://localhost:5000/news/all");
+          const response = await fetch(`${process.env.REACT_APP_API_URL}/news/all`);
           const data = await response.json();
           if (response.ok) {
             setNewsData(data.news);

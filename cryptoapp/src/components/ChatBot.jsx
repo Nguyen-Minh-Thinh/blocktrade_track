@@ -1,8 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import { IoIosSend } from "react-icons/io";
 import { SiWechat } from "react-icons/si";
 import { chatBot } from "../api/chat";
+
+// Giả sử userId được lấy từ localStorage hoặc context
+const getUserId = () => localStorage.getItem("userId") || null; // Thay bằng cách lấy userId thực tế
 
 export default function ChatBot() {
   const [open, setOpen] = useState(false);
@@ -11,6 +14,16 @@ export default function ChatBot() {
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const messagesEndRef = useRef(null); // Để cuộn tự động
+
+  // Cuộn tự động đến tin nhắn mới nhất
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const sendMessage = async () => {
     if (!input.trim()) return;
@@ -20,11 +33,13 @@ export default function ChatBot() {
     setLoading(true);
 
     try {
-      const response = await chatBot(input)
-      const botMessage = { sender: "bot", text: response?.answer };
+      const userId = getUserId(); // Lấy userId từ nguồn xác thực
+      const response = await chatBot(input, userId);
+      const botMessage = { sender: "bot", text: response?.response || "Không có phản hồi từ bot." };
       setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
-      setMessages((prev) => [...prev, { sender: "bot", text: "Xin lỗi, có lỗi xảy ra!" }]);
+      const errorMessage = error.error || "Xin lỗi, có lỗi xảy ra!";
+      setMessages((prev) => [...prev, { sender: "bot", text: errorMessage }]);
     } finally {
       setLoading(false);
     }
@@ -48,10 +63,12 @@ export default function ChatBot() {
                   msg.sender === "bot" ? "bg-blue-600 self-start" : "bg-gray-700 self-end"
                 }`}
               >
+                {/* Thoát HTML để tránh XSS */}
                 {msg.text}
               </div>
             ))}
             {loading && <div className="text-gray-400 text-sm">Đang nhập...</div>}
+            <div ref={messagesEndRef} /> {/* Điểm neo để cuộn */}
           </div>
           <div className="p-2 border-t border-gray-700 flex items-center">
             <input
@@ -61,8 +78,13 @@ export default function ChatBot() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+              disabled={loading}
             />
-            <button className="p-2" onClick={sendMessage} disabled={loading}>
+            <button
+              className={`p-2 ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+              onClick={sendMessage}
+              disabled={loading}
+            >
               <IoIosSend className="w-5 h-5 text-gray-400" />
             </button>
           </div>

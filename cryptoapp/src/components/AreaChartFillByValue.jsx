@@ -14,7 +14,7 @@ const AreaChartFillByValue = () => {
   const [interval] = useState("5m"); // Time interval
 
   // Kết nối tới Flask SocketIO server
-  const socket = io("http://localhost:5000", {
+  const socket = io(`${process.env.REACT_APP_API_URL}`, {
     transports: ["websocket"],
     cors: { origin: "*" },
   });
@@ -29,7 +29,7 @@ const AreaChartFillByValue = () => {
     try {
       console.log(`Fetching initial data for ${symbol}_${interval}`);
       const response = await fetch(
-        `http://localhost:5000/candlestick_data?symbol=${symbol}&interval=${interval}&limit=50`
+        `${process.env.REACT_APP_API_URL}/candlestick_data?symbol=${symbol}&interval=${interval}&limit=50`
       );
       const data = await response.json();
 

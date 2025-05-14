@@ -19,9 +19,9 @@ const TradeHistory = ({ userId }) => {
   const [filteredTradeHistoryData, setFilteredTradeHistoryData] = useState([]);
 
   // ✅ Hàm fetch toàn bộ dữ liệu ban đầu
-  const fetchAllTransactions = async () => {
+  const fetchTransactionHistory = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/transactions?user_id=${userId}`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/transactions?user_id=${userId}`);
       const result = await response.json();
       const transactions = result.transactions || [];
 
@@ -46,7 +46,7 @@ const TradeHistory = ({ userId }) => {
   // ✅ useEffect để load dữ liệu ngay khi component mount
   useEffect(() => {
     if (userId) {
-      fetchAllTransactions();
+      fetchTransactionHistory();
     }
   }, [userId]);
 

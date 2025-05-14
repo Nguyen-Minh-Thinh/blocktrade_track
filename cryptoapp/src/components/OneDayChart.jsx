@@ -32,40 +32,39 @@ const OneDayChart = ({ symbol }) => {
   const [maxDate, setMaxDate] = useState(new Date());
   const [loading, setLoading] = useState(true);
 
-  const fetchData = () => {
-    fetch(`http://localhost:5000/realtime_data?coin_symbol=${symbol}`)
-      .then(res => res.json())
-      .then(data => {
-        if (!Array.isArray(data)) {
-          setLoading(true);
-          setDataPoints([]);
-          return;
-        }
-  
-        const parsedData = data.map(item => ({
-          x: new Date(item.timestamp || item.updated_date),
-          y: Number(item.price || item.close)
-        }));
-  
-        if (parsedData.length === 0) {
-          setLoading(true);
-          setDataPoints([]);
-          return;
-        }
-  
-        if (JSON.stringify(parsedData) !== JSON.stringify(dataPoints)) {
-          const timestamps = parsedData.map(p => p.x.getTime());
-          setMinDate(new Date(Math.min(...timestamps)));
-          setMaxDate(new Date(Math.max(...timestamps)));
-          setDataPoints(parsedData);
-        }
-  
-        setLoading(false);
-      })
-      .catch(() => {
+  const fetchData = async () => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/realtime_data?coin_symbol=${symbol}`)
+      const data = await response.json();
+      if (!Array.isArray(data)) {
         setLoading(true);
         setDataPoints([]);
-      });
+        return;
+      }
+  
+      const parsedData = data.map(item => ({
+        x: new Date(item.timestamp || item.updated_date),
+        y: Number(item.price || item.close)
+      }));
+  
+      if (parsedData.length === 0) {
+        setLoading(true);
+        setDataPoints([]);
+        return;
+      }
+  
+      if (JSON.stringify(parsedData) !== JSON.stringify(dataPoints)) {
+        const timestamps = parsedData.map(p => p.x.getTime());
+        setMinDate(new Date(Math.min(...timestamps)));
+        setMaxDate(new Date(Math.max(...timestamps)));
+        setDataPoints(parsedData);
+      }
+  
+      setLoading(false);
+    } catch (error) {
+      setLoading(true);
+      setDataPoints([]);
+    }
   };
   
 
